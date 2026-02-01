@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export const Navbar = () => {
@@ -40,11 +41,11 @@ export const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Log in
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/dashboard">Log in</Link>
             </Button>
-            <Button size="sm">
-              Get Started Free
+            <Button size="sm" asChild>
+              <Link to="/dashboard">Get Started Free</Link>
             </Button>
           </div>
 
