@@ -11,6 +11,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import LiveMonitor from "./pages/LiveMonitor";
 import Flags from "./pages/Flags";
 import Timeline from "./pages/Timeline";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/live-monitor" element={<LiveMonitor />} />
           <Route path="/flags" element={<Flags />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
