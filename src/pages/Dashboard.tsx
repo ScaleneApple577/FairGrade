@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { ProjectCard, EmptyProjectCard } from "@/components/dashboard/ProjectCard";
+import { EnhancedProjectCard, EmptyProjectCard } from "@/components/dashboard/EnhancedProjectCard";
+import { QuickStats } from "@/components/dashboard/QuickStats";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock data for demo
 const mockProjects = [
@@ -15,94 +21,116 @@ const mockProjects = [
     name: "CS 101 Final Project",
     course: "Computer Science 101",
     status: "active" as const,
-    deadline: "12 days (March 15)",
+    deadline: "12 days",
+    deadlineDate: "March 15",
     groupCount: 5,
     studentCount: 20,
-    extensionsInstalled: 18,
-    alerts: {
-      count: 2,
-      message: "Extensions not installed",
+    onlineNow: 5,
+    eventsToday: 234,
+    flags: {
+      count: 3,
+      aiDetected: 2,
+      plagiarism: 1,
     },
   },
   {
     id: "2",
     name: "MATH 250 Midterm",
     course: "Mathematics 250",
-    status: "completed" as const,
-    deadline: "Feb 15",
+    status: "active" as const,
+    deadline: "5 days",
+    deadlineDate: "March 8",
     groupCount: 3,
     studentCount: 12,
-    extensionsInstalled: 12,
+    onlineNow: 3,
+    eventsToday: 89,
+  },
+  {
+    id: "3",
+    name: "ENG 202 Essay",
+    course: "English 202",
+    status: "completed" as const,
+    deadline: "Feb 15",
+    groupCount: 4,
+    studentCount: 16,
+    onlineNow: 0,
+    eventsToday: 0,
   },
 ];
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState("all");
 
   const filteredProjects = mockProjects.filter((project) => {
-    if (activeTab === "all") return true;
-    return project.status === activeTab;
+    if (filter === "all") return true;
+    if (filter === "active") return project.status === "active";
+    if (filter === "completed") return project.status === "completed";
+    if (filter === "flagged") return project.flags && project.flags.count > 0;
+    return true;
   });
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8">
+      <div className="flex-1 overflow-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="bg-card border-b border-border px-8 py-6 sticky top-0 z-10">
+          <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-1">My Projects</h1>
+              <h1 className="text-3xl font-bold text-foreground">My Projects</h1>
               <p className="text-muted-foreground">Manage and monitor group projects</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-64"
-                />
-              </div>
-              <Button asChild>
+            <div className="flex items-center gap-4">
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-40">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Projects</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="flagged">Flagged</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button asChild className="shadow-md">
                 <Link to="/create">
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="w-5 h-5 mr-2" />
                   New Project
                 </Link>
               </Button>
             </div>
           </div>
+        </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">All Projects</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="archived">Archived</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </motion.div>
+        {/* Quick Stats */}
+        <div className="p-8 bg-gradient-to-br from-primary/5 to-purple-500/5">
+          <QuickStats
+            activeProjects={3}
+            aiFlags={7}
+            pendingReview={3}
+            studentsOnline={12}
+            upcomingDeadlines={2}
+            nextDeadlineDays={3}
+          />
+        </div>
 
         {/* Project Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredProjects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <ProjectCard {...project} />
-            </motion.div>
-          ))}
-          <EmptyProjectCard />
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProjects.map((project, index) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <EnhancedProjectCard {...project} />
+              </motion.div>
+            ))}
+            <EmptyProjectCard />
+          </div>
         </div>
       </div>
     </DashboardLayout>

@@ -1,4 +1,4 @@
-import { FolderOpen, PlusCircle, BarChart3, Settings, Zap } from "lucide-react";
+import { FolderOpen, PlusCircle, BarChart3, Settings, Zap, Eye, Flag } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
 const menuItems = [
   { title: "My Projects", url: "/dashboard", icon: FolderOpen },
   { title: "Create Project", url: "/create", icon: PlusCircle },
+  { title: "Live Monitor", url: "/live-monitor", icon: Eye, pulse: true },
+  { title: "Flags & Alerts", url: "/flags", icon: Flag, badge: 3 },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
@@ -28,7 +29,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -58,12 +59,26 @@ export function AppSidebar() {
                   >
                     <NavLink
                       to={item.url}
-                      end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
+                      end={item.url === "/dashboard" || item.url === "/create"}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative"
                       activeClassName="bg-primary/10 text-primary font-medium"
                     >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <div className="relative">
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {item.pulse && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-success rounded-full animate-pulse" />
+                        )}
+                      </div>
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge && item.badge > 0 && (
+                            <span className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5 rounded-full font-medium">
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -75,15 +90,19 @@ export function AppSidebar() {
         {/* Upgrade CTA */}
         {!collapsed && (
           <div className="p-4 border-t border-border">
-            <div className="bg-gradient-hero rounded-xl p-4 text-primary-foreground">
+            <div className="bg-gradient-to-br from-warning to-orange-500 rounded-xl p-4 text-white">
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="h-5 w-5" />
-                <span className="font-semibold">Upgrade to Pro</span>
+                <span className="font-bold">Upgrade to Pro</span>
               </div>
-              <p className="text-sm text-primary-foreground/80 mb-3">
-                Unlimited projects + advanced analytics
+              <p className="text-sm text-white/90 mb-3">
+                Unlimited projects + AI detection
               </p>
-              <Button variant="hero" size="sm" className="w-full">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="w-full bg-white text-orange-600 hover:bg-gray-100 shadow-md font-semibold"
+              >
                 Upgrade Now
               </Button>
             </div>
