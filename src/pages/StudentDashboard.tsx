@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -14,9 +15,22 @@ import {
   MessageSquare,
   Check,
   Download,
+  Key,
+  Copy,
+  CheckCheck,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Mock data
 const studentData = {
@@ -98,6 +112,69 @@ function getAvailabilityClass(count: number) {
 }
 
 export default function StudentDashboard() {
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const generateExtensionToken = async () => {
+    setIsGenerating(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to generate a token");
+        return;
+      }
+
+      // Generate a secure random token
+      const tokenBytes = new Uint8Array(32);
+      crypto.getRandomValues(tokenBytes);
+      const token = Array.from(tokenBytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      // Calculate expiration (90 days from now)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 90);
+
+      // Delete any existing tokens for this user
+      await supabase
+        .from("extension_tokens")
+        .delete()
+        .eq("student_id", user.id);
+
+      // Insert the new token
+      const { error } = await supabase.from("extension_tokens").insert({
+        student_id: user.id,
+        token,
+        expires_at: expiresAt.toISOString(),
+      });
+
+      if (error) {
+        console.error("Error creating token:", error);
+        toast.error("Failed to generate token");
+        return;
+      }
+
+      setGeneratedToken(token);
+      setTokenModalOpen(true);
+      toast.success("Extension token generated successfully");
+    } catch (error) {
+      console.error("Error generating token:", error);
+      toast.error("Failed to generate token");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToken = async () => {
+    if (generatedToken) {
+      await navigator.clipboard.writeText(generatedToken);
+      setCopied(true);
+      toast.success("Token copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,7 +243,17 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm">View Settings</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={generateExtensionToken} disabled={isGenerating}>
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Key className="h-4 w-4 mr-2" />
+                )}
+                Generate Token
+              </Button>
+              <Button variant="outline" size="sm">View Settings</Button>
+            </div>
           </div>
         </motion.div>
 
@@ -469,6 +556,45 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
       </main>
+
+      {/* Extension Token Modal */}
+      <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              Extension Token Generated
+            </DialogTitle>
+            <DialogDescription>
+              Copy this token and paste it in the FairGrade Chrome extension to link your account.
+              This token expires in 90 days.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
+                {generatedToken}
+              </div>
+              <Button variant="outline" size="icon" onClick={copyToken}>
+                {copied ? (
+                  <CheckCheck className="h-4 w-4 text-success" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+              <p className="text-sm text-foreground">
+                <strong>Important:</strong> Keep this token secure. Don't share it with anyone.
+                You can generate a new token at any time, which will invalidate the old one.
+              </p>
+            </div>
+            <Button className="w-full" onClick={() => setTokenModalOpen(false)}>
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

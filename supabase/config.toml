@@ -1,1 +1,22 @@
 project_id = "ptwmwmvmlhigbbqqjwmo"
+
+[functions.calculate-scores]
+verify_jwt = false
+
+[functions.heartbeat]
+verify_jwt = false
+
+[functions.student-stats]
+verify_jwt = false
+
+[functions.team-availability]
+verify_jwt = false
+
+[functions.track]
+verify_jwt = false
+
+[functions.extension-auth]
+verify_jwt = false
+
+[functions.track-batch]
+verify_jwt = false
