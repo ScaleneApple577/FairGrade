@@ -42,10 +42,10 @@ export const Navbar = () => {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/dashboard">Log in</Link>
+              <Link to="/auth">Log in</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/dashboard">Get Started Free</Link>
+              <Link to="/auth">Get Started Free</Link>
             </Button>
           </div>
 
@@ -80,11 +80,11 @@ export const Navbar = () => {
                   </a>
                 ))}
                 <div className="pt-4 space-y-2">
-                  <Button variant="outline" className="w-full">
-                    Log in
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/auth">Log in</Link>
                   </Button>
-                  <Button className="w-full">
-                    Get Started Free
+                  <Button className="w-full" asChild>
+                    <Link to="/auth">Get Started Free</Link>
                   </Button>
                 </div>
               </div>
