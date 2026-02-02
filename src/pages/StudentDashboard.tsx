@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -10,7 +9,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Puzzle,
-  Trophy,
   FileText,
   Video,
   MessageSquare,
@@ -19,13 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // Mock data
 const studentData = {
@@ -90,12 +81,6 @@ const availabilityGrid = [
   { time: "4:00 PM", mon: 0, tue: 3, wed: 2, thu: 4, fri: 1 },
 ];
 
-const leaderboard = [
-  { rank: 1, name: "Bob Lee", initials: "BL", hours: "12.5", percent: 47, badge: "🏆", note: "Top performer" },
-  { rank: 2, name: "You (Alice Kim)", initials: "AK", hours: "8.5", percent: 40, badge: "✨", note: "Above average", isUser: true },
-  { rank: 3, name: "Charlie Martinez", initials: "CM", hours: "5.2", percent: 25, badge: "🥉", note: "Good effort" },
-  { rank: 4, name: "David Wilson", initials: "DW", hours: "1.8", percent: 13, badge: "", note: "Needs improvement" },
-];
 
 const activities = [
   { icon: FileText, title: 'Edited "Project_Draft.docx"', project: "CS 101 Final Project", time: "2 hours ago", detail: "Added 347 characters in Google Docs", color: "bg-primary" },
@@ -113,7 +98,6 @@ function getAvailabilityClass(count: number) {
 }
 
 export default function StudentDashboard() {
-  const [leaderboardFilter, setLeaderboardFilter] = useState("all");
 
   return (
     <div className="min-h-screen bg-background">
@@ -444,78 +428,6 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
-        {/* Leaderboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-xl border border-border shadow-soft p-6 mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-warning" />
-                Top Contributors This Week
-              </h2>
-              <p className="text-sm text-muted-foreground">See who's working the hardest across all your projects</p>
-            </div>
-            <Select value={leaderboardFilter} onValueChange={setLeaderboardFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                <SelectItem value="cs101">CS 101 Final Project</SelectItem>
-                <SelectItem value="math250">MATH 250 Group Lab</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-3">
-            {leaderboard.map((entry) => (
-              <div
-                key={entry.rank}
-                className={`flex items-center gap-4 p-4 rounded-xl ${
-                  entry.isUser ? "bg-primary/5 border border-primary/20" : "bg-muted/50"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    entry.rank === 1
-                      ? "bg-warning text-warning-foreground"
-                      : entry.rank === 2
-                      ? "bg-muted-foreground/50 text-background"
-                      : entry.rank === 3
-                      ? "bg-warning/60 text-warning-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {entry.rank}
-                </div>
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    entry.isUser ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {entry.initials}
-                </div>
-                <div className="flex-1">
-                  <p className={`font-medium ${entry.isUser ? "text-primary" : "text-foreground"}`}>
-                    {entry.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {entry.hours} hours • {entry.percent}% contribution
-                  </p>
-                </div>
-                <div className="text-right">
-                  {entry.badge && <span className="text-xl">{entry.badge}</span>}
-                  <p className={`text-sm ${entry.rank <= 3 ? "text-success" : "text-muted-foreground"}`}>
-                    {entry.note}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
 
         {/* Activity Timeline */}
         <motion.div
