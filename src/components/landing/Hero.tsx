@@ -73,7 +73,7 @@ export const Hero = () => {
             className="flex flex-col sm:flex-row gap-4 mb-6"
           >
             <Button variant="hero" size="xl" className="group" asChild>
-              <Link to="/dashboard">
+              <Link to="/auth">
                 Get Started Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
