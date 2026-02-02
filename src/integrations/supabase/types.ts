@@ -105,6 +105,83 @@ export type Database = {
           },
         ]
       }
+      event_stream: {
+        Row: {
+          characters_added: number | null
+          characters_deleted: number | null
+          created_at: string
+          duration_seconds: number | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          platform: string | null
+          project_id: string | null
+          student_id: string
+          timestamp: string
+          url: string | null
+        }
+        Insert: {
+          characters_added?: number | null
+          characters_deleted?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          platform?: string | null
+          project_id?: string | null
+          student_id: string
+          timestamp?: string
+          url?: string | null
+        }
+        Update: {
+          characters_added?: number | null
+          characters_deleted?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          platform?: string | null
+          project_id?: string | null
+          student_id?: string
+          timestamp?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_stream_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extension_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          student_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          student_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          student_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       groups: {
         Row: {
           created_at: string
