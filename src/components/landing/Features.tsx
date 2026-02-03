@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   UserCheck,
@@ -14,15 +15,110 @@ import {
   FileText,
   TrendingUp,
   Calculator,
+  LucideIcon,
 } from "lucide-react";
-import { CategoryList } from "@/components/ui/category-list";
-import { SectionWithMockup } from "@/components/ui/section-with-mockup";
+import { cn } from "@/lib/utils";
 
-const scrollToSection = (id: string) => {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth" });
-  }
+interface FeatureCardProps {
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+  featureId: string;
+  featured?: boolean;
+  accentColor: "blue" | "orange";
+}
+
+const FeatureCard = ({
+  title,
+  subtitle,
+  icon: Icon,
+  featureId,
+  featured = false,
+  accentColor,
+}: FeatureCardProps) => {
+  const navigate = useNavigate();
+
+  const accentClasses = {
+    blue: {
+      border: "hover:border-blue-500",
+      shadow: "hover:shadow-blue-500/20",
+      icon: "text-blue-500",
+      iconBg: "group-hover:bg-blue-500/20",
+      ring: "ring-blue-500/50",
+      badge: "bg-blue-500/20 text-blue-400",
+    },
+    orange: {
+      border: "hover:border-orange-500",
+      shadow: "hover:shadow-orange-500/20",
+      icon: "text-orange-500",
+      iconBg: "group-hover:bg-orange-500/20",
+      ring: "ring-orange-500/50",
+      badge: "bg-orange-500/20 text-orange-400",
+    },
+  };
+
+  const accent = accentClasses[accentColor];
+
+  return (
+    <motion.div
+      onClick={() => navigate(`/features/${featureId}`)}
+      className={cn(
+        "relative group cursor-pointer overflow-hidden rounded-lg",
+        "bg-zinc-900 border border-zinc-800 transition-all duration-300",
+        accent.border,
+        accent.shadow,
+        "hover:shadow-lg",
+        featured && "ring-1 ring-offset-2 ring-offset-black",
+        featured && accent.ring
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Corner brackets */}
+      <div className={cn("absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-opacity", accentColor === "blue" ? "border-blue-500" : "border-orange-500")} />
+      <div className={cn("absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 rounded-tr-lg opacity-0 group-hover:opacity-100 transition-opacity", accentColor === "blue" ? "border-blue-500" : "border-orange-500")} />
+      <div className={cn("absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity", accentColor === "blue" ? "border-blue-500" : "border-orange-500")} />
+      <div className={cn("absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 rounded-br-lg opacity-0 group-hover:opacity-100 transition-opacity", accentColor === "blue" ? "border-blue-500" : "border-orange-500")} />
+
+      <div className="p-4 md:p-5 flex items-center gap-4">
+        <div className={cn(
+          "flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300",
+          "bg-zinc-800 group-hover:scale-110",
+          accent.iconBg
+        )}>
+          <Icon className={cn("w-6 h-6 transition-colors", accent.icon)} />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white font-semibold text-base md:text-lg truncate group-hover:text-white transition-colors">
+            {title}
+          </h3>
+          <p className="text-zinc-400 text-sm truncate">
+            {subtitle}
+          </p>
+        </div>
+
+        <motion.div
+          className={cn("flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", accent.icon)}
+          initial={{ x: -10 }}
+          whileHover={{ x: 0 }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </motion.div>
+      </div>
+
+      {featured && (
+        <div className={cn("absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium", accent.badge)}>
+          Featured
+        </div>
+      )}
+    </motion.div>
+  );
 };
 
 const studentFeatures = [
@@ -30,32 +126,32 @@ const studentFeatures = [
     title: "Real-Time Contribution Tracking",
     subtitle: "See your progress as you work",
     icon: Activity,
-    onClick: () => scrollToSection("track-your-work"),
+    featureId: "track-your-work",
     featured: true,
   },
   {
     title: "Personal Contribution Dashboard",
     subtitle: "View your stats and improve",
     icon: PieChart,
-    onClick: () => scrollToSection("self-audit"),
+    featureId: "self-audit",
   },
   {
     title: "Group Availability Calendar",
     subtitle: "Find times everyone is free",
     icon: Calendar,
-    onClick: () => scrollToSection("team-calendar"),
+    featureId: "team-calendar",
   },
   {
     title: "Task & Deadline Manager",
     subtitle: "Stay organized with your team",
     icon: CheckSquare,
-    onClick: () => scrollToSection("task-tracker"),
+    featureId: "task-tracker",
   },
   {
     title: "Rate Your Teammates",
     subtitle: "Anonymous, fair feedback",
     icon: Star,
-    onClick: () => scrollToSection("peer-reviews"),
+    featureId: "peer-reviews",
   },
 ];
 
@@ -64,165 +160,38 @@ const teacherFeatures = [
     title: "Live Google Docs Monitoring",
     subtitle: "See who writes what, in real-time",
     icon: Eye,
-    onClick: () => scrollToSection("live-tracking"),
+    featureId: "live-tracking",
     featured: true,
   },
   {
     title: "AI Content Detection",
     subtitle: "Catch AI-generated text instantly",
     icon: Bot,
-    onClick: () => scrollToSection("ai-detection"),
+    featureId: "ai-detection",
   },
   {
     title: "Plagiarism Detector",
     subtitle: "Verify originality automatically",
     icon: Shield,
-    onClick: () => scrollToSection("plagiarism-check"),
+    featureId: "plagiarism-check",
   },
   {
     title: "Contribution Reports",
     subtitle: "Fair grades backed by data",
     icon: FileText,
-    onClick: () => scrollToSection("auto-reports"),
+    featureId: "auto-reports",
   },
   {
     title: "Group Health Monitoring",
     subtitle: "Intervene before groups fail",
     icon: TrendingUp,
-    onClick: () => scrollToSection("analytics-dashboard"),
+    featureId: "analytics-dashboard",
   },
   {
     title: "Individual Grade Calculator",
     subtitle: "Adjust grades based on effort",
     icon: Calculator,
-    onClick: () => scrollToSection("grade-adjuster"),
-  },
-];
-
-const studentDetails = [
-  {
-    id: "track-your-work",
-    title: "Your Contribution, Tracked Automatically",
-    description:
-      "See exactly how much you've contributed in real-time. Word counts, time spent, tasks completed. No more wondering if you're pulling your weight.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/3b82f6?text=Student+Dashboard",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/3b82f6?text=Progress+Chart",
-    reverseLayout: false,
-  },
-  {
-    id: "self-audit",
-    title: "See How You Compare",
-    description:
-      "Personal dashboard shows your contribution percentage, peer review scores, meeting attendance. Set goals and improve your teamwork skills.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/3b82f6?text=Self+Audit+View",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/3b82f6?text=Stats+Breakdown",
-    reverseLayout: true,
-  },
-  {
-    id: "team-calendar",
-    title: "Find Meeting Times in Seconds",
-    description:
-      "Mark when you're free. See a heatmap of when everyone is available. No more endless group chat messages trying to coordinate schedules.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/3b82f6?text=Calendar+Heatmap",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/3b82f6?text=Availability+Grid",
-    reverseLayout: false,
-  },
-  {
-    id: "task-tracker",
-    title: "Never Miss a Deadline",
-    description:
-      "See all group tasks in one place. Know what you need to do and when. Get reminders so nothing falls through the cracks.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/3b82f6?text=Task+Board",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/3b82f6?text=My+Tasks",
-    reverseLayout: true,
-  },
-  {
-    id: "peer-reviews",
-    title: "Rate Your Teammates Fairly",
-    description:
-      "Anonymous peer reviews let you honestly evaluate who contributed. Rate on effort, communication, quality. Your feedback helps ensure fair grades.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/3b82f6?text=Review+Form",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/3b82f6?text=Submit+Review",
-    reverseLayout: false,
-  },
-];
-
-const teacherDetails = [
-  {
-    id: "live-tracking",
-    title: "Watch Contributions Happen in Real-Time",
-    description:
-      "Our Chrome extension tracks every keystroke in Google Docs. See word counts update live, detect large pastes, track exactly when each student works.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=Live+Tracking",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Timeline+View",
-    reverseLayout: true,
-  },
-  {
-    id: "ai-detection",
-    title: "Catch AI-Generated Content Instantly",
-    description:
-      "Advanced AI detection scans all pasted text over 100 characters. When a student pastes ChatGPT output, you'll know immediately.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=AI+Alert",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Flagged+Content",
-    reverseLayout: false,
-  },
-  {
-    id: "plagiarism-check",
-    title: "Verify Originality Automatically",
-    description:
-      "Integrated plagiarism checking compares student work against billions of web pages. Get originality scores for each team member instantly.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=Plagiarism+Report",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Originality+Score",
-    reverseLayout: true,
-  },
-  {
-    id: "auto-reports",
-    title: "Fair Grades Backed by Data",
-    description:
-      "Auto-generated PDF reports show each student's exact contribution. Words written, tasks completed, meeting attendance, peer review scores.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=Report+PDF",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Data+Breakdown",
-    reverseLayout: false,
-  },
-  {
-    id: "analytics-dashboard",
-    title: "Monitor Group Health in Real-Time",
-    description:
-      "Instructor dashboard shows red flags (no activity), yellow warnings (deadlines approaching), green indicators (on track). Intervene before groups fail.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=Analytics+View",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Health+Alerts",
-    reverseLayout: true,
-  },
-  {
-    id: "grade-adjuster",
-    title: "Adjust Grades Based on Real Effort",
-    description:
-      "AI-powered grade recommendation engine suggests individual adjustments based on tracked data and peer reviews. Fair grading made simple.",
-    primaryImageSrc:
-      "https://placehold.co/600x400/1a1a1a/f97316?text=Grade+Calculator",
-    secondaryImageSrc:
-      "https://placehold.co/400x300/0f0f0f/f97316?text=Recommendations",
-    reverseLayout: false,
+    featureId: "grade-adjuster",
   },
 ];
 
@@ -246,7 +215,7 @@ export const Features = () => {
           </p>
         </motion.div>
 
-        {/* Two Column Layout */}
+        {/* Two Column Layout - Side by Side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Student Features Column */}
           <motion.div
@@ -266,7 +235,15 @@ export const Features = () => {
               </div>
             </div>
 
-            <CategoryList cards={studentFeatures} accentColor="blue" />
+            <div className="space-y-3">
+              {studentFeatures.map((feature) => (
+                <FeatureCard
+                  key={feature.featureId}
+                  {...feature}
+                  accentColor="blue"
+                />
+              ))}
+            </div>
           </motion.div>
 
           {/* Teacher Features Column */}
@@ -287,54 +264,17 @@ export const Features = () => {
               </div>
             </div>
 
-            <CategoryList cards={teacherFeatures} accentColor="orange" />
+            <div className="space-y-3">
+              {teacherFeatures.map((feature) => (
+                <FeatureCard
+                  key={feature.featureId}
+                  {...feature}
+                  accentColor="orange"
+                />
+              ))}
+            </div>
           </motion.div>
         </div>
-      </div>
-
-      {/* Detail Sections */}
-      <div className="mt-24 md:mt-32 border-t border-zinc-800 pt-16">
-        {/* Student Detail Sections */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-            <GraduationCap className="w-5 h-5 text-blue-500" />
-            <span className="text-blue-400 font-medium">Student Features</span>
-          </div>
-        </motion.div>
-
-        {studentDetails.map((detail) => (
-          <SectionWithMockup
-            key={detail.id}
-            {...detail}
-            accentColor="blue"
-          />
-        ))}
-
-        {/* Teacher Detail Sections */}
-        <motion.div
-          className="text-center mb-12 mt-24"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20">
-            <UserCheck className="w-5 h-5 text-orange-500" />
-            <span className="text-orange-400 font-medium">Teacher Features</span>
-          </div>
-        </motion.div>
-
-        {teacherDetails.map((detail) => (
-          <SectionWithMockup
-            key={detail.id}
-            {...detail}
-            accentColor="orange"
-          />
-        ))}
       </div>
     </section>
   );
