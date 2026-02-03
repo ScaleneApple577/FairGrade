@@ -15,15 +15,15 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-zinc-800">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">F</span>
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">F</span>
             </div>
-            <span className="font-bold text-xl text-foreground">FairGrade</span>
+            <span className="font-bold text-xl text-white">FairGrade</span>
           </a>
 
           {/* Desktop Nav */}
@@ -32,7 +32,7 @@ export const Navbar = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-muted-foreground hover:text-foreground transition-all duration-200 font-medium text-sm hover:scale-105"
+                className="text-zinc-400 hover:text-white transition-all duration-200 font-medium text-sm hover:scale-105"
               >
                 {link.name}
               </a>
@@ -41,17 +41,23 @@ export const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="btn-public-hover" asChild>
-              <Link to="/auth">Log in</Link>
-            </Button>
-            <Button size="sm" className="btn-public-hover" asChild>
-              <Link to="/auth">Get Started Free</Link>
-            </Button>
+            <Link
+              to="/auth"
+              className="px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-all duration-200 hover:scale-105"
+            >
+              Log in
+            </Link>
+            <Link
+              to="/auth"
+              className="px-4 py-2 bg-white text-black font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/20"
+            >
+              Get Started Free
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-white"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -73,19 +79,27 @@ export const Navbar = () => {
                   <a
                     key={link.name}
                     href={link.href}
-                    className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-200 font-medium hover:translate-x-1"
+                    className="block py-2 text-zinc-400 hover:text-white transition-all duration-200 font-medium hover:translate-x-1"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.name}
                   </a>
                 ))}
                 <div className="pt-4 space-y-2">
-                  <Button variant="outline" className="w-full btn-public-hover" asChild>
-                    <Link to="/auth">Log in</Link>
-                  </Button>
-                  <Button className="w-full btn-public-hover" asChild>
-                    <Link to="/auth">Get Started Free</Link>
-                  </Button>
+                  <Link
+                    to="/auth"
+                    className="block w-full py-3 text-center text-zinc-400 border border-zinc-700 rounded-lg font-medium transition-all duration-200 hover:bg-zinc-800 hover:text-white"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/auth"
+                    className="block w-full py-3 text-center bg-white text-black font-semibold rounded-lg transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Get Started Free
+                  </Link>
                 </div>
               </div>
             </motion.div>
