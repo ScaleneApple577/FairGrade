@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,14 +13,14 @@ import { AvailabilityEditor } from "@/components/calendar/AvailabilityEditor";
 import { MeetingScheduler } from "@/components/calendar/MeetingScheduler";
 import { MeetingList } from "@/components/calendar/MeetingList";
 import { AttendanceWidget } from "@/components/calendar/AttendanceWidget";
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { ProjectSelector } from "@/components/calendar/ProjectSelector";
 import {
   Calendar,
   Users,
   Clock,
   Plus,
   Edit3,
-  ChevronLeft,
-  ChevronRight,
   LayoutGrid,
   List,
   Vote,
@@ -100,21 +101,46 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
   );
 }
 
-// Mock data for demonstration
-const mockHeatmapData = {
-  "8:00": { "0": 0, "1": 2, "2": 3, "3": 2, "4": 4, "5": 1, "6": 0 },
-  "9:00": { "0": 1, "1": 3, "2": 4, "3": 3, "4": 4, "5": 2, "6": 0 },
-  "10:00": { "0": 1, "1": 4, "2": 4, "3": 4, "4": 4, "5": 3, "6": 1 },
-  "11:00": { "0": 2, "1": 3, "2": 3, "3": 2, "4": 3, "5": 2, "6": 1 },
-  "12:00": { "0": 1, "1": 2, "2": 2, "3": 2, "4": 2, "5": 1, "6": 0 },
-  "13:00": { "0": 1, "1": 3, "2": 4, "3": 3, "4": 4, "5": 2, "6": 1 },
-  "14:00": { "0": 2, "1": 4, "2": 4, "3": 4, "4": 4, "5": 3, "6": 1 },
-  "15:00": { "0": 1, "1": 3, "2": 3, "3": 3, "4": 3, "5": 2, "6": 0 },
-  "16:00": { "0": 1, "1": 2, "2": 2, "3": 2, "4": 2, "5": 1, "6": 0 },
-  "17:00": { "0": 0, "1": 1, "2": 2, "3": 1, "4": 1, "5": 0, "6": 0 },
-  "18:00": { "0": 0, "1": 1, "2": 1, "3": 1, "4": 1, "5": 0, "6": 0 },
-  "19:00": { "0": 0, "1": 0, "2": 1, "3": 0, "4": 0, "5": 0, "6": 0 },
-};
+// Generate mock heatmap data with real dates
+function generateMockHeatmapData(weekStart: Date, weekEnd: Date, totalMembers: number) {
+  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm
+  
+  const heatmapData: Record<string, Record<string, {
+    available_count: number;
+    total_members: number;
+    percentage: number;
+    available_members: string[];
+    unavailable_members: string[];
+  }>> = {};
+
+  const memberNames = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank"].slice(0, totalMembers);
+
+  days.forEach((day) => {
+    const dateKey = format(day, 'yyyy-MM-dd');
+    heatmapData[dateKey] = {};
+    
+    hours.forEach((hour) => {
+      const hourKey = `${hour}:00`;
+      // Generate random availability (weighted towards work hours)
+      const isWorkHour = hour >= 9 && hour <= 17;
+      const baseChance = isWorkHour ? 0.7 : 0.3;
+      
+      const availableMembers = memberNames.filter(() => Math.random() < baseChance);
+      const unavailableMembers = memberNames.filter(m => !availableMembers.includes(m));
+      
+      heatmapData[dateKey][hourKey] = {
+        available_count: availableMembers.length,
+        total_members: totalMembers,
+        percentage: totalMembers > 0 ? (availableMembers.length / totalMembers) * 100 : 0,
+        available_members: availableMembers,
+        unavailable_members: unavailableMembers,
+      };
+    });
+  });
+
+  return heatmapData;
+}
 
 const mockMeetings = [
   {
@@ -164,6 +190,13 @@ const mockSuggestedTimes = [
   { day: 1, hour: 10, available_count: 4, total_members: 4 },
 ];
 
+// Mock projects for selector
+const mockProjects = [
+  { id: "proj-1", name: "Marketing Campaign", member_count: 4, course_name: "MKTG 301" },
+  { id: "proj-2", name: "Mobile App Design", member_count: 6, course_name: "CS 490" },
+  { id: "proj-3", name: "Research Paper", member_count: 3, course_name: "ENG 201" },
+];
+
 export default function StudentCalendar() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -172,13 +205,32 @@ export default function StudentCalendar() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>("proj-1");
   const [userId, setUserId] = useState<string | null>(null);
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [meetings, setMeetings] = useState(mockMeetings);
   const [checkingInMeeting, setCheckingInMeeting] = useState<string | null>(null);
+  
+  // Week navigation state
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => 
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
+  
+  // Calculate week end
+  const currentWeekEnd = useMemo(() => 
+    endOfWeek(currentWeekStart, { weekStartsOn: 1 }),
+    [currentWeekStart]
+  );
 
-  const totalMembers = 4; // This would come from the API
+  // Get current project details
+  const currentProject = mockProjects.find(p => p.id === currentProjectId);
+  const totalMembers = currentProject?.member_count || 4;
+  
+  // Generate heatmap data for current week
+  const heatmapData = useMemo(() => 
+    generateMockHeatmapData(currentWeekStart, currentWeekEnd, totalMembers),
+    [currentWeekStart, currentWeekEnd, totalMembers]
+  );
 
   useEffect(() => {
     checkAuth();
@@ -405,137 +457,147 @@ export default function StudentCalendar() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Main calendar area */}
-                <div className="lg:col-span-3">
-                  <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <CardTitle>Team Availability</CardTitle>
-                        <Tabs value={activeTab} onValueChange={setActiveTab}>
-                          <TabsList className="bg-zinc-800">
-                            <TabsTrigger value="heatmap" className="data-[state=active]:bg-blue-500">
-                              <LayoutGrid className="h-4 w-4 mr-1" />
-                              Heatmap
-                            </TabsTrigger>
-                            <TabsTrigger value="meetings" className="data-[state=active]:bg-blue-500">
-                              <List className="h-4 w-4 mr-1" />
-                              Meetings
-                            </TabsTrigger>
-                            <TabsTrigger value="polls" className="data-[state=active]:bg-blue-500">
-                              <Vote className="h-4 w-4 mr-1" />
-                              Polls
-                            </TabsTrigger>
-                          </TabsList>
-                        </Tabs>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <ChevronLeft className="h-4 w-4" />
+              <div className="space-y-6">
+                {/* Project Selector */}
+                <ProjectSelector
+                  projects={mockProjects}
+                  selectedProjectId={currentProjectId}
+                  onSelectProject={setCurrentProjectId}
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Main calendar area */}
+                  <div className="lg:col-span-3">
+                    <Card className="bg-zinc-900 border-zinc-800">
+                      <CardHeader className="flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <CardTitle>Team Availability</CardTitle>
+                            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                              <TabsList className="bg-zinc-800">
+                                <TabsTrigger value="heatmap" className="data-[state=active]:bg-blue-500">
+                                  <LayoutGrid className="h-4 w-4 mr-1" />
+                                  Heatmap
+                                </TabsTrigger>
+                                <TabsTrigger value="meetings" className="data-[state=active]:bg-blue-500">
+                                  <List className="h-4 w-4 mr-1" />
+                                  Meetings
+                                </TabsTrigger>
+                                <TabsTrigger value="polls" className="data-[state=active]:bg-blue-500">
+                                  <Vote className="h-4 w-4 mr-1" />
+                                  Polls
+                                </TabsTrigger>
+                              </TabsList>
+                            </Tabs>
+                          </div>
+                        </div>
+                        
+                        {/* Week Navigation */}
+                        {activeTab === "heatmap" && (
+                          <CalendarHeader 
+                            currentWeekStart={currentWeekStart}
+                            onNavigate={setCurrentWeekStart}
+                          />
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        {activeTab === "heatmap" && (
+                          <HeatmapView
+                            heatmapData={heatmapData}
+                            totalMembers={totalMembers}
+                            weekStart={currentWeekStart}
+                            weekEnd={currentWeekEnd}
+                            onCellClick={(date, hour) => {
+                              console.log(`Clicked ${format(date, 'yyyy-MM-dd')} at ${hour}:00`);
+                            }}
+                          />
+                        )}
+                        {activeTab === "meetings" && (
+                          <MeetingList
+                            meetings={meetings}
+                            currentUserId="user1"
+                            onCheckIn={handleCheckIn}
+                            onCheckOut={handleCheckOut}
+                            onViewDetails={(id) => console.log("View meeting", id)}
+                            isCheckingIn={checkingInMeeting || undefined}
+                          />
+                        )}
+                        {activeTab === "polls" && (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <Vote className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No active polls</p>
+                            <Button 
+                              variant="outline" 
+                              className="mt-4"
+                              onClick={() => toast({ title: "Coming soon", description: "Poll creation is under development" })}
+                            >
+                              Create Poll
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Sidebar widgets */}
+                  <div className="space-y-6">
+                    {/* Quick actions */}
+                    <Card className="bg-zinc-900 border-zinc-800">
+                      <CardHeader>
+                        <CardTitle className="text-base">Quick Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                          Update Availability
                         </Button>
-                        <span className="text-sm font-medium px-2">This Week</span>
-                        <Button variant="ghost" size="icon">
-                          <ChevronRight className="h-4 w-4" />
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setShowScheduler(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2 text-green-400" />
+                          Schedule Meeting
                         </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {activeTab === "heatmap" && (
-                        <HeatmapView
-                          heatmapData={mockHeatmapData}
-                          totalMembers={totalMembers}
-                          onCellClick={(day, hour) => {
-                            // Could open scheduler with this time pre-selected
-                            console.log(`Clicked ${day} at ${hour}:00`);
-                          }}
-                        />
-                      )}
-                      {activeTab === "meetings" && (
-                        <MeetingList
-                          meetings={meetings}
-                          currentUserId="user1"
-                          onCheckIn={handleCheckIn}
-                          onCheckOut={handleCheckOut}
-                          onViewDetails={(id) => console.log("View meeting", id)}
-                          isCheckingIn={checkingInMeeting || undefined}
-                        />
-                      )}
-                      {activeTab === "polls" && (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <Vote className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>No active polls</p>
-                          <Button 
-                            variant="outline" 
-                            className="mt-4"
-                            onClick={() => toast({ title: "Coming soon", description: "Poll creation is under development" })}
-                          >
-                            Create Poll
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setActiveTab("polls")}
+                        >
+                          <Vote className="h-4 w-4 mr-2 text-purple-400" />
+                          Create Poll
+                        </Button>
+                      </CardContent>
+                    </Card>
 
-                {/* Sidebar widgets */}
-                <div className="space-y-6">
-                  {/* Quick actions */}
-                  <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader>
-                      <CardTitle className="text-base">Quick Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setIsEditing(true)}
-                      >
-                        <Clock className="h-4 w-4 mr-2 text-blue-400" />
-                        Update Availability
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setShowScheduler(true)}
-                      >
-                        <Plus className="h-4 w-4 mr-2 text-green-400" />
-                        Schedule Meeting
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setActiveTab("polls")}
-                      >
-                        <Vote className="h-4 w-4 mr-2 text-purple-400" />
-                        Create Poll
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    {/* Attendance stats */}
+                    <AttendanceWidget
+                      attendedCount={3}
+                      totalMeetings={4}
+                      pastMeetings={mockPastMeetings}
+                    />
 
-                  {/* Attendance stats */}
-                  <AttendanceWidget
-                    attendedCount={3}
-                    totalMeetings={4}
-                    pastMeetings={mockPastMeetings}
-                  />
-
-                  {/* Best times hint */}
-                  <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-blue-500/20">
-                          <Clock className="h-4 w-4 text-blue-400" />
+                    {/* Best times hint */}
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-blue-500/20">
+                            <Clock className="h-4 w-4 text-blue-400" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm">Best Meeting Times</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Tue & Thu at 10am have 100% availability
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-sm">Best Meeting Times</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Tue & Thu at 10am have 100% availability
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
             )}

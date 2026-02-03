@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { format, eachDayOfInterval, isToday } from "date-fns";
 import {
   Tooltip,
   TooltipContent,
@@ -17,22 +18,19 @@ interface HeatmapSlot {
 type HeatmapCellValue = HeatmapSlot | number;
 
 interface HeatmapData {
-  [key: string]: {
-    [key: string]: HeatmapCellValue;
+  [dateKey: string]: {
+    [hourKey: string]: HeatmapCellValue;
   };
 }
 
 interface HeatmapViewProps {
   heatmapData: HeatmapData;
   totalMembers: number;
-  onCellClick?: (day: number, hour: number) => void;
+  weekStart: Date;
+  weekEnd: Date;
+  onCellClick?: (date: Date, hour: number) => void;
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DAY_INDICES: Record<string, number> = {
-  'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
-  'thursday': 4, 'friday': 5, 'saturday': 6
-};
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm
 
 function getAvailabilityColor(available: number, total: number): string {
@@ -53,42 +51,41 @@ function getAvailabilityColor(available: number, total: number): string {
   }
 }
 
-function getTextColor(available: number, total: number): string {
-  if (total === 0) return 'text-zinc-500';
-  
-  const percentage = (available / total) * 100;
-  
-  if (percentage >= 50 && percentage < 75) {
-    return 'text-black'; // Yellow background needs dark text
-  }
-  return 'text-white';
-}
-
 export function HeatmapView({
   heatmapData,
   totalMembers,
+  weekStart,
+  weekEnd,
   onCellClick,
 }: HeatmapViewProps) {
+  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
   const formatHour = (hour: number) => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
     return `${displayHour}${ampm}`;
   };
 
-  const getSlotData = (dayIndex: number, hour: number): HeatmapSlot => {
-    const dayName = DAYS[dayIndex].toLowerCase();
+  const formatTimeRange = (hour: number) => {
+    const startAmpm = hour >= 12 ? 'pm' : 'am';
+    const endHour = hour + 1;
+    const endAmpm = endHour >= 12 ? 'pm' : 'am';
+    const displayStart = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    const displayEnd = endHour > 12 ? endHour - 12 : endHour === 0 ? 12 : endHour;
+    return `${displayStart}${startAmpm} - ${displayEnd}${endAmpm}`;
+  };
+
+  const getSlotData = (date: Date, hour: number): HeatmapSlot => {
+    const dateKey = format(date, 'yyyy-MM-dd');
     const hourKey = `${hour}:00`;
     
-    // Check multiple key formats
-    const slot = heatmapData?.[dayName]?.[hourKey] || 
-                 heatmapData?.[hourKey]?.[dayIndex.toString()] ||
-                 heatmapData?.[dayIndex.toString()]?.[hourKey];
+    const slot = heatmapData?.[dateKey]?.[hourKey];
     
     if (slot && typeof slot === 'object' && 'available_count' in slot) {
       return slot;
     }
     
-    // Handle simple count format from edge function
+    // Handle simple count format
     if (typeof slot === 'number') {
       return {
         available_count: slot,
@@ -136,70 +133,102 @@ export function HeatmapView({
 
       <div className="overflow-x-auto">
         <div className="min-w-[700px]">
-          {/* Header row with days */}
+          {/* Header row with real dates */}
           <div className="grid grid-cols-8 gap-1">
             <div className="p-2 text-center text-sm font-medium text-muted-foreground">
               Time
             </div>
-            {DAYS.map((day) => (
-              <div
-                key={day}
-                className="p-2 text-center text-sm font-medium text-foreground"
-              >
-                {day}
-              </div>
-            ))}
+            {days.map((day) => {
+              const isTodayDate = isToday(day);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    "p-2 text-center",
+                    isTodayDate && "bg-blue-500/20 rounded-t-lg border-t-2 border-x-2 border-blue-500"
+                  )}
+                >
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {format(day, 'EEE')}
+                  </div>
+                  <div className={cn(
+                    "text-lg font-bold",
+                    isTodayDate ? "text-blue-400" : "text-foreground"
+                  )}>
+                    {format(day, 'd')}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Time grid */}
-          {HOURS.map((hour) => (
+          {HOURS.map((hour, hourIndex) => (
             <div key={hour} className="grid grid-cols-8 gap-1 mt-1">
               {/* Time label */}
-              <div className="p-2 text-xs text-muted-foreground flex items-center justify-center h-10">
+              <div className="p-2 text-xs text-muted-foreground flex items-center justify-center h-12 md:h-16">
                 {formatHour(hour)}
               </div>
               
-              {/* Day cells */}
-              {DAYS.map((_, dayIndex) => {
-                const slotData = getSlotData(dayIndex, hour);
+              {/* Day cells - NO TEXT, only colors */}
+              {days.map((day) => {
+                const slotData = getSlotData(day, hour);
                 const bgColor = getAvailabilityColor(slotData.available_count, slotData.total_members);
-                const textColor = getTextColor(slotData.available_count, slotData.total_members);
+                const isTodayDate = isToday(day);
+                const isLastHour = hourIndex === HOURS.length - 1;
                 
                 return (
-                  <Tooltip key={`${dayIndex}-${hour}`}>
+                  <Tooltip key={`${day.toISOString()}-${hour}`} delayDuration={200}>
                     <TooltipTrigger asChild>
                       <div
-                        onClick={() => onCellClick?.(dayIndex, hour)}
+                        onClick={() => onCellClick?.(day, hour)}
                         className={cn(
-                          "h-10 rounded border border-border cursor-pointer transition-all",
-                          "flex items-center justify-center",
-                          "hover:scale-105 hover:brightness-110",
+                          "h-12 md:h-16 rounded border border-border cursor-pointer transition-all",
+                          "hover:brightness-110 hover:scale-[1.02]",
                           bgColor,
-                          textColor
+                          isTodayDate && "border-blue-500/50",
+                          isTodayDate && isLastHour && "rounded-b-lg"
                         )}
-                        style={{
-                          textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-                        }}
-                      >
-                        <span className="font-semibold text-sm md:text-base">
-                          {slotData.available_count}/{slotData.total_members}
-                        </span>
-                      </div>
+                        aria-label={`${format(day, 'EEEE MMMM d')}, ${formatHour(hour)}: ${slotData.available_count} of ${slotData.total_members} members available`}
+                      />
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <div className="text-sm">
-                        <p className="font-medium mb-1">
-                          {DAYS[dayIndex]} at {formatHour(hour)}
-                        </p>
-                        <p className="text-green-400">
-                          Available: {slotData.available_members.length > 0 
-                            ? slotData.available_members.join(', ') 
-                            : slotData.available_count > 0 ? `${slotData.available_count} members` : 'None'}
-                        </p>
-                        {slotData.unavailable_members.length > 0 && (
-                          <p className="text-red-400">
-                            Unavailable: {slotData.unavailable_members.join(', ')}
-                          </p>
+                    <TooltipContent 
+                      side="top" 
+                      className="max-w-xs bg-zinc-900 border-zinc-700 p-3"
+                    >
+                      <div className="text-sm space-y-2">
+                        <div className="font-semibold text-white border-b border-zinc-700 pb-2">
+                          {format(day, 'EEE MMM d, yyyy')} • {formatTimeRange(hour)}
+                        </div>
+                        
+                        {slotData.available_count > 0 && (
+                          <div>
+                            <p className="text-green-400 font-medium">
+                              ✓ Available ({slotData.available_count}):
+                            </p>
+                            <p className="text-zinc-300 text-xs mt-1">
+                              {slotData.available_members.length > 0 
+                                ? slotData.available_members.join(', ') 
+                                : `${slotData.available_count} members`}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {(slotData.total_members - slotData.available_count) > 0 && (
+                          <div>
+                            <p className="text-red-400 font-medium">
+                              ✗ Unavailable ({slotData.total_members - slotData.available_count}):
+                            </p>
+                            <p className="text-zinc-300 text-xs mt-1">
+                              {slotData.unavailable_members.length > 0 
+                                ? slotData.unavailable_members.join(', ') 
+                                : `${slotData.total_members - slotData.available_count} members`}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {slotData.available_count === 0 && slotData.total_members === 0 && (
+                          <p className="text-zinc-500">No availability data</p>
                         )}
                       </div>
                     </TooltipContent>
