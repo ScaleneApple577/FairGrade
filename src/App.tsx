@@ -14,6 +14,7 @@ import Flags from "./pages/Flags";
 import Timeline from "./pages/Timeline";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import PricingPage from "./pages/PricingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/flags" element={<Flags />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/pricing" element={<PricingPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
