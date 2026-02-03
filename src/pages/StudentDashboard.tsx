@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Bell,
   CheckCircle,
@@ -8,20 +9,27 @@ import {
   Calendar,
   Users,
   AlertTriangle,
-  ArrowRight,
-  Puzzle,
   FileText,
   Video,
   MessageSquare,
   Check,
-  Download,
   Key,
   Copy,
   CheckCheck,
   Loader2,
+  FolderOpen,
+  Star,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+  ListTodo,
+  BarChart3,
+  Search,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +40,17 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Sidebar navigation items
+const sidebarItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/student/dashboard", active: true },
+  { icon: FolderOpen, label: "My Projects", path: "/student/projects" },
+  { icon: Calendar, label: "Calendar", path: "/student/calendar" },
+  { icon: ListTodo, label: "Tasks", path: "/student/tasks" },
+  { icon: Star, label: "Peer Reviews", path: "/student/reviews" },
+  { icon: BarChart3, label: "My Stats", path: "/student/stats" },
+  { icon: Settings, label: "Settings", path: "/settings" },
+];
+
 // Mock data
 const studentData = {
   name: "Alice Kim",
@@ -40,10 +59,10 @@ const studentData = {
 };
 
 const quickStats = [
-  { label: "Active Projects", value: "2", icon: TrendingUp },
-  { label: "Avg Contribution", value: "29%", icon: Users },
-  { label: "Hours This Week", value: "8.5", icon: Clock },
-  { label: "Next Deadline", value: "3 days", icon: Calendar },
+  { label: "Active Projects", value: "2", icon: FolderOpen, trend: "+1 this month" },
+  { label: "Tasks Due This Week", value: "5", icon: ListTodo, trend: "3 completed" },
+  { label: "Contribution Score", value: "87%", icon: TrendingUp, trend: "+5% vs last week" },
+  { label: "Peer Review Rating", value: "4.5", icon: Star, trend: "★★★★☆" },
 ];
 
 const projects = [
@@ -52,70 +71,58 @@ const projects = [
     name: "CS 101 Final Project",
     course: "Computer Science 101",
     deadline: "12 days",
-    group: "Group 1",
-    memberCount: 4,
     contribution: 40,
-    status: "good",
-    groupAvg: 33,
-    stats: {
-      documentEdits: { percent: 45, diff: "+5%" },
-      meetings: { value: "2/2 ✓", note: "Perfect attendance" },
-      tasks: { value: "6/8", note: "2 pending" },
-      lastActive: { value: "2h ago", note: "● Active today" },
-    },
+    progress: 65,
     members: [
-      { name: "You", initials: "AK", percent: 40, isUser: true },
-      { name: "Bob Lee", initials: "BL", percent: 35 },
-      { name: "Charlie M.", initials: "CM", percent: 25 },
+      { name: "You", initials: "AK" },
+      { name: "Bob Lee", initials: "BL" },
+      { name: "Charlie M.", initials: "CM" },
+      { name: "Diana P.", initials: "DP" },
     ],
   },
   {
     id: "2",
     name: "MATH 250 Group Lab",
     course: "Mathematics 250",
-    deadline: "3 days!",
-    group: "Group 3",
-    memberCount: 3,
+    deadline: "3 days",
     contribution: 18,
-    status: "warning",
-    groupAvg: 33,
-    stats: {
-      documentEdits: { percent: 12, diff: "-21%" },
-      meetings: { value: "0/3", note: "Missed all" },
-      tasks: { value: "1/6", note: "5 overdue" },
-      lastActive: { value: "4d ago", note: "○ Inactive" },
-    },
-    members: [],
+    progress: 45,
+    members: [
+      { name: "You", initials: "AK" },
+      { name: "Eve R.", initials: "ER" },
+      { name: "Frank S.", initials: "FS" },
+    ],
+    urgent: true,
   },
 ];
 
-const availabilityGrid = [
-  { time: "2:00 PM", mon: 4, tue: 3, wed: 4, thu: 1, fri: 2 },
-  { time: "3:00 PM", mon: 3, tue: 4, wed: 1, thu: 2, fri: 4 },
-  { time: "4:00 PM", mon: 0, tue: 3, wed: 2, thu: 4, fri: 1 },
+const upcomingTasks = [
+  { id: 1, name: "Complete research section", project: "CS 101 Final Project", due: "Tomorrow", priority: "High" },
+  { id: 2, name: "Review teammate's code", project: "CS 101 Final Project", due: "In 2 days", priority: "Medium" },
+  { id: 3, name: "Submit lab calculations", project: "MATH 250 Group Lab", due: "In 3 days", priority: "High" },
+  { id: 4, name: "Prepare presentation slides", project: "CS 101 Final Project", due: "In 5 days", priority: "Low" },
+  { id: 5, name: "Team meeting prep", project: "MATH 250 Group Lab", due: "In 6 days", priority: "Medium" },
 ];
 
-
-const activities = [
-  { icon: FileText, title: 'Edited "Project_Draft.docx"', project: "CS 101 Final Project", time: "2 hours ago", detail: "Added 347 characters in Google Docs", color: "bg-primary" },
-  { icon: Video, title: "Attended Group Meeting", project: "CS 101 Final Project", time: "Yesterday at 3:00 PM", detail: "45 minutes on Zoom • Camera on 100%", color: "bg-success" },
-  { icon: MessageSquare, title: "Sent 12 messages in Slack", project: "CS 101 Final Project", time: "2 days ago", detail: "Active discussion in #group-1 channel", color: "bg-warning" },
-  { icon: Check, title: 'Completed Task: "Create outline"', project: "CS 101 Final Project", time: "3 days ago", detail: "Marked as complete", color: "bg-success" },
+const recentActivity = [
+  { icon: FileText, title: 'Edited "Project_Draft.docx"', time: "2 hours ago", color: "bg-blue-500" },
+  { icon: Video, title: "Attended Group Meeting", time: "Yesterday", color: "bg-green-500" },
+  { icon: MessageSquare, title: "Sent 12 messages in Slack", time: "2 days ago", color: "bg-yellow-500" },
+  { icon: Check, title: 'Completed Task: "Create outline"', time: "3 days ago", color: "bg-green-500" },
 ];
-
-function getAvailabilityClass(count: number) {
-  if (count === 4) return "bg-success text-success-foreground";
-  if (count >= 3) return "bg-success/60 text-success-foreground";
-  if (count >= 2) return "bg-warning/60 text-warning-foreground";
-  if (count >= 1) return "bg-warning/30 text-foreground";
-  return "bg-destructive/30 text-destructive";
-}
 
 export default function StudentDashboard() {
+  const navigate = useNavigate();
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<number[]>([]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   const generateExtensionToken = async () => {
     setIsGenerating(true);
@@ -126,24 +133,20 @@ export default function StudentDashboard() {
         return;
       }
 
-      // Generate a secure random token
       const tokenBytes = new Uint8Array(32);
       crypto.getRandomValues(tokenBytes);
       const token = Array.from(tokenBytes)
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
 
-      // Calculate expiration (90 days from now)
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 90);
 
-      // Delete any existing tokens for this user
       await supabase
         .from("extension_tokens")
         .delete()
         .eq("student_id", user.id);
 
-      // Insert the new token
       const { error } = await supabase.from("extension_tokens").insert({
         student_id: user.id,
         token,
@@ -151,7 +154,6 @@ export default function StudentDashboard() {
       });
 
       if (error) {
-        console.error("Error creating token:", error);
         toast.error("Failed to generate token");
         return;
       }
@@ -160,7 +162,6 @@ export default function StudentDashboard() {
       setTokenModalOpen(true);
       toast.success("Extension token generated successfully");
     } catch (error) {
-      console.error("Error generating token:", error);
       toast.error("Failed to generate token");
     } finally {
       setIsGenerating(false);
@@ -176,422 +177,344 @@ export default function StudentDashboard() {
     }
   };
 
+  const toggleTask = (taskId: number) => {
+    setCompletedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "High": return "bg-red-500/20 text-red-400 border-red-500/30";
+      case "Medium": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "Low": return "bg-green-500/20 text-green-400 border-green-500/30";
+      default: return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">F</span>
-              </div>
-              <span className="text-muted-foreground">|</span>
-              <span className="font-semibold text-foreground">Student Dashboard</span>
+    <div className="min-h-screen bg-black flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col fixed h-full">
+        {/* Logo */}
+        <div className="p-6 border-b border-zinc-800">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">F</span>
             </div>
-
-            <div className="flex items-center gap-4">
-              <button className="relative p-2 hover:bg-muted rounded-lg transition-colors">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-hero rounded-full flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                  {studentData.avatar}
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-foreground">{studentData.name}</p>
-                  <p className="text-xs text-muted-foreground">{studentData.email}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-6 py-8">
-        {/* Welcome */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Welcome back, {studentData.name.split(" ")[0]}! 👋
-          </h1>
-          <p className="text-muted-foreground">Here's how your projects are going</p>
-        </motion.div>
-
-        {/* Extension Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-success/10 border border-success/20 rounded-xl p-4 mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
-                <Puzzle className="h-6 w-6 text-success" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-success" />
-                  Extension is Active & Tracking
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Tracking 2 projects • Last sync: 2 minutes ago
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={generateExtensionToken} disabled={isGenerating}>
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Key className="h-4 w-4 mr-2" />
-                )}
-                Generate Token
-              </Button>
-              <Button variant="outline" size="sm">View Settings</Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {quickStats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-soft"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">{stat.label}</span>
-                <stat.icon className="h-5 w-5 text-primary" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-            </motion.div>
-          ))}
+            <span className="text-white font-bold text-xl">FairGrade</span>
+          </Link>
         </div>
 
-        {/* Project Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {projects.map((project) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`bg-card rounded-xl border shadow-soft overflow-hidden ${
-                project.status === "warning" ? "border-warning/50" : "border-border"
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          {sidebarItems.map((item) => (
+            <Link
+              key={item.label}
+              to={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                item.active
+                  ? "bg-blue-500/20 border-l-4 border-blue-500 text-white"
+                  : "text-zinc-400 hover:bg-blue-500/10 hover:text-white border-l-4 border-transparent hover:border-blue-500/50"
               }`}
             >
-              {/* Project Header */}
-              <div className="p-6 border-b border-border">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">{project.name}</h3>
-                    <p className="text-sm text-muted-foreground">{project.course}</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      project.status === "warning"
-                        ? "bg-destructive/10 text-destructive border-destructive/20"
-                        : "bg-muted"
-                    }
-                  >
-                    {project.status === "warning" && <AlertTriangle className="h-3 w-3 mr-1" />}
-                    Due in {project.deadline}
-                  </Badge>
+              <item.icon className={`h-5 w-5 ${item.active ? "text-blue-500" : "group-hover:text-blue-400"}`} />
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-4 border-t border-zinc-800">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 w-full"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="font-medium">Log Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 ml-64">
+        {/* Top Bar */}
+        <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50">
+          <div className="flex items-center justify-between px-8 h-16">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-semibold text-white">Dashboard</h1>
+              <span className="text-zinc-600">/</span>
+              <span className="text-zinc-400">Overview</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Input
+                  placeholder="Search..."
+                  className="w-64 pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500"
+                />
+              </div>
+
+              <button className="relative p-2 hover:bg-zinc-800 rounded-lg transition-colors">
+                <Bell className="h-5 w-5 text-zinc-400" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+              </button>
+
+              <div className="flex items-center gap-3 pl-4 border-l border-zinc-800">
+                <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {studentData.avatar}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  {project.group} • {project.memberCount} members
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-white">{studentData.name}</p>
+                  <p className="text-xs text-zinc-500">{studentData.email}</p>
                 </div>
               </div>
 
-              {/* Contribution Score */}
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-muted-foreground">Your Contribution</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-bold text-foreground">{project.contribution}%</span>
-                    <div className="text-right">
-                      <p
-                        className={`text-sm font-medium ${
-                          project.status === "warning" ? "text-warning" : "text-success"
-                        }`}
-                      >
-                        {project.status === "warning" ? "⚠️ Below Average" : "✓ Above Average"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Group avg: {project.groupAvg}%</p>
-                    </div>
+              <Button className="bg-white text-black hover:bg-zinc-200 font-semibold">
+                Get Started Free
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="p-8">
+          {/* Welcome */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Welcome back, {studentData.name.split(" ")[0]}! 👋
+            </h1>
+            <p className="text-zinc-400">
+              {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          </motion.div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {quickStats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                    <stat.icon className="h-5 w-5 text-blue-500" />
                   </div>
                 </div>
+                <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
+                <p className="text-sm text-zinc-500 mb-1">{stat.label}</p>
+                <p className="text-xs text-blue-400">{stat.trend}</p>
+              </motion.div>
+            ))}
+          </div>
 
-                {/* Progress Bar */}
-                <div className="h-3 bg-muted rounded-full overflow-hidden mb-4">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      project.status === "warning" ? "bg-warning" : "bg-success"
-                    }`}
-                    style={{ width: `${project.contribution}%` }}
-                  />
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Active Projects */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white">Active Projects</h2>
+                <Link to="/student/projects" className="text-blue-400 hover:underline text-sm flex items-center gap-1">
+                  View All <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
 
-                {/* Alert for warning status */}
-                {project.status === "warning" && (
-                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-foreground">Action Needed!</p>
-                        <p className="text-sm text-muted-foreground">
-                          You're behind your groupmates. Contribute more to avoid grade penalties.
-                          Your last contribution was 4 days ago.
-                        </p>
-                      </div>
+              {projects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1 }}
+                  whileHover={{ scale: 1.01 }}
+                  className={`bg-zinc-900 rounded-xl border ${project.urgent ? "border-red-500/50" : "border-zinc-800"} p-6 hover:shadow-lg transition-all duration-300 cursor-pointer`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+                      <p className="text-sm text-zinc-500">{project.course}</p>
                     </div>
+                    <Badge className={project.urgent ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-zinc-800 text-zinc-400"}>
+                      Due in {project.deadline}
+                    </Badge>
                   </div>
-                )}
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Document Edits</p>
-                    <p className="font-semibold text-foreground">{project.stats.documentEdits.percent}%</p>
-                    <p
-                      className={`text-xs ${
-                        project.stats.documentEdits.diff.startsWith("+")
-                          ? "text-success"
-                          : "text-destructive"
-                      }`}
-                    >
-                      {project.stats.documentEdits.diff} vs avg
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Meetings</p>
-                    <p className="font-semibold text-foreground">{project.stats.meetings.value}</p>
-                    <p className="text-xs text-muted-foreground">{project.stats.meetings.note}</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Tasks Complete</p>
-                    <p className="font-semibold text-foreground">{project.stats.tasks.value}</p>
-                    <p className="text-xs text-muted-foreground">{project.stats.tasks.note}</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Last Active</p>
-                    <p className="font-semibold text-foreground">{project.stats.lastActive.value}</p>
-                    <p className="text-xs text-muted-foreground">{project.stats.lastActive.note}</p>
-                  </div>
-                </div>
-
-                {/* Group Members (only for good status projects) */}
-                {project.members.length > 0 && (
-                  <div className="border-t border-border pt-4 mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-medium text-muted-foreground">Group Contributions</span>
-                      <button className="text-xs text-primary hover:underline">View Details</button>
-                    </div>
-                    <div className="space-y-2">
-                      {project.members.map((member) => (
-                        <div key={member.name} className="flex items-center gap-3">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                              member.isUser
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {member.initials}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className={member.isUser ? "font-medium text-foreground" : "text-muted-foreground"}>
-                                {member.name}
-                              </span>
-                              <span className="font-medium text-foreground">{member.percent}%</span>
-                            </div>
-                            <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-1">
-                              <div
-                                className={`h-full rounded-full ${
-                                  member.isUser ? "bg-primary" : "bg-muted-foreground/50"
-                                }`}
-                                style={{ width: `${member.percent}%` }}
-                              />
-                            </div>
-                          </div>
+                  {/* Team Members */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex -space-x-2">
+                      {project.members.slice(0, 4).map((member, i) => (
+                        <div
+                          key={i}
+                          className="w-8 h-8 bg-zinc-700 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-zinc-900"
+                        >
+                          {member.initials}
                         </div>
                       ))}
                     </div>
+                    <span className="text-sm text-zinc-500">{project.members.length} members</span>
                   </div>
-                )}
 
-                <Button
-                  variant={project.status === "warning" ? "default" : "ghost"}
-                  className={`w-full ${project.status === "warning" ? "bg-warning hover:bg-warning/90" : ""}`}
-                >
-                  {project.status === "warning" ? (
-                    <>
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Take Action Now
-                    </>
-                  ) : (
-                    <>
-                      View Full Details
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </>
-                  )}
+                  {/* Progress Bar */}
+                  <div className="mb-3">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-zinc-400">Progress</span>
+                      <span className="text-white font-medium">{project.progress}%</span>
+                    </div>
+                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${project.progress}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                        className="h-full bg-blue-500 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-blue-400 text-sm font-medium">
+                      Your contribution: {project.contribution}%
+                    </p>
+                    <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white">
+                      View Details <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="space-y-6">
+              {/* Upcoming Tasks */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+              >
+                <h3 className="text-lg font-semibold text-white mb-4">Tasks Due Soon</h3>
+                <div className="space-y-3">
+                  {upcomingTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
+                        completedTasks.includes(task.id) ? "bg-zinc-800/50 opacity-60" : "hover:bg-zinc-800/50"
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleTask(task.id)}
+                        className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                          completedTasks.includes(task.id)
+                            ? "bg-blue-500 border-blue-500"
+                            : "border-zinc-600 hover:border-blue-500"
+                        }`}
+                      >
+                        {completedTasks.includes(task.id) && <Check className="h-3 w-3 text-white" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${completedTasks.includes(task.id) ? "text-zinc-500 line-through" : "text-white"}`}>
+                          {task.name}
+                        </p>
+                        <p className="text-xs text-zinc-500 truncate">{task.project}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-zinc-400">{task.due}</span>
+                          <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Recent Activity */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Recent Activity</h3>
+                  <button className="text-blue-400 hover:underline text-sm">View All</button>
+                </div>
+                <div className="space-y-4">
+                  {recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-start gap-3 group cursor-pointer">
+                      <div className={`w-8 h-8 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0`}>
+                        <activity.icon className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-white group-hover:text-blue-400 transition-colors">
+                          {activity.title}
+                        </p>
+                        <p className="text-xs text-zinc-500">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Peer Review Reminder */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/30 p-6"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-500/30 rounded-full flex items-center justify-center animate-pulse">
+                    <Star className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">Pending Reviews</p>
+                    <p className="text-sm text-zinc-400">You have 2 peer reviews</p>
+                  </div>
+                </div>
+                <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                  Review Now
                 </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Team Availability Calendar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-xl border border-border shadow-soft p-6 mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                Team Availability - When Can We Meet?
-              </h2>
-              <p className="text-sm text-muted-foreground">See when your groupmates are available</p>
-            </div>
-            <Button variant="outline" size="sm">Update My Availability</Button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Time</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Mon</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Tue</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Wed</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Thu</th>
-                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Fri</th>
-                </tr>
-              </thead>
-              <tbody>
-                {availabilityGrid.map((row) => (
-                  <tr key={row.time} className="border-b border-border">
-                    <td className="py-3 px-2 font-medium text-foreground">{row.time}</td>
-                    {[row.mon, row.tue, row.wed, row.thu, row.fri].map((count, i) => (
-                      <td key={i} className="text-center py-3 px-2">
-                        <span
-                          className={`inline-block px-3 py-1.5 rounded-lg text-xs font-medium ${getAvailabilityClass(count)}`}
-                        >
-                          {count}/4 free
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center gap-6 mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-success" />
-              <span className="text-muted-foreground">All available</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-success/60" />
-              <span className="text-muted-foreground">Most available</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-destructive/30" />
-              <span className="text-muted-foreground">Conflict</span>
+              </motion.div>
             </div>
           </div>
-        </motion.div>
+        </main>
+      </div>
 
-
-        {/* Activity Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-xl border border-border shadow-soft p-6"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              My Activity This Week
-            </h2>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {activities.map((activity, index) => (
-              <div key={index} className="flex items-start gap-4">
-                <div className="relative">
-                  {index < activities.length - 1 && (
-                    <div className="absolute left-1/2 top-10 bottom-0 w-0.5 -translate-x-1/2 bg-border h-8" />
-                  )}
-                  <div className={`w-10 h-10 rounded-full ${activity.color} flex items-center justify-center`}>
-                    <activity.icon className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                </div>
-                <div className="flex-1 pb-4">
-                  <p className="font-medium text-foreground">{activity.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {activity.project} • {activity.time}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">{activity.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </main>
-
-      {/* Extension Token Modal */}
+      {/* Token Modal */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5 text-primary" />
-              Extension Token Generated
-            </DialogTitle>
-            <DialogDescription>
-              Copy this token and paste it in the FairGrade Chrome extension to link your account.
-              This token expires in 90 days.
+            <DialogTitle>Extension Token Generated</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              Copy this token and paste it into the FairGrade browser extension.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
+          <div className="mt-4">
+            <div className="flex items-center gap-2 p-3 bg-zinc-800 rounded-lg">
+              <code className="flex-1 text-sm text-blue-400 font-mono break-all">
                 {generatedToken}
-              </div>
-              <Button variant="outline" size="icon" onClick={copyToken}>
-                {copied ? (
-                  <CheckCheck className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
+              </code>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyToken}
+                className="text-zinc-400 hover:text-white"
+              >
+                {copied ? <CheckCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
-            <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
-              <p className="text-sm text-foreground">
-                <strong>Important:</strong> Keep this token secure. Don't share it with anyone.
-                You can generate a new token at any time, which will invalidate the old one.
-              </p>
-            </div>
-            <Button className="w-full" onClick={() => setTokenModalOpen(false)}>
-              Done
-            </Button>
+            <p className="text-xs text-zinc-500 mt-2">
+              This token expires in 90 days. Keep it secure.
+            </p>
           </div>
         </DialogContent>
       </Dialog>
