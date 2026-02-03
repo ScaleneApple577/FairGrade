@@ -216,7 +216,7 @@ export const Features = () => {
         </motion.div>
 
         {/* Two Column Layout - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 gap-4 md:gap-8 lg:gap-12">
           {/* Student Features Column */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
