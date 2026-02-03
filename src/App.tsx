@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentCalendar from "./pages/StudentCalendar";
 import LiveMonitor from "./pages/LiveMonitor";
 import Flags from "./pages/Flags";
 import Timeline from "./pages/Timeline";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/project/:id/timeline" element={<Timeline />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/calendar" element={<StudentCalendar />} />
           <Route path="/live-monitor" element={<LiveMonitor />} />
           <Route path="/flags" element={<Flags />} />
           <Route path="/analytics" element={<Analytics />} />
