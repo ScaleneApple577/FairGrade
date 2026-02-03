@@ -32,7 +32,7 @@ export const Navbar = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-muted-foreground hover:text-foreground transition-colors font-medium text-sm"
+                className="text-muted-foreground hover:text-foreground transition-all duration-200 font-medium text-sm hover:scale-105"
               >
                 {link.name}
               </a>
@@ -73,7 +73,7 @@ export const Navbar = () => {
                   <a
                     key={link.name}
                     href={link.href}
-                    className="block py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
+                    className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-200 font-medium hover:translate-x-1"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.name}
