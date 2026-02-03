@@ -140,7 +140,7 @@ export const Pricing = () => {
               <Button
                 variant={plan.popular ? "hero" : plan.variant}
                 size="lg"
-                className="w-full"
+                className="w-full btn-public-hover"
               >
                 {plan.cta}
               </Button>

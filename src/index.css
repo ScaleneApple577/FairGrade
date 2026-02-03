@@ -124,3 +124,19 @@
     font-family: 'Inter', sans-serif;
   }
 }
+
+@layer components {
+  /* Public website button hover animation */
+  .btn-public-hover {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .btn-public-hover:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
+  }
+  
+  .btn-public-hover:active {
+    transform: scale(0.98);
+  }
+}

@@ -72,13 +72,13 @@ export const Hero = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 mb-6"
           >
-            <Button variant="hero" size="xl" className="group" asChild>
+            <Button variant="hero" size="xl" className="group btn-public-hover" asChild>
               <Link to="/auth">
                 Get Started Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button variant="heroOutline" size="xl" className="group">
+            <Button variant="heroOutline" size="xl" className="group btn-public-hover">
               <Play className="w-5 h-5" />
               Watch Demo (2 min)
             </Button>
