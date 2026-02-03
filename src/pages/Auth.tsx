@@ -26,48 +26,59 @@ const Auth = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [existingUser, setExistingUser] = useState<{ id: string; email: string; role?: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session?.user) {
-          setTimeout(() => {
-            redirectBasedOnRole(session.user.id);
-          }, 0);
+        if (event === 'SIGNED_OUT') {
+          setExistingUser(null);
         }
         setCheckingSession(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check for existing session but DON'T auto-redirect
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        redirectBasedOnRole(session.user.id);
-      } else {
-        setCheckingSession(false);
+        // Fetch user role
+        const { data: userRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
+        setExistingUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          role: userRole?.role
+        });
       }
+      setCheckingSession(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const redirectBasedOnRole = async (userId: string) => {
-    try {
-      const { data: userRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (userRole?.role === "teacher") {
-        navigate("/dashboard");
-      } else {
-        navigate("/student/dashboard");
-      }
-    } catch (error) {
+  const redirectBasedOnRole = (userRole?: string) => {
+    if (userRole === "teacher") {
+      navigate("/dashboard");
+    } else {
       navigate("/student/dashboard");
     }
+  };
+
+  const handleContinueAsUser = () => {
+    if (existingUser) {
+      redirectBasedOnRole(existingUser.role);
+    }
+  };
+
+  const handleSwitchAccount = async () => {
+    await supabase.auth.signOut();
+    setExistingUser(null);
   };
 
   const validateInputs = (isSignUp: boolean) => {
@@ -202,13 +213,64 @@ const Auth = () => {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <p className="text-zinc-400">Checking session...</p>
       </div>
     );
   }
 
-  const accentColor = role === "teacher" ? "orange" : "blue";
+  // Show "already logged in" state
+  if (existingUser) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md text-center"
+        >
+          <Link to="/" className="inline-flex items-center gap-2 mb-6">
+            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">F</span>
+            </div>
+          </Link>
+
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
+          <p className="text-zinc-400 mb-8">You're already signed in</p>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-4 justify-center mb-4">
+              <div className={`w-12 h-12 ${existingUser.role === "teacher" ? "bg-orange-500" : "bg-blue-500"} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                {existingUser.email.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-left">
+                <p className="text-white font-medium">{existingUser.email}</p>
+                <p className="text-zinc-500 text-sm capitalize">{existingUser.role || "Student"}</p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleContinueAsUser}
+              className={`w-full mb-3 ${existingUser.role === "teacher" ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-500 hover:bg-blue-600"} text-white`}
+            >
+              Continue to Dashboard
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button
+              onClick={handleSwitchAccount}
+              variant="outline"
+              className="w-full border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              Sign in with different account
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const accentClasses = {
     border: role === "teacher" ? "border-orange-500" : "border-blue-500",
     bg: role === "teacher" ? "bg-orange-500" : "bg-blue-500",
