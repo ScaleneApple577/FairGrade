@@ -12,6 +12,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentCalendar from "./pages/StudentCalendar";
 import StudentReviews from "./pages/StudentReviews";
 import StudentProjects from "./pages/StudentProjects";
+import StudentStats from "./pages/StudentStats";
 import LiveMonitor from "./pages/LiveMonitor";
 import Flags from "./pages/Flags";
 import Timeline from "./pages/Timeline";
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/student/projects" element={<StudentProjects />} />
           <Route path="/student/calendar" element={<StudentCalendar />} />
           <Route path="/student/reviews" element={<StudentReviews />} />
+          <Route path="/student/stats" element={<StudentStats />} />
           <Route path="/live-monitor" element={<LiveMonitor />} />
           <Route path="/flags" element={<Flags />} />
           <Route path="/analytics" element={<Analytics />} />
