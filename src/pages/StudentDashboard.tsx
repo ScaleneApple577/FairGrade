@@ -231,10 +231,35 @@ export default function StudentDashboard() {
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-200">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">F</span>
+            <div className="w-9 h-11 flex-shrink-0">
+              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
+                <path 
+                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 10 L10 42 Q10 44 8 43.5" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-            <span className="text-xl font-bold text-slate-900">FairGrade</span>
+            <span className="text-xl font-bold">
+              <span className="text-slate-900">Fair</span>
+              <span className="text-blue-500">Grade</span>
+            </span>
           </Link>
         </div>
 
