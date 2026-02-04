@@ -42,7 +42,6 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
     { title: "Dashboard", url: "/student/dashboard", icon: Home },
     { title: "My Projects", url: "/student/projects", icon: FolderOpen },
     { title: "Calendar", url: "/student/calendar", icon: Calendar },
-    { title: "Tasks", url: "/student/tasks", icon: CheckSquare },
     { title: "Peer Reviews", url: "/student/reviews", icon: Star },
     { title: "My Stats", url: "/student/stats", icon: BarChart3 },
     { title: "Settings", url: "/student/settings", icon: Settings },

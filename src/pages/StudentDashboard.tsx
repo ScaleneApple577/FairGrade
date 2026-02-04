@@ -40,7 +40,6 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/student/dashboard" },
   { icon: FolderOpen, label: "My Projects", path: "/student/projects" },
   { icon: Calendar, label: "Calendar", path: "/student/calendar" },
-  { icon: CheckSquare, label: "Tasks", path: "/student/tasks" },
   { icon: Star, label: "Peer Reviews", path: "/student/reviews" },
   { icon: BarChart3, label: "My Stats", path: "/student/stats" },
   { icon: Settings, label: "Settings", path: "/student/settings" },
