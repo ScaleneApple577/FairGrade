@@ -45,7 +45,7 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
     { title: "Tasks", url: "/student/tasks", icon: CheckSquare },
     { title: "Peer Reviews", url: "/student/reviews", icon: Star },
     { title: "My Stats", url: "/student/stats", icon: BarChart3 },
-    { title: "Settings", url: "/settings", icon: Settings },
+    { title: "Settings", url: "/student/settings", icon: Settings },
   ];
 
   const handleLogout = async () => {
@@ -54,19 +54,44 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
   };
 
   return (
-    <div className="w-64 h-screen bg-white border-r border-slate-200 flex flex-col fixed left-0 top-0 shadow-sm">
+    <div className="w-64 h-screen bg-white shadow-lg flex flex-col fixed left-0 top-0">
       {/* Logo */}
-      <div className="p-4 border-b border-slate-200">
-        <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">F</span>
+      <div className="p-6 border-b border-slate-200">
+        <a href="/" className="flex items-center gap-3">
+          <div className="w-9 h-11 flex-shrink-0">
+            <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
+              <path 
+                d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
+                stroke="#3B82F6" 
+                strokeWidth="3.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+              <path 
+                d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
+                stroke="#3B82F6" 
+                strokeWidth="3.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+              <path 
+                d="M10 10 L10 42 Q10 44 8 43.5" 
+                stroke="#3B82F6" 
+                strokeWidth="3.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
-          <span className="font-bold text-lg text-slate-900">FairGrade</span>
+          <span className="text-xl font-bold">
+            <span className="text-slate-900">Fair</span>
+            <span className="text-blue-500">Grade</span>
+          </span>
         </a>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const isActive = currentPath === item.url || currentPath.startsWith(item.url + '/');
           return (
@@ -74,27 +99,27 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
               key={item.title}
               onClick={() => navigate(item.url)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left",
+                "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
                 isActive 
-                  ? "bg-blue-50 text-primary border-l-4 border-primary -ml-px" 
-                  : "text-slate-600 hover:bg-slate-50 hover:text-primary"
+                  ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600 font-semibold" 
+                  : "text-slate-600 hover:bg-slate-50"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-sm font-medium">{item.title}</span>
+              <item.icon className="w-5 h-5" />
+              <span>{item.title}</span>
             </button>
           );
         })}
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-200">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
         >
-          <LogOut className="h-5 w-5" />
-          <span className="text-sm font-medium">Log Out</span>
+          <LogOut className="w-5 h-5" />
+          <span>Log Out</span>
         </button>
       </div>
     </div>
