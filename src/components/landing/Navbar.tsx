@@ -21,7 +21,7 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-md">
               <span className="text-white font-bold text-lg">F</span>
             </div>
             <span className="font-bold text-xl text-slate-900">FairGrade</span>
