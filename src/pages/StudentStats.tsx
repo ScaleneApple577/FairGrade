@@ -3,9 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  FolderKanban,
+  FolderOpen,
   Calendar,
-  Users,
+  Star,
   BarChart3,
   TrendingUp,
   FileText,
@@ -14,7 +14,6 @@ import {
   CheckCircle,
   XCircle,
   MessageSquare,
-  Star,
   Lightbulb,
   AlertCircle,
   Target,
@@ -24,7 +23,6 @@ import {
   Award,
   Trophy,
   Lock,
-  X,
 } from "lucide-react";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 import {
@@ -47,10 +45,10 @@ import { useToast } from "@/hooks/use-toast";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
-  { icon: FolderKanban, label: "My Projects", href: "/student/projects" },
-  { icon: BarChart3, label: "My Stats", href: "/student/stats" },
+  { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
   { icon: Calendar, label: "Calendar", href: "/student/calendar" },
-  { icon: Users, label: "Peer Reviews", href: "/student/reviews" },
+  { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
+  { icon: BarChart3, label: "My Stats", href: "/student/stats" },
 ];
 
 // Mock data - in production this would come from API
