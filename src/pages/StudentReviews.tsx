@@ -15,7 +15,6 @@ import {
   FolderOpen,
   Calendar,
   BarChart3,
-  Settings,
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
@@ -31,7 +30,6 @@ const sidebarItems = [
   { icon: Calendar, label: "Calendar", path: "/student/calendar" },
   { icon: Star, label: "Peer Reviews", path: "/student/reviews" },
   { icon: BarChart3, label: "My Stats", path: "/student/stats" },
-  { icon: Settings, label: "Settings", path: "/student/settings" },
 ];
 
 // Mock data

@@ -16,7 +16,6 @@ import {
   Loader2,
   FolderOpen,
   Star,
-  Settings,
   LogOut,
   LayoutDashboard,
   CheckSquare,
@@ -42,7 +41,6 @@ const sidebarItems = [
   { icon: Calendar, label: "Calendar", path: "/student/calendar" },
   { icon: Star, label: "Peer Reviews", path: "/student/reviews" },
   { icon: BarChart3, label: "My Stats", path: "/student/stats" },
-  { icon: Settings, label: "Settings", path: "/student/settings" },
 ];
 
 // Mock dashboard data (simulating API response)

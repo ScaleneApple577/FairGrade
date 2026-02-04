@@ -29,7 +29,6 @@ import {
   CheckSquare,
   Star,
   BarChart3,
-  Settings,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,7 +43,6 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
     { title: "Calendar", url: "/student/calendar", icon: Calendar },
     { title: "Peer Reviews", url: "/student/reviews", icon: Star },
     { title: "My Stats", url: "/student/stats", icon: BarChart3 },
-    { title: "Settings", url: "/student/settings", icon: Settings },
   ];
 
   const handleLogout = async () => {
