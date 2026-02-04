@@ -231,8 +231,10 @@ const Auth = () => {
           className="w-full max-w-md text-center"
         >
           <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
-              <span className="text-white font-bold text-3xl">FG</span>
+            <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           </Link>
 
@@ -290,8 +292,10 @@ const Auth = () => {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="inline-flex flex-col items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
-              <span className="text-white font-bold text-3xl">FG</span>
+            <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           </Link>
           <h1 className="text-3xl font-bold mb-2">
