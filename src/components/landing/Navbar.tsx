@@ -52,7 +52,7 @@ export const Navbar = () => {
               to="/auth"
               className="px-4 py-2 bg-white text-black font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/20"
             >
-              Get Started Free
+              Sign Up Now
             </Link>
           </div>
 
@@ -99,7 +99,7 @@ export const Navbar = () => {
                     className="block w-full py-3 text-center bg-white text-black font-semibold rounded-lg transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => setIsOpen(false)}
                   >
-                    Get Started Free
+                    Sign Up Now
                   </Link>
                 </div>
               </div>

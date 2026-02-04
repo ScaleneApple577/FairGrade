@@ -107,7 +107,7 @@ export const AnimatedHero = () => {
               to="/auth"
               className="px-8 py-4 bg-white text-black font-semibold rounded-lg text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/20"
             >
-              Get Started Free
+              Sign Up Now
             </Link>
             <button className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg text-lg transition-all duration-200 hover:scale-105 hover:bg-white/10 flex items-center gap-2">
               <Play className="w-5 h-5" />

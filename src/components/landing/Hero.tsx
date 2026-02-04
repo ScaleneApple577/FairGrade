@@ -74,7 +74,7 @@ export const Hero = () => {
           >
             <Button variant="hero" size="xl" className="group btn-public-hover" asChild>
               <Link to="/auth">
-                Get Started Free
+                Sign Up Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
