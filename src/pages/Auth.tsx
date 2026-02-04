@@ -230,9 +230,9 @@ const Auth = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md text-center"
         >
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">F</span>
+          <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <span className="text-white font-bold text-3xl">FG</span>
             </div>
           </Link>
 
@@ -288,14 +288,15 @@ const Auth = () => {
         className="w-full max-w-md"
       >
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">F</span>
+        <div className="flex flex-col items-center mb-8">
+          <Link to="/" className="inline-flex flex-col items-center gap-4 mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <span className="text-white font-bold text-3xl">FG</span>
             </div>
           </Link>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            {authMode === "signin" ? "Welcome Back" : "Create Account"}
+          <h1 className="text-3xl font-bold mb-2">
+            <span className="text-slate-900">Fair</span>
+            <span className="text-blue-500">Grade</span>
           </h1>
           <p className="text-slate-500">
             {authMode === "signin" ? "Sign in to continue" : "Join FairGrade today"}
