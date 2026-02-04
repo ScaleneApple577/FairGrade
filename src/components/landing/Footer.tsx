@@ -41,11 +41,13 @@ export const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">F</span>
+            <div className="flex items-center gap-2 mb-4 group">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                <span className="text-white font-bold text-lg">FG</span>
               </div>
-              <span className="font-bold text-xl text-white">FairGrade</span>
+              <span className="font-bold text-xl text-white">
+                Fair<span className="text-blue-400">Grade</span>
+              </span>
             </div>
             <p className="text-slate-400 text-sm mb-6 max-w-xs">
               Making group project grading fair and transparent for educators worldwide.

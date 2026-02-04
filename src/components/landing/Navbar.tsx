@@ -20,11 +20,14 @@ export const Navbar = () => {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-lg">F</span>
+          <a href="/" className="flex items-center gap-2 group" aria-label="FairGrade Home">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+              <span className="text-white font-bold text-lg">FG</span>
             </div>
-            <span className="font-bold text-xl text-slate-900">FairGrade</span>
+            <div className="hidden sm:flex items-baseline">
+              <span className="text-slate-900 font-bold text-xl">Fair</span>
+              <span className="text-blue-500 font-bold text-xl">Grade</span>
+            </div>
           </a>
 
           {/* Desktop Nav */}
