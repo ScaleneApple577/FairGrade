@@ -126,12 +126,12 @@ const FeatureDetailPage = () => {
 
   if (!feature) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Feature not found</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Feature not found</h1>
           <button
             onClick={() => navigate("/features")}
-            className="text-blue-500 hover:underline"
+            className="text-primary hover:underline"
           >
             Back to Features
           </button>
@@ -140,25 +140,8 @@ const FeatureDetailPage = () => {
     );
   }
 
-  const accentClasses = {
-    blue: {
-      gradient: "from-blue-500/20",
-      border: "border-blue-500/30",
-      badge: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      glow: "shadow-blue-500/20",
-    },
-    orange: {
-      gradient: "from-orange-500/20",
-      border: "border-orange-500/30",
-      badge: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-      glow: "shadow-orange-500/20",
-    },
-  };
-
-  const accent = accentClasses[feature.accentColor];
-
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       <main className="pt-24 pb-16">
@@ -166,7 +149,7 @@ const FeatureDetailPage = () => {
           {/* Back Button */}
           <motion.button
             onClick={() => navigate("/features")}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8 group"
+            className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors mb-8 group"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -182,14 +165,14 @@ const FeatureDetailPage = () => {
             transition={{ duration: 0.4 }}
             className="mb-6"
           >
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${accent.badge}`}>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-blue-50 text-primary border-blue-200">
               {feature.category === "student" ? "For Students" : "For Teachers"}
             </span>
           </motion.div>
 
           {/* Title */}
           <motion.h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -199,7 +182,7 @@ const FeatureDetailPage = () => {
 
           {/* Subtitle */}
           <motion.p
-            className="text-xl md:text-2xl text-zinc-400 mb-12"
+            className="text-xl md:text-2xl text-slate-500 mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -215,15 +198,15 @@ const FeatureDetailPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <p className="text-lg text-zinc-300 leading-relaxed mb-8">
+              <p className="text-lg text-slate-600 leading-relaxed mb-8">
                 {feature.longDescription}
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button className="px-6 py-3 bg-white text-black font-semibold rounded-lg hover:scale-105 transition-transform">
+                <button className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 hover:scale-105 transition-all shadow-lg shadow-primary/20">
                   Sign Up Now
                 </button>
-                <button className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-lg hover:bg-zinc-800 transition-colors">
+                <button className="px-6 py-3 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
                   Watch Demo
                 </button>
               </div>
@@ -237,7 +220,7 @@ const FeatureDetailPage = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               {/* Primary Image */}
-              <div className={`rounded-2xl overflow-hidden border ${accent.border} shadow-2xl ${accent.glow}`}>
+              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
                 <img
                   src={feature.primaryImageSrc}
                   alt={feature.title}
@@ -247,7 +230,7 @@ const FeatureDetailPage = () => {
 
               {/* Secondary Image */}
               <motion.div
-                className={`absolute -bottom-6 -left-6 w-2/3 rounded-xl overflow-hidden border ${accent.border} shadow-xl`}
+                className="absolute -bottom-6 -left-6 w-2/3 rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
