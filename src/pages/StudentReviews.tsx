@@ -22,14 +22,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MenuVertical } from "@/components/ui/menu-vertical";
 
 // Sidebar navigation items
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/student/dashboard" },
-  { icon: FolderOpen, label: "My Projects", path: "/student/projects" },
-  { icon: Calendar, label: "Calendar", path: "/student/calendar" },
-  { icon: Star, label: "Peer Reviews", path: "/student/reviews" },
-  { icon: BarChart3, label: "My Stats", path: "/student/stats" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
+  { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
+  { icon: Calendar, label: "Calendar", href: "/student/calendar" },
+  { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
+  { icon: BarChart3, label: "My Stats", href: "/student/stats" },
 ];
 
 // Mock data
@@ -235,22 +236,9 @@ export default function StudentReviews() {
           </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                isActive(item.path)
-                  ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600 font-semibold"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <div className="flex-1 p-4">
+          <MenuVertical menuItems={sidebarItems} />
+        </div>
 
         <div className="p-4 border-t border-slate-200">
           <button

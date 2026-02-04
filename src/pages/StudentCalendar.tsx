@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { MeetingList } from "@/components/calendar/MeetingList";
 import { AttendanceWidget } from "@/components/calendar/AttendanceWidget";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { ProjectSelector } from "@/components/calendar/ProjectSelector";
+import { MenuVertical } from "@/components/ui/menu-vertical";
 import {
   Calendar,
   Users,
@@ -38,11 +39,11 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
   const navigate = useNavigate();
   
   const menuItems = [
-    { title: "Dashboard", url: "/student/dashboard", icon: Home },
-    { title: "My Projects", url: "/student/projects", icon: FolderOpen },
-    { title: "Calendar", url: "/student/calendar", icon: Calendar },
-    { title: "Peer Reviews", url: "/student/reviews", icon: Star },
-    { title: "My Stats", url: "/student/stats", icon: BarChart3 },
+    { label: "Dashboard", href: "/student/dashboard", icon: Home },
+    { label: "My Projects", href: "/student/projects", icon: FolderOpen },
+    { label: "Calendar", href: "/student/calendar", icon: Calendar },
+    { label: "Peer Reviews", href: "/student/reviews", icon: Star },
+    { label: "My Stats", href: "/student/stats", icon: BarChart3 },
   ];
 
   const handleLogout = async () => {
@@ -54,7 +55,7 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
     <div className="w-64 h-screen bg-white shadow-lg flex flex-col fixed left-0 top-0">
       {/* Logo */}
       <div className="p-6 border-b border-slate-200">
-        <a href="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-11 flex-shrink-0">
             <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
               <path 
@@ -84,30 +85,13 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
             <span className="text-slate-900">Fair</span>
             <span className="text-blue-500">Grade</span>
           </span>
-        </a>
+        </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item) => {
-          const isActive = currentPath === item.url || currentPath.startsWith(item.url + '/');
-          return (
-            <button
-              key={item.title}
-              onClick={() => navigate(item.url)}
-              className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
-                isActive 
-                  ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600 font-semibold" 
-                  : "text-slate-600 hover:bg-slate-50"
-              )}
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.title}</span>
-            </button>
-          );
-        })}
-      </nav>
+      <div className="flex-1 p-4">
+        <MenuVertical menuItems={menuItems} />
+      </div>
 
       {/* Logout */}
       <div className="p-4 border-t border-slate-200">
