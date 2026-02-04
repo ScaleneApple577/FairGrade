@@ -24,15 +24,15 @@ export function ProjectSelector({
   if (isLoading) {
     return (
       <div className="flex items-center gap-3">
-        <FolderOpen className="h-5 w-5 text-muted-foreground" />
-        <div className="h-10 w-64 bg-zinc-800 animate-pulse rounded-lg" />
+        <FolderOpen className="h-5 w-5 text-slate-400" />
+        <div className="h-10 w-64 bg-slate-100 animate-pulse rounded-lg" />
       </div>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <div className="flex items-center gap-3 text-muted-foreground">
+      <div className="flex items-center gap-3 text-slate-500">
         <FolderOpen className="h-5 w-5" />
         <span className="text-sm">No projects available</span>
       </div>
@@ -41,26 +41,26 @@ export function ProjectSelector({
 
   return (
     <div className="flex items-center gap-3">
-      <FolderOpen className="h-5 w-5 text-blue-400" />
+      <FolderOpen className="h-5 w-5 text-primary" />
       <Select value={selectedProjectId || undefined} onValueChange={onSelectProject}>
-        <SelectTrigger className="w-64 md:w-80 bg-zinc-900 border-zinc-700">
+        <SelectTrigger className="w-64 md:w-80 bg-white border-slate-200">
           <SelectValue placeholder="Select a project" />
         </SelectTrigger>
-        <SelectContent className="bg-zinc-900 border-zinc-700">
+        <SelectContent className="bg-white border-slate-200">
           {projects.map((project) => (
             <SelectItem 
               key={project.id} 
               value={project.id}
-              className="cursor-pointer hover:bg-zinc-800"
+              className="cursor-pointer hover:bg-slate-50"
             >
               <div className="flex items-center gap-2">
-                <span className="font-medium">{project.name}</span>
+                <span className="font-medium text-slate-900">{project.name}</span>
                 {project.course_name && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-slate-500">
                     ({project.course_name})
                   </span>
                 )}
-                <span className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
+                <span className="flex items-center gap-1 text-xs text-slate-500 ml-auto">
                   <Users className="h-3 w-3" />
                   {project.member_count}
                 </span>

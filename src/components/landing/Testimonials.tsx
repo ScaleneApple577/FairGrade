@@ -37,7 +37,7 @@ const stats = [
 
 export const Testimonials = () => {
   return (
-    <section id="testimonials" className="py-24 bg-zinc-950">
+    <section id="testimonials" className="py-24 bg-slate-50">
       <div className="container mx-auto px-6">
         {/* Stats */}
         <motion.div
@@ -55,10 +55,10 @@ export const Testimonials = () => {
               transition={{ delay: index * 0.1 }}
               className="text-center"
             >
-              <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
                 {stat.value}
               </div>
-              <div className="text-zinc-400 font-medium">
+              <div className="text-slate-600 font-medium">
                 {stat.label}
               </div>
             </motion.div>
@@ -72,13 +72,13 @@ export const Testimonials = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-block text-orange-500 font-semibold text-sm uppercase tracking-wider mb-4">
+          <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">
             Testimonials
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 antialiased">
+          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 antialiased">
             Trusted by Educators
           </h2>
-          <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
             See what professors and teachers are saying about FairGrade
           </p>
         </motion.div>
@@ -92,11 +92,11 @@ export const Testimonials = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 }}
-              className="bg-zinc-900 rounded-2xl p-8 shadow-2xl hover:shadow-orange-500/5 transition-all duration-300 border border-zinc-800 hover:border-zinc-700 relative"
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 hover:border-primary/30 relative"
             >
               {/* Quote icon */}
               <div className="absolute -top-4 right-8">
-                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <Quote className="w-5 h-5 text-white" />
                 </div>
               </div>
@@ -106,26 +106,26 @@ export const Testimonials = () => {
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star
                     key={i}
-                    className="w-5 h-5 fill-orange-500 text-orange-500"
+                    className="w-5 h-5 fill-amber-400 text-amber-400"
                   />
                 ))}
               </div>
 
               {/* Quote */}
-              <p className="text-white text-lg leading-relaxed mb-6 italic">
+              <p className="text-slate-700 text-lg leading-relaxed mb-6 italic">
                 "{testimonial.quote}"
               </p>
 
               {/* Author */}
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
                   {testimonial.avatar}
                 </div>
                 <div>
-                  <div className="font-semibold text-white">
+                  <div className="font-semibold text-slate-900">
                     {testimonial.author}
                   </div>
-                  <div className="text-sm text-zinc-400">
+                  <div className="text-sm text-slate-500">
                     {testimonial.role}
                   </div>
                 </div>

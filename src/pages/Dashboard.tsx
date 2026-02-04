@@ -126,30 +126,30 @@ export default function Dashboard() {
       case "critical":
         return { color: "bg-red-500", text: "Critical", dotColor: "bg-red-500" };
       default:
-        return { color: "bg-zinc-500", text: "Unknown", dotColor: "bg-zinc-500" };
+        return { color: "bg-slate-400", text: "Unknown", dotColor: "bg-slate-400" };
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "error": return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "warning": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "info": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      default: return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+      case "error": return "bg-red-50 text-red-600 border-red-200";
+      case "warning": return "bg-yellow-50 text-yellow-600 border-yellow-200";
+      case "info": return "bg-blue-50 text-blue-600 border-blue-200";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col fixed h-full">
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm">
         {/* Logo */}
-        <div className="p-6 border-b border-zinc-800">
+        <div className="p-6 border-b border-slate-200">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">F</span>
             </div>
-            <span className="text-white font-bold text-xl">FairGrade</span>
+            <span className="text-slate-900 font-bold text-xl">FairGrade</span>
           </Link>
         </div>
 
@@ -161,21 +161,21 @@ export default function Dashboard() {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
                 item.active
-                  ? "bg-orange-500/20 border-l-4 border-orange-500 text-white"
-                  : "text-zinc-400 hover:bg-orange-500/10 hover:text-white border-l-4 border-transparent hover:border-orange-500/50"
+                  ? "bg-blue-50 border-l-4 border-primary text-primary"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent hover:border-primary/50"
               }`}
             >
-              <item.icon className={`h-5 w-5 ${item.active ? "text-orange-500" : "group-hover:text-orange-400"}`} />
+              <item.icon className={`h-5 w-5 ${item.active ? "text-primary" : "group-hover:text-primary"}`} />
               <span className="font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-zinc-800">
+        <div className="p-4 border-t border-slate-200">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 w-full"
           >
             <LogOut className="h-5 w-5" />
             <span className="font-medium">Log Out</span>
@@ -186,39 +186,39 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 ml-64">
         {/* Top Bar */}
-        <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
           <div className="flex items-center justify-between px-8 h-16">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg font-semibold text-white">Dashboard</h1>
-              <span className="text-zinc-600">/</span>
-              <span className="text-zinc-400">Overview</span>
+              <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
+              <span className="text-slate-300">/</span>
+              <span className="text-slate-500">Overview</span>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Search projects, students..."
-                  className="w-72 pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500"
+                  className="w-72 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
                 />
               </div>
 
-              <button className="relative p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-                <Bell className="h-5 w-5 text-zinc-400" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
+              <button className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                <Bell className="h-5 w-5 text-slate-500" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
               </button>
 
-              <div className="flex items-center gap-3 pl-4 border-l border-zinc-800">
-                <div className="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {teacherData.avatar}
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-white">{teacherData.name}</p>
-                  <p className="text-xs text-zinc-500">{teacherData.email}</p>
+                  <p className="text-sm font-medium text-slate-900">{teacherData.name}</p>
+                  <p className="text-xs text-slate-500">{teacherData.email}</p>
                 </div>
               </div>
 
-              <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">
+              <Button asChild className="bg-primary hover:bg-primary/90 text-white font-semibold">
                 <Link to="/create">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Project
@@ -236,10 +236,10 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-white mb-1">
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">
               Welcome back, Professor {teacherData.name.split(" ").pop()}! 👋
             </h1>
-            <p className="text-zinc-400">
+            <p className="text-slate-500">
               {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </motion.div>
@@ -253,16 +253,16 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -2 }}
-                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer group"
+                className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer group"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
-                    <stat.icon className="h-5 w-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                    <stat.icon className="h-5 w-5 text-primary" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
-                <p className="text-sm text-zinc-500 mb-1">{stat.label}</p>
-                <p className="text-xs text-orange-400">{stat.trend}</p>
+                <p className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</p>
+                <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
+                <p className="text-xs text-primary">{stat.trend}</p>
               </motion.div>
             ))}
           </div>
@@ -271,8 +271,8 @@ export default function Dashboard() {
             {/* Group Health Monitoring */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Group Health Status</h2>
-                <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-400 hover:text-white">
+                <h2 className="text-xl font-semibold text-slate-900">Group Health Status</h2>
+                <Button variant="outline" size="sm" className="border-slate-200 text-slate-600 hover:text-slate-900">
                   <Flag className="h-4 w-4 mr-2" />
                   Filter
                 </Button>
@@ -288,12 +288,12 @@ export default function Dashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + index * 0.1 }}
                       whileHover={{ scale: 1.02 }}
-                      className={`bg-zinc-900 rounded-xl border p-5 hover:shadow-lg transition-all duration-300 cursor-pointer ${
+                      className={`bg-white rounded-xl border p-5 hover:shadow-lg transition-all duration-300 cursor-pointer ${
                         project.status === "critical"
-                          ? "border-red-500/50"
+                          ? "border-red-200"
                           : project.status === "at-risk"
-                          ? "border-yellow-500/50"
-                          : "border-zinc-800"
+                          ? "border-yellow-200"
+                          : "border-slate-200"
                       }`}
                     >
                       {/* Status Badge */}
@@ -301,26 +301,26 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
                           <span className={`text-sm font-medium ${
-                            project.status === "critical" ? "text-red-400" :
-                            project.status === "at-risk" ? "text-yellow-400" : "text-green-400"
+                            project.status === "critical" ? "text-red-600" :
+                            project.status === "at-risk" ? "text-yellow-600" : "text-green-600"
                           }`}>
                             {statusConfig.text}
                           </span>
                         </div>
                         {project.flags > 0 && (
-                          <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                          <Badge className="bg-red-50 text-red-600 border-red-200">
                             {project.flags} flags
                           </Badge>
                         )}
                       </div>
 
                       {/* Project Name */}
-                      <h3 className="text-lg font-semibold text-white mb-2">{project.name}</h3>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">{project.name}</h3>
 
                       {/* Warning Message */}
                       {project.warning && (
                         <div className={`flex items-center gap-2 text-sm mb-3 ${
-                          project.status === "critical" ? "text-red-400" : "text-yellow-400"
+                          project.status === "critical" ? "text-red-600" : "text-yellow-600"
                         }`}>
                           <AlertTriangle className="h-4 w-4" />
                           <span>{project.warning}</span>
@@ -333,7 +333,7 @@ export default function Dashboard() {
                           {project.members.map((member, i) => (
                             <div
                               key={i}
-                              className="w-7 h-7 bg-zinc-700 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-zinc-900"
+                              className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-700 border-2 border-white"
                             >
                               {member}
                             </div>
@@ -344,10 +344,10 @@ export default function Dashboard() {
                       {/* Progress */}
                       <div className="mb-3">
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-zinc-400">Progress</span>
-                          <span className="text-white font-medium">{project.progress}%</span>
+                          <span className="text-slate-500">Progress</span>
+                          <span className="text-slate-900 font-medium">{project.progress}%</span>
                         </div>
-                        <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${statusConfig.color}`}
                             style={{ width: `${project.progress}%` }}
@@ -357,16 +357,16 @@ export default function Dashboard() {
 
                       {/* Last Activity */}
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-500">Last activity: {project.lastActivity}</span>
+                        <span className="text-xs text-slate-500">Last activity: {project.lastActivity}</span>
                         <Button
                           variant="ghost"
                           size="sm"
                           className={`text-xs ${
                             project.status === "critical"
-                              ? "text-red-400 hover:text-red-300"
+                              ? "text-red-600 hover:text-red-700"
                               : project.status === "at-risk"
-                              ? "text-yellow-400 hover:text-yellow-300"
-                              : "text-zinc-400 hover:text-white"
+                              ? "text-yellow-600 hover:text-yellow-700"
+                              : "text-slate-600 hover:text-slate-900"
                           }`}
                         >
                           {project.status === "critical" ? "Take Action" : project.status === "at-risk" ? "Intervene" : "View Details"}
@@ -385,27 +385,27 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+                className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
               >
-                <h3 className="text-lg font-semibold text-white mb-4">Recent Alerts</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Alerts</h3>
                 <div className="space-y-3">
                   {recentFlags.map((flag, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        flag.severity === "error" ? "bg-red-500/20" :
-                        flag.severity === "warning" ? "bg-yellow-500/20" : "bg-blue-500/20"
+                        flag.severity === "error" ? "bg-red-50" :
+                        flag.severity === "warning" ? "bg-yellow-50" : "bg-blue-50"
                       }`}>
                         <flag.icon className={`h-4 w-4 ${
-                          flag.severity === "error" ? "text-red-400" :
-                          flag.severity === "warning" ? "text-yellow-400" : "text-blue-400"
+                          flag.severity === "error" ? "text-red-600" :
+                          flag.severity === "warning" ? "text-yellow-600" : "text-blue-600"
                         }`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white">{flag.title}</p>
-                        <p className="text-xs text-zinc-500">{flag.time}</p>
+                        <p className="text-sm text-slate-900">{flag.title}</p>
+                        <p className="text-xs text-slate-500">{flag.time}</p>
                       </div>
                     </div>
                   ))}
@@ -417,61 +417,35 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+                className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    <h3 className="text-lg font-semibold text-white">Live Activity</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Live Activity</h3>
                   </div>
+                  <Button variant="ghost" size="sm" className="text-primary">
+                    View All
+                  </Button>
                 </div>
                 <div className="space-y-3">
                   {liveActivity.map((activity, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      className="flex items-start gap-3"
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
                     >
-                      <Activity className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-white">
-                          <span className="font-medium">{activity.student}</span>{" "}
-                          <span className="text-zinc-400">{activity.action}</span>
-                        </p>
-                        <p className="text-xs text-zinc-500">{activity.time}</p>
+                      <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Activity className="h-4 w-4 text-primary" />
                       </div>
-                    </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-900">
+                          <span className="font-medium">{activity.student}</span> {activity.action}
+                        </p>
+                        <p className="text-xs text-slate-500">{activity.time}</p>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
-
-              {/* Quick Actions */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="grid grid-cols-2 gap-3"
-              >
-                <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white h-auto py-4 flex-col gap-2">
-                  <Link to="/create">
-                    <Plus className="h-5 w-5" />
-                    <span className="text-sm">New Project</span>
-                  </Link>
-                </Button>
-                <Button variant="outline" className="border-zinc-700 text-white hover:bg-zinc-800 h-auto py-4 flex-col gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span className="text-sm">Reports</span>
-                </Button>
-                <Button variant="outline" className="border-zinc-700 text-white hover:bg-zinc-800 h-auto py-4 flex-col gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span className="text-sm">Analytics</span>
-                </Button>
-                <Button variant="outline" className="border-zinc-700 text-white hover:bg-zinc-800 h-auto py-4 flex-col gap-2">
-                  <Users className="h-5 w-5" />
-                  <span className="text-sm">Message</span>
-                </Button>
               </motion.div>
             </div>
           </div>

@@ -4,30 +4,30 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* FairGrade Design System */
+/* FairGrade Design System - Light Blue & White Theme */
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 14% 10%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 14% 10%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 14% 10%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
-    --secondary-foreground: 220 14% 10%;
+    --secondary-foreground: 222 47% 11%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
     --accent: 210 40% 96%;
-    --accent-foreground: 220 14% 10%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -44,9 +44,9 @@
 
     --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 50%) 0%, hsl(224 76% 48%) 100%);
-    --gradient-hero-light: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 76% 58%) 100%);
+    /* Gradients - Light Theme */
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 76% 48%) 100%);
+    --gradient-hero-light: linear-gradient(135deg, hsl(210 100% 97%) 0%, hsl(0 0% 100%) 100%);
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(220 14% 10% / 0.05);
@@ -54,12 +54,12 @@
     --shadow-lg: 0 10px 15px -3px hsl(220 14% 10% / 0.1), 0 4px 6px -4px hsl(220 14% 10% / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(220 14% 10% / 0.1), 0 8px 10px -6px hsl(220 14% 10% / 0.1);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 220 14% 10%;
+    --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 217 91% 60%;
   }
@@ -139,4 +139,22 @@
   .btn-public-hover:active {
     transform: scale(0.98);
   }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(210 40% 96%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(215 20% 65%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 16% 47%);
 }

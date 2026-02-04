@@ -4,7 +4,7 @@ import { Footer } from "@/components/landing/Footer";
 
 const FeaturesPage = () => {
   return (
-    <div className="min-h-screen bg-black scroll-smooth">
+    <div className="min-h-screen bg-white scroll-smooth">
       <Navbar />
       <div className="pt-16">
         <Features />
