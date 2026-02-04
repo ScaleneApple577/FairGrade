@@ -51,7 +51,7 @@ const plans = [
 
 export const Pricing = () => {
   return (
-    <section id="pricing" className="py-24 bg-black">
+    <section id="pricing" className="py-24 bg-white">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <motion.div
@@ -60,13 +60,13 @@ export const Pricing = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-block text-orange-500 font-semibold text-sm uppercase tracking-wider mb-4">
+          <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">
             Pricing
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 antialiased">
+          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 antialiased">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
             Choose the plan that fits your needs. All plans include our core tracking features.
           </p>
         </motion.div>
@@ -82,14 +82,14 @@ export const Pricing = () => {
               transition={{ delay: index * 0.15 }}
               className={`relative rounded-2xl p-8 ${
                 plan.popular
-                  ? "bg-orange-500 text-white scale-105 shadow-2xl shadow-orange-500/20"
-                  : "bg-zinc-900 border border-zinc-800 hover:border-zinc-700"
+                  ? "bg-primary text-white scale-105 shadow-2xl shadow-primary/20"
+                  : "bg-white border border-slate-200 hover:border-primary/30 shadow-lg hover:shadow-xl"
               } transition-all duration-300`}
             >
               {/* Popular badge */}
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="inline-block bg-white text-orange-500 font-bold text-xs uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg">
+                  <span className="inline-block bg-white text-primary font-bold text-xs uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg">
                     Most Popular
                   </span>
                 </div>
@@ -97,21 +97,21 @@ export const Pricing = () => {
 
               {/* Plan info */}
               <div className="mb-8">
-                <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? "text-white" : "text-white"}`}>
+                <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? "text-white" : "text-slate-900"}`}>
                   {plan.name}
                 </h3>
-                <p className={plan.popular ? "text-white/80" : "text-zinc-400"}>
+                <p className={plan.popular ? "text-white/80" : "text-slate-500"}>
                   {plan.description}
                 </p>
               </div>
 
               {/* Price */}
               <div className="mb-8">
-                <span className={`text-5xl font-bold ${plan.popular ? "text-white" : "text-white"}`}>
+                <span className={`text-5xl font-bold ${plan.popular ? "text-white" : "text-slate-900"}`}>
                   {plan.price}
                 </span>
                 {plan.period && (
-                  <span className={`text-sm ml-2 ${plan.popular ? "text-white/80" : "text-zinc-400"}`}>
+                  <span className={`text-sm ml-2 ${plan.popular ? "text-white/80" : "text-slate-500"}`}>
                     {plan.period}
                   </span>
                 )}
@@ -122,11 +122,11 @@ export const Pricing = () => {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      plan.popular ? "bg-white/20" : "bg-orange-500/10"
+                      plan.popular ? "bg-white/20" : "bg-blue-50"
                     }`}>
-                      <Check className={`w-3 h-3 ${plan.popular ? "text-white" : "text-orange-500"}`} />
+                      <Check className={`w-3 h-3 ${plan.popular ? "text-white" : "text-primary"}`} />
                     </div>
-                    <span className={`text-sm ${plan.popular ? "text-white/90" : "text-zinc-300"}`}>
+                    <span className={`text-sm ${plan.popular ? "text-white/90" : "text-slate-600"}`}>
                       {feature}
                     </span>
                   </li>
@@ -138,8 +138,8 @@ export const Pricing = () => {
                 to="/auth"
                 className={`block w-full py-3 text-center font-semibold rounded-lg transition-all duration-200 hover:scale-105 ${
                   plan.popular
-                    ? "bg-white text-orange-500 hover:shadow-lg hover:shadow-white/20"
-                    : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
+                    ? "bg-white text-primary hover:shadow-lg hover:shadow-white/20"
+                    : "bg-primary text-white hover:bg-primary/90"
                 }`}
               >
                 {plan.cta}

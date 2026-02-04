@@ -34,20 +34,20 @@ interface HeatmapViewProps {
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm
 
 function getAvailabilityColor(available: number, total: number): string {
-  if (total === 0) return 'bg-zinc-800';
+  if (total === 0) return 'bg-slate-200';
   
   const percentage = (available / total) * 100;
   
   if (percentage === 100) {
-    return 'bg-green-600'; // Dark green - everyone
+    return 'bg-green-500'; // Dark green - everyone
   } else if (percentage >= 75) {
     return 'bg-green-400'; // Light green - most
   } else if (percentage >= 50) {
-    return 'bg-yellow-500'; // Yellow - half
+    return 'bg-yellow-400'; // Yellow - half
   } else if (percentage > 0) {
-    return 'bg-red-500'; // Red - few
+    return 'bg-red-400'; // Red - few
   } else {
-    return 'bg-zinc-800'; // Gray - none
+    return 'bg-slate-200'; // Gray - none
   }
 }
 
@@ -110,24 +110,24 @@ export function HeatmapView({
       {/* Legend */}
       <div className="flex flex-wrap gap-4 mb-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-600" />
-          <span className="text-muted-foreground">Everyone (100%)</span>
+          <div className="w-4 h-4 rounded bg-green-500" />
+          <span className="text-slate-600">Everyone (100%)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-green-400" />
-          <span className="text-muted-foreground">Most (75%+)</span>
+          <span className="text-slate-600">Most (75%+)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-500" />
-          <span className="text-muted-foreground">Half (50-74%)</span>
+          <div className="w-4 h-4 rounded bg-yellow-400" />
+          <span className="text-slate-600">Half (50-74%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-500" />
-          <span className="text-muted-foreground">Few (&lt;50%)</span>
+          <div className="w-4 h-4 rounded bg-red-400" />
+          <span className="text-slate-600">Few (&lt;50%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-zinc-800" />
-          <span className="text-muted-foreground">None (0%)</span>
+          <div className="w-4 h-4 rounded bg-slate-200" />
+          <span className="text-slate-600">None (0%)</span>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export function HeatmapView({
         <div className="min-w-[700px]">
           {/* Header row with real dates */}
           <div className="grid grid-cols-8 gap-1">
-            <div className="p-2 text-center text-sm font-medium text-muted-foreground">
+            <div className="p-2 text-center text-sm font-medium text-slate-500">
               Time
             </div>
             {days.map((day) => {
@@ -145,15 +145,15 @@ export function HeatmapView({
                   key={day.toISOString()}
                   className={cn(
                     "p-2 text-center",
-                    isTodayDate && "bg-blue-500/20 rounded-t-lg border-t-2 border-x-2 border-blue-500"
+                    isTodayDate && "bg-blue-50 rounded-t-lg border-t-2 border-x-2 border-primary"
                   )}
                 >
-                  <div className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-slate-500">
                     {format(day, 'EEE')}
                   </div>
                   <div className={cn(
                     "text-lg font-bold",
-                    isTodayDate ? "text-blue-400" : "text-foreground"
+                    isTodayDate ? "text-primary" : "text-slate-900"
                   )}>
                     {format(day, 'd')}
                   </div>
@@ -166,7 +166,7 @@ export function HeatmapView({
           {HOURS.map((hour, hourIndex) => (
             <div key={hour} className="grid grid-cols-8 gap-1 mt-1">
               {/* Time label */}
-              <div className="p-2 text-xs text-muted-foreground flex items-center justify-center h-12 md:h-16">
+              <div className="p-2 text-xs text-slate-500 flex items-center justify-center h-12 md:h-16">
                 {formatHour(hour)}
               </div>
               
@@ -183,10 +183,10 @@ export function HeatmapView({
                       <div
                         onClick={() => onCellClick?.(day, hour)}
                         className={cn(
-                          "h-12 md:h-16 rounded border border-border cursor-pointer transition-all",
-                          "hover:brightness-110 hover:scale-[1.02]",
+                          "h-12 md:h-16 rounded border border-slate-200 cursor-pointer transition-all",
+                          "hover:brightness-95 hover:scale-[1.02]",
                           bgColor,
-                          isTodayDate && "border-blue-500/50",
+                          isTodayDate && "border-primary/50",
                           isTodayDate && isLastHour && "rounded-b-lg"
                         )}
                         aria-label={`${format(day, 'EEEE MMMM d')}, ${formatHour(hour)}: ${slotData.available_count} of ${slotData.total_members} members available`}
@@ -194,10 +194,10 @@ export function HeatmapView({
                     </TooltipTrigger>
                     <TooltipContent 
                       side="top" 
-                      className="max-w-xs bg-zinc-900 border-zinc-700 p-3"
+                      className="max-w-xs bg-slate-900 border-slate-700 p-3"
                     >
                       <div className="text-sm space-y-2">
-                        <div className="font-semibold text-white border-b border-zinc-700 pb-2">
+                        <div className="font-semibold text-white border-b border-slate-700 pb-2">
                           {format(day, 'EEE MMM d, yyyy')} • {formatTimeRange(hour)}
                         </div>
                         
@@ -206,7 +206,7 @@ export function HeatmapView({
                             <p className="text-green-400 font-medium">
                               ✓ Available ({slotData.available_count}):
                             </p>
-                            <p className="text-zinc-300 text-xs mt-1">
+                            <p className="text-slate-300 text-xs mt-1">
                               {slotData.available_members.length > 0 
                                 ? slotData.available_members.join(', ') 
                                 : `${slotData.available_count} members`}
@@ -219,7 +219,7 @@ export function HeatmapView({
                             <p className="text-red-400 font-medium">
                               ✗ Unavailable ({slotData.total_members - slotData.available_count}):
                             </p>
-                            <p className="text-zinc-300 text-xs mt-1">
+                            <p className="text-slate-300 text-xs mt-1">
                               {slotData.unavailable_members.length > 0 
                                 ? slotData.unavailable_members.join(', ') 
                                 : `${slotData.total_members - slotData.available_count} members`}
@@ -228,7 +228,7 @@ export function HeatmapView({
                         )}
                         
                         {slotData.available_count === 0 && slotData.total_members === 0 && (
-                          <p className="text-zinc-500">No availability data</p>
+                          <p className="text-slate-500">No availability data</p>
                         )}
                       </div>
                     </TooltipContent>

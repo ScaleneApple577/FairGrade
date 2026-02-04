@@ -31,8 +31,8 @@ export function CalendarHeader({ currentWeekStart, onNavigate }: CalendarHeaderP
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-blue-400" />
-        <h2 className="text-xl font-semibold text-foreground">{weekLabel}</h2>
+        <Calendar className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-semibold text-slate-900">{weekLabel}</h2>
       </div>
       
       <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export function CalendarHeader({ currentWeekStart, onNavigate }: CalendarHeaderP
           variant="outline"
           size="sm"
           onClick={handlePreviousWeek}
-          className="border-zinc-700 hover:bg-zinc-800"
+          className="border-slate-200 hover:bg-slate-50"
         >
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline ml-1">Previous</span>
@@ -50,7 +50,7 @@ export function CalendarHeader({ currentWeekStart, onNavigate }: CalendarHeaderP
           variant="outline"
           size="sm"
           onClick={handleToday}
-          className="border-zinc-700 hover:bg-zinc-800"
+          className="border-slate-200 hover:bg-slate-50"
         >
           Today
         </Button>
@@ -59,7 +59,7 @@ export function CalendarHeader({ currentWeekStart, onNavigate }: CalendarHeaderP
           variant="outline"
           size="sm"
           onClick={handleNextWeek}
-          className="border-zinc-700 hover:bg-zinc-800"
+          className="border-slate-200 hover:bg-slate-50"
         >
           <span className="hidden sm:inline mr-1">Next</span>
           <ChevronRight className="h-4 w-4" />

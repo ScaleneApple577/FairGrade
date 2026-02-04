@@ -16,15 +16,15 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-zinc-800">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">F</span>
             </div>
-            <span className="font-bold text-xl text-white">FairGrade</span>
+            <span className="font-bold text-xl text-slate-900">FairGrade</span>
           </a>
 
           {/* Desktop Nav */}
@@ -33,7 +33,7 @@ export const Navbar = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-zinc-400 hover:text-white transition-all duration-200 font-medium text-sm hover:scale-105"
+                className="text-slate-600 hover:text-primary transition-all duration-200 font-medium text-sm hover:scale-105"
               >
                 {link.name}
               </a>
@@ -44,13 +44,13 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             <Link
               to="/auth"
-              className="px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-all duration-200 hover:scale-105"
+              className="px-4 py-2 text-slate-600 hover:text-primary font-medium text-sm transition-all duration-200 hover:scale-105"
             >
               Log in
             </Link>
             <Link
               to="/auth"
-              className="px-4 py-2 bg-white text-black font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-white/20"
+              className="px-4 py-2 bg-primary text-white font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
             >
               Sign Up Now
             </Link>
@@ -58,7 +58,7 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-white"
+            className="md:hidden p-2 text-slate-900"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -73,14 +73,14 @@ export const Navbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden overflow-hidden"
+              className="md:hidden overflow-hidden bg-white"
             >
               <div className="py-4 space-y-3">
                 {navLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
-                    className="block py-2 text-zinc-400 hover:text-white transition-all duration-200 font-medium hover:translate-x-1"
+                    className="block py-2 text-slate-600 hover:text-primary transition-all duration-200 font-medium hover:translate-x-1"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.name}
@@ -89,14 +89,14 @@ export const Navbar = () => {
                 <div className="pt-4 space-y-2">
                   <Link
                     to="/auth"
-                    className="block w-full py-3 text-center text-zinc-400 border border-zinc-700 rounded-lg font-medium transition-all duration-200 hover:bg-zinc-800 hover:text-white"
+                    className="block w-full py-3 text-center text-slate-600 border border-slate-200 rounded-lg font-medium transition-all duration-200 hover:bg-slate-50 hover:text-primary"
                     onClick={() => setIsOpen(false)}
                   >
                     Log in
                   </Link>
                   <Link
                     to="/auth"
-                    className="block w-full py-3 text-center bg-white text-black font-semibold rounded-lg transition-all duration-200 hover:scale-[1.02]"
+                    className="block w-full py-3 text-center bg-primary text-white font-semibold rounded-lg transition-all duration-200 hover:scale-[1.02] hover:bg-primary/90"
                     onClick={() => setIsOpen(false)}
                   >
                     Sign Up Now
