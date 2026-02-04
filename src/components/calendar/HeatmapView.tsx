@@ -34,20 +34,20 @@ interface HeatmapViewProps {
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm
 
 function getAvailabilityColor(available: number, total: number): string {
-  if (total === 0) return 'bg-slate-200';
+  if (total === 0) return 'bg-slate-300';
   
   const percentage = (available / total) * 100;
   
   if (percentage === 100) {
-    return 'bg-green-500'; // Dark green - everyone
+    return 'bg-green-600'; // Dark green - everyone
   } else if (percentage >= 75) {
     return 'bg-green-400'; // Light green - most
   } else if (percentage >= 50) {
-    return 'bg-yellow-400'; // Yellow - half
+    return 'bg-yellow-500'; // Yellow - half
   } else if (percentage > 0) {
-    return 'bg-red-400'; // Red - few
+    return 'bg-red-500'; // Red - few
   } else {
-    return 'bg-slate-200'; // Gray - none
+    return 'bg-slate-300'; // Gray - none
   }
 }
 
@@ -108,26 +108,26 @@ export function HeatmapView({
   return (
     <div className="w-full">
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-4 text-sm">
+      <div className="flex flex-wrap items-center gap-6 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500" />
-          <span className="text-slate-600">Everyone (100%)</span>
+          <div className="w-4 h-4 rounded bg-green-600" />
+          <span className="text-sm text-slate-600">Everyone (100%)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-green-400" />
-          <span className="text-slate-600">Most (75%+)</span>
+          <span className="text-sm text-slate-600">Most (75%+)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-400" />
-          <span className="text-slate-600">Half (50-74%)</span>
+          <div className="w-4 h-4 rounded bg-yellow-500" />
+          <span className="text-sm text-slate-600">Half (50-74%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-400" />
-          <span className="text-slate-600">Few (&lt;50%)</span>
+          <div className="w-4 h-4 rounded bg-red-500" />
+          <span className="text-sm text-slate-600">Few (&lt;50%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-slate-200" />
-          <span className="text-slate-600">None (0%)</span>
+          <div className="w-4 h-4 rounded bg-slate-300" />
+          <span className="text-sm text-slate-600">None (0%)</span>
         </div>
       </div>
 
