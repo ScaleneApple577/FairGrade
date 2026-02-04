@@ -221,7 +221,7 @@ const FeatureDetailPage = () => {
 
               <div className="flex flex-wrap gap-4">
                 <button className="px-6 py-3 bg-white text-black font-semibold rounded-lg hover:scale-105 transition-transform">
-                  Get Started Free
+                  Sign Up Now
                 </button>
                 <button className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-lg hover:bg-zinc-800 transition-colors">
                   Watch Demo

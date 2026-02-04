@@ -14,7 +14,7 @@ const plans = [
       "Google Docs + Zoom tracking",
       "Basic analytics",
     ],
-    cta: "Get Started Free",
+    cta: "Sign Up Now",
     popular: false,
   },
   {
