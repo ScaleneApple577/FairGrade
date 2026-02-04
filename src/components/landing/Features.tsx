@@ -100,7 +100,6 @@ const studentFeatures = [
     subtitle: "See your progress as you work",
     icon: Activity,
     featureId: "track-your-work",
-    featured: true,
   },
   {
     title: "Personal Contribution Dashboard",
@@ -153,12 +152,6 @@ const teacherFeatures = [
     subtitle: "Fair grades backed by data",
     icon: FileText,
     featureId: "auto-reports",
-  },
-  {
-    title: "Group Health Monitoring",
-    subtitle: "Intervene before groups fail",
-    icon: TrendingUp,
-    featureId: "analytics-dashboard",
   },
   {
     title: "Individual Grade Calculator",
