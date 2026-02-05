@@ -65,14 +65,14 @@ const AnimatedStep = ({ step, index, totalSteps }: { step: { num: string; title:
       <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg relative z-10">
         {step.num}
       </div>
-      <h3 className="text-xl font-semibold text-slate-900 mt-4">{step.title}</h3>
-      <p className="text-slate-500 mt-2">{step.desc}</p>
+      <h3 className="text-xl font-semibold text-white mt-4">{step.title}</h3>
+      <p className="text-slate-300 mt-2">{step.desc}</p>
       
       {/* Animated connector line (desktop only) */}
       {index < totalSteps - 1 && (
         <div className="hidden md:block absolute top-5 left-[60%] overflow-hidden" style={{ width: '100%' }}>
           <div 
-            className="border-t-2 border-dashed border-slate-300"
+            className="border-t-2 border-dashed border-white/20"
             style={{
               width: lineVisible ? '100%' : '0%',
               transition: 'width 0.5s ease-out'
@@ -99,7 +99,7 @@ const Index = () => {
       <style>{silkFlowKeyframes}</style>
 
       {/* NAVBAR */}
-      <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200/50 z-50">
+      <nav className="sticky top-0 bg-white/10 backdrop-blur-md border-b border-white/10 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
@@ -107,23 +107,23 @@ const Index = () => {
               <span className="text-white font-bold text-sm">F</span>
             </div>
             <span className="text-lg">
-              <span className="font-bold text-slate-900">Fair</span>
-              <span className="font-bold text-primary">Grade</span>
+              <span className="font-bold text-white">Fair</span>
+              <span className="font-bold text-blue-400">Grade</span>
             </span>
           </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-slate-600 hover:text-primary font-medium transition-colors">Home</Link>
-            <Link to="/features" className="text-slate-600 hover:text-primary font-medium transition-colors">Features</Link>
-            <a href="#how-it-works" className="text-slate-600 hover:text-primary font-medium transition-colors">How It Works</a>
-            <a href="#testimonials" className="text-slate-600 hover:text-primary font-medium transition-colors">Testimonials</a>
-            <Link to="/pricing" className="text-slate-600 hover:text-primary font-medium transition-colors">Pricing</Link>
+            <Link to="/" className="text-slate-300 hover:text-white font-medium transition-colors">Home</Link>
+            <Link to="/features" className="text-slate-300 hover:text-white font-medium transition-colors">Features</Link>
+            <a href="#how-it-works" className="text-slate-300 hover:text-white font-medium transition-colors">How It Works</a>
+            <a href="#testimonials" className="text-slate-300 hover:text-white font-medium transition-colors">Testimonials</a>
+            <Link to="/pricing" className="text-slate-300 hover:text-white font-medium transition-colors">Pricing</Link>
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-slate-600 hover:text-primary font-medium transition-colors">Log In</Link>
+            <Link to="/auth" className="text-slate-300 hover:text-white font-medium transition-colors">Log In</Link>
             <Link to="/auth" className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary/90 font-medium transition-colors">
               Sign Up Now
             </Link>
@@ -131,7 +131,7 @@ const Index = () => {
 
           {/* Mobile Menu Button */}
           <button 
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -140,14 +140,14 @@ const Index = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 px-6 py-4 space-y-4">
-            <Link to="/" className="block text-slate-600 hover:text-primary font-medium">Home</Link>
-            <Link to="/features" className="block text-slate-600 hover:text-primary font-medium">Features</Link>
-            <a href="#how-it-works" className="block text-slate-600 hover:text-primary font-medium">How It Works</a>
-            <a href="#testimonials" className="block text-slate-600 hover:text-primary font-medium">Testimonials</a>
-            <Link to="/pricing" className="block text-slate-600 hover:text-primary font-medium">Pricing</Link>
-            <div className="pt-4 border-t border-slate-200 space-y-3">
-              <Link to="/auth" className="block text-slate-600 hover:text-primary font-medium">Log In</Link>
+          <div className="md:hidden bg-slate-900/95 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-4">
+            <Link to="/" className="block text-slate-300 hover:text-white font-medium">Home</Link>
+            <Link to="/features" className="block text-slate-300 hover:text-white font-medium">Features</Link>
+            <a href="#how-it-works" className="block text-slate-300 hover:text-white font-medium">How It Works</a>
+            <a href="#testimonials" className="block text-slate-300 hover:text-white font-medium">Testimonials</a>
+            <Link to="/pricing" className="block text-slate-300 hover:text-white font-medium">Pricing</Link>
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <Link to="/auth" className="block text-slate-300 hover:text-white font-medium">Log In</Link>
               <Link to="/auth" className="block bg-primary text-white px-5 py-2.5 rounded-lg text-center font-medium">
                 Sign Up Now
               </Link>
@@ -158,13 +158,6 @@ const Index = () => {
 
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated blue glow overlay */}
-        <div 
-          className="absolute inset-0 pointer-events-none z-[1]"
-          style={{
-            background: 'radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(30,58,95,0.2) 0%, transparent 50%)'
-          }}
-        />
 
         {/* Hero Content */}
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
@@ -230,61 +223,26 @@ const Index = () => {
       </section>
 
       {/* SOCIAL PROOF BAR */}
-      <section className="bg-white/90 backdrop-blur-sm py-12">
+      <section className="bg-white/5 backdrop-blur-sm py-12">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-slate-400 text-sm uppercase tracking-wider font-medium mb-8">
             Integrated with tools students already use
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            <span className="text-slate-300 font-semibold text-xl">Google Docs</span>
-            <span className="text-slate-300 font-semibold text-xl">Google Sheets</span>
-            <span className="text-slate-300 font-semibold text-xl">Google Slides</span>
-            <span className="text-slate-300 font-semibold text-xl">Canvas</span>
-            <span className="text-slate-300 font-semibold text-xl">Blackboard</span>
+            <span className="text-slate-500 font-semibold text-xl">Google Docs</span>
+            <span className="text-slate-500 font-semibold text-xl">Google Sheets</span>
+            <span className="text-slate-500 font-semibold text-xl">Google Slides</span>
+            <span className="text-slate-500 font-semibold text-xl">Canvas</span>
+            <span className="text-slate-500 font-semibold text-xl">Blackboard</span>
           </div>
         </div>
       </section>
 
-      {/* FEATURES GRID */}
-      <section className="bg-white/95 backdrop-blur-sm py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-              Everything you need for fair group grading
-            </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto mt-4">
-              FairGrade monitors contributions, detects issues, and ensures every student gets the grade they deserve.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mt-16">
-            {[
-              { emoji: "📊", title: "Contribution Tracking", desc: "Monitor every edit, comment, and addition across Google Docs, Sheets, and Slides in real-time." },
-              { emoji: "🤖", title: "AI Content Detection", desc: "Automatically flag AI-generated content and distinguish it from genuine student work." },
-              { emoji: "🔍", title: "Plagiarism Detection", desc: "Cross-reference student submissions against billions of sources to maintain academic integrity." },
-              { emoji: "🎬", title: "Live Replay", desc: "Watch document evolution like a video. See exactly who wrote what and when with our timeline player." },
-              { emoji: "👥", title: "Peer Reviews", desc: "Anonymous peer evaluation system with multi-criteria ratings for honest, constructive feedback." },
-              { emoji: "📅", title: "Smart Scheduling", desc: "When2Meet-style availability heatmaps and AI-suggested meeting times for teams." },
-            ].map((feature, i) => (
-              <div 
-                key={i}
-                className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-md hover:border-primary/20 hover:-translate-y-1 transition-all"
-              >
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-2xl">
-                  {feature.emoji}
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mt-4">{feature.title}</h3>
-                <p className="text-slate-500 mt-2 leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="bg-slate-100/90 backdrop-blur-sm py-20 px-6">
+      <section id="how-it-works" className="bg-white/5 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">
             How FairGrade works
           </h2>
 
@@ -301,7 +259,7 @@ const Index = () => {
       </section>
 
       {/* FOR TEACHERS & STUDENTS */}
-      <section className="bg-white/95 backdrop-blur-sm py-20 px-6">
+      <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
           {/* For Teachers */}
           <div className="bg-gradient-to-br from-primary to-primary/80 text-white rounded-2xl p-10">
@@ -356,9 +314,9 @@ const Index = () => {
       </section>
 
       {/* TESTIMONIALS */}
-      <section id="testimonials" className="bg-slate-100/90 backdrop-blur-sm py-20 px-6">
+      <section id="testimonials" className="bg-white/5 backdrop-blur-sm py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">
             Loved by educators & students
           </h2>
 
@@ -368,9 +326,9 @@ const Index = () => {
               { quote: "Finally, my contributions are visible. No more carrying the team without recognition.", author: "Alex Rivera", role: "Student, UCLA" },
               { quote: "The live replay feature is a game-changer. It's like having a DVR for student collaboration.", author: "Dr. James Park", role: "MIT" },
             ].map((testimonial, i) => (
-              <div key={i} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-                <p className="text-slate-600 italic leading-relaxed">"{testimonial.quote}"</p>
-                <p className="font-semibold text-slate-900 mt-6">{testimonial.author}</p>
+              <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/10">
+                <p className="text-slate-200 italic leading-relaxed">"{testimonial.quote}"</p>
+                <p className="font-semibold text-white mt-6">{testimonial.author}</p>
                 <p className="text-slate-400 text-sm">{testimonial.role}</p>
               </div>
             ))}
@@ -397,7 +355,7 @@ const Index = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-slate-900/95 backdrop-blur-sm text-slate-400 py-16 px-6">
+      <footer className="bg-black/30 backdrop-blur-sm text-slate-400 py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-12">
           {/* Logo & Description */}
           <div>
@@ -407,7 +365,7 @@ const Index = () => {
               </div>
               <span className="text-lg">
                 <span className="font-bold text-white">Fair</span>
-                <span className="font-bold text-primary">Grade</span>
+                <span className="font-bold text-blue-400">Grade</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed">
@@ -449,7 +407,7 @@ const Index = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="max-w-6xl mx-auto border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="max-w-6xl mx-auto border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm">© 2026 FairGrade. All rights reserved.</p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="hover:text-white transition-colors">Twitter</a>
