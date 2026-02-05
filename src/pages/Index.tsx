@@ -2,6 +2,7 @@ import { Navbar } from "@/components/landing/Navbar";
 import { AnimatedHero } from "@/components/landing/AnimatedHero";
 import { Footer } from "@/components/landing/Footer";
 import { Timeline } from "@/components/ui/timeline";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { FileText, Puzzle, BarChart3 } from "lucide-react";
 
 const timelineData = [
@@ -60,7 +61,8 @@ const timelineData = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white scroll-smooth">
+    <div className="min-h-screen bg-background scroll-smooth relative">
+      <AnimatedBackground />
       <Navbar />
       <AnimatedHero />
       <Timeline data={timelineData} />
