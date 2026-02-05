@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Star,
   Clock,
@@ -10,28 +10,11 @@ import {
   Info,
   AlertCircle,
   X,
-  Bell,
-  Search,
-  FolderOpen,
-  Calendar,
-  BarChart3,
-  LogOut,
-  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MenuVertical } from "@/components/ui/menu-vertical";
-
-// Sidebar navigation items
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
-  { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
-  { icon: Calendar, label: "Calendar", href: "/student/calendar" },
-  { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
-  { icon: BarChart3, label: "My Stats", href: "/student/stats" },
-];
+import { StudentLayout } from "@/components/student/StudentLayout";
 
 // Mock data
 const mockStats = {
@@ -153,7 +136,7 @@ function StarRating({
             className={`${sizeClasses[size]} ${
               star <= rating
                 ? "text-yellow-500 fill-yellow-500"
-                : "text-slate-300"
+                : "text-slate-500"
             }`}
           />
         </button>
@@ -164,7 +147,6 @@ function StarRating({
 
 export default function StudentReviews() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"pending" | "completed" | "received">("pending");
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedTeammate, setSelectedTeammate] = useState<any>(null);
@@ -178,13 +160,6 @@ export default function StudentReviews() {
   const [reliabilityRating, setReliabilityRating] = useState(0);
   const [teamworkRating, setTeamworkRating] = useState(0);
   const [comments, setComments] = useState("");
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
-  const isActive = (path: string) => location.pathname === path;
 
   const openReviewModal = (teammate: any, project: any) => {
     setSelectedTeammate(teammate);
@@ -217,64 +192,7 @@ export default function StudentReviews() {
   const allRatingsComplete = overallRating > 0 && communicationRating > 0 && contributionRating > 0 && reliabilityRating > 0 && teamworkRating > 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Fixed Sidebar */}
-      <aside className="w-64 h-screen bg-white shadow-lg fixed left-0 top-0 flex flex-col">
-        <div className="p-6 border-b border-slate-200">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-11 flex-shrink-0">
-              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold">
-              <span className="text-slate-900">Fair</span>
-              <span className="text-blue-500">Grade</span>
-            </span>
-          </Link>
-        </div>
-
-        <div className="flex-1 p-4">
-          <MenuVertical menuItems={sidebarItems} />
-        </div>
-
-        <div className="p-4 border-t border-slate-200">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full p-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="ml-64 min-h-screen bg-slate-50 flex-1">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center justify-between px-8 h-16">
-            <h1 className="text-lg font-semibold text-slate-900">Peer Reviews</h1>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input placeholder="Search..." className="w-64 pl-10 bg-slate-50 border-slate-200" />
-              </div>
-              <button className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <Bell className="h-5 w-5 text-slate-500" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-              </button>
-              <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                SJ
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="p-8">
+    <StudentLayout pageTitle="Peer Reviews">
           {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -718,8 +636,6 @@ export default function StudentReviews() {
               </div>
             </motion.div>
           )}
-        </main>
-      </div>
 
       {/* Review Modal */}
       {showReviewModal && selectedTeammate && (
@@ -894,6 +810,6 @@ export default function StudentReviews() {
           </motion.div>
         </div>
       )}
-    </div>
+    </StudentLayout>
   );
 }

@@ -16,6 +16,7 @@ interface MenuVerticalProps {
   color?: string;
   skew?: number;
   className?: string;
+  variant?: "light" | "dark";
 }
 
 const MotionLink = motion.create(Link);
@@ -25,8 +26,10 @@ export const MenuVertical = ({
   color = "hsl(var(--primary))",
   skew = 0,
   className,
+  variant = "light",
 }: MenuVerticalProps) => {
   const location = useLocation();
+  const isDark = variant === "dark";
 
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>
@@ -39,7 +42,9 @@ export const MenuVertical = ({
             key={`${item.href}-${index}`}
             className={cn(
               "group/nav flex items-center gap-2 cursor-pointer",
-              isActive ? "text-primary" : "text-slate-600"
+              isActive 
+                ? (isDark ? "text-blue-400" : "text-primary")
+                : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600")
             )}
             initial="initial"
             whileHover="hover"
@@ -53,7 +58,7 @@ export const MenuVertical = ({
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="z-0"
-              style={{ color: isActive ? color : color }}
+              style={{ color: isDark ? "#60a5fa" : color }}
             >
               <ArrowRight strokeWidth={2.5} className="size-5" />
             </motion.div>
@@ -63,7 +68,7 @@ export const MenuVertical = ({
               to={item.href}
               variants={{
                 initial: { x: -28, color: "inherit" },
-                hover: { x: 0, color, skewX: skew },
+                hover: { x: 0, color: isDark ? "#60a5fa" : color, skewX: skew },
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className={cn(

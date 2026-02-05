@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Sidebar component for student navigation
+// Dark Sidebar component for student navigation
 function StudentSidebar({ currentPath }: { currentPath: string }) {
   const navigate = useNavigate();
   
@@ -52,9 +52,9 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
   };
 
   return (
-    <div className="w-64 h-screen bg-white shadow-lg flex flex-col fixed left-0 top-0">
+    <div className="w-64 h-screen bg-[#0f172a] border-r border-white/10 flex flex-col fixed left-0 top-0">
       {/* Logo */}
-      <div className="p-6 border-b border-slate-200">
+      <div className="p-6 border-b border-white/10">
         <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-11 flex-shrink-0">
             <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
@@ -82,22 +82,22 @@ function StudentSidebar({ currentPath }: { currentPath: string }) {
             </svg>
           </div>
           <span className="text-xl font-bold">
-            <span className="text-slate-900">Fair</span>
-            <span className="text-blue-500">Grade</span>
+            <span className="text-white">Fair</span>
+            <span className="text-blue-400">Grade</span>
           </span>
         </Link>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 p-4">
-        <MenuVertical menuItems={menuItems} />
+        <MenuVertical menuItems={menuItems} variant="dark" />
       </div>
 
       {/* Logout */}
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-white/10">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <span>Log Out</span>
@@ -398,16 +398,16 @@ export default function StudentCalendar() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-[#111827] flex">
       <StudentSidebar currentPath="/student/calendar" />
       
       <main className="flex-1 ml-64">
         {/* Top Bar */}
-        <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
+        <header className="h-14 border-b border-white/10 bg-[#0f172a]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold text-slate-900">Team Calendar</h1>
-            <Badge variant="outline" className="text-primary border-primary/30">
+            <Calendar className="h-5 w-5 text-blue-400" />
+            <h1 className="text-lg font-semibold text-white">Team Calendar</h1>
+            <Badge variant="outline" className="text-blue-400 border-blue-400/30 bg-blue-500/10">
               <Users className="h-3 w-3 mr-1" />
               {totalMembers} members
             </Badge>
@@ -420,7 +420,7 @@ export default function StudentCalendar() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="border-primary/30 text-primary hover:bg-blue-50"
+                  className="border-white/20 text-blue-400 hover:bg-white/10"
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
                   Edit My Availability
@@ -428,7 +428,7 @@ export default function StudentCalendar() {
                 <Button
                   size="sm"
                   onClick={() => setShowScheduler(true)}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Schedule Meeting
@@ -445,10 +445,10 @@ export default function StudentCalendar() {
             transition={{ duration: 0.3 }}
           >
             {isEditing ? (
-              <Card className="bg-white border-slate-200 shadow-sm">
+              <Card className="bg-white/5 border-white/10">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-slate-900">
-                    <Edit3 className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Edit3 className="h-5 w-5 text-blue-400" />
                     Mark Your Availability
                   </CardTitle>
                 </CardHeader>
@@ -474,22 +474,22 @@ export default function StudentCalendar() {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   {/* Main calendar area */}
                   <div className="lg:col-span-3">
-                    <Card className="bg-white border-slate-200 shadow-sm">
+                    <Card className="bg-white/5 border-white/10">
                       <CardHeader className="flex flex-col gap-4">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <CardTitle className="text-slate-900">Team Availability</CardTitle>
+                            <CardTitle className="text-white">Team Availability</CardTitle>
                             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                              <TabsList className="bg-slate-100">
-                                <TabsTrigger value="heatmap" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+                              <TabsList className="bg-white/10">
+                                <TabsTrigger value="heatmap" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
                                   <LayoutGrid className="h-4 w-4 mr-1" />
                                   Heatmap
                                 </TabsTrigger>
-                                <TabsTrigger value="meetings" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+                                <TabsTrigger value="meetings" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
                                   <List className="h-4 w-4 mr-1" />
                                   Meetings
                                 </TabsTrigger>
-                                <TabsTrigger value="polls" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+                                <TabsTrigger value="polls" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
                                   <Vote className="h-4 w-4 mr-1" />
                                   Polls
                                 </TabsTrigger>
@@ -529,12 +529,12 @@ export default function StudentCalendar() {
                           />
                         )}
                         {activeTab === "polls" && (
-                          <div className="text-center py-12 text-muted-foreground">
+                          <div className="text-center py-12 text-slate-400">
                             <Vote className="h-12 w-12 mx-auto mb-4 opacity-50" />
                             <p>No active polls</p>
                             <Button 
                               variant="outline" 
-                              className="mt-4"
+                              className="mt-4 border-white/20 text-white hover:bg-white/10"
                               onClick={() => toast({ title: "Coming soon", description: "Poll creation is under development" })}
                             >
                               Create Poll
@@ -548,33 +548,33 @@ export default function StudentCalendar() {
                   {/* Sidebar widgets */}
                   <div className="space-y-6">
                     {/* Quick actions */}
-                    <Card className="bg-white border-slate-200 shadow-sm">
+                    <Card className="bg-white/5 border-white/10">
                       <CardHeader>
-                        <CardTitle className="text-base text-slate-900">Quick Actions</CardTitle>
+                        <CardTitle className="text-base text-white">Quick Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start border-slate-200"
+                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
                           onClick={() => setIsEditing(true)}
                         >
-                          <Clock className="h-4 w-4 mr-2 text-primary" />
+                          <Clock className="h-4 w-4 mr-2 text-blue-400" />
                           Update Availability
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start border-slate-200"
+                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
                           onClick={() => setShowScheduler(true)}
                         >
-                          <Plus className="h-4 w-4 mr-2 text-green-600" />
+                          <Plus className="h-4 w-4 mr-2 text-green-400" />
                           Schedule Meeting
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start border-slate-200"
+                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
                           onClick={() => setActiveTab("polls")}
                         >
-                          <Vote className="h-4 w-4 mr-2 text-purple-600" />
+                          <Vote className="h-4 w-4 mr-2 text-purple-400" />
                           Create Poll
                         </Button>
                       </CardContent>
@@ -588,15 +588,15 @@ export default function StudentCalendar() {
                     />
 
                     {/* Best times hint */}
-                    <Card className="bg-gradient-to-br from-blue-50 to-white border-primary/20">
+                    <Card className="bg-blue-500/10 border-blue-500/20">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-blue-100">
-                            <Clock className="h-4 w-4 text-primary" />
+                          <div className="p-2 rounded-lg bg-blue-500/20">
+                            <Clock className="h-4 w-4 text-blue-400" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-sm text-slate-900">Best Meeting Times</h4>
-                            <p className="text-xs text-slate-500 mt-1">
+                            <h4 className="font-medium text-sm text-white">Best Meeting Times</h4>
+                            <p className="text-xs text-slate-400 mt-1">
                               Tue & Thu at 10am have 100% availability
                             </p>
                           </div>
