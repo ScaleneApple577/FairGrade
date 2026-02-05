@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Plus,
   Download,
@@ -27,16 +27,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MenuVertical } from "@/components/ui/menu-vertical";
 
 // Sidebar navigation items for teachers
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
-  { icon: Users, label: "Students", path: "/teacher/students" },
-  { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
-  { icon: Activity, label: "Live Monitor", path: "/teacher/live-monitor" },
-  { icon: FileText, label: "Reports", path: "/teacher/reports" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: FolderOpen, label: "All Projects", href: "/teacher/projects" },
+  { icon: Users, label: "Students", href: "/teacher/students" },
+  { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },
+  { icon: Activity, label: "Live Monitor", href: "/teacher/live-monitor" },
+  { icon: FileText, label: "Reports", href: "/teacher/reports" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 // Mock data for teacher
@@ -202,7 +203,6 @@ const weeklyStats = {
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [statusFilter, setStatusFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
 
@@ -210,8 +210,6 @@ export default function TeacherDashboard() {
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
-  const isActive = (path: string) => location.pathname === path;
 
   const getAlertConfig = (severity: string) => {
     switch (severity) {
@@ -296,21 +294,12 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                isActive(item.path)
-                  ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <item.icon className={`h-5 w-5 ${isActive(item.path) ? "text-blue-600" : ""}`} />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 p-4">
+          <MenuVertical
+            menuItems={sidebarItems}
+            color="hsl(217, 91%, 60%)"
+            skew={-2}
+          />
         </nav>
 
         {/* Logout */}
