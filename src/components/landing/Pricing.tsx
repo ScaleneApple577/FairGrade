@@ -51,7 +51,7 @@ const plans = [
 
 export const Pricing = () => {
   return (
-    <section id="pricing" className="py-24 bg-white">
+    <section id="pricing" className="py-24">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <motion.div
@@ -63,10 +63,10 @@ export const Pricing = () => {
           <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">
             Pricing
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 antialiased">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 antialiased">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
             Choose the plan that fits your needs. All plans include our core tracking features.
           </p>
         </motion.div>
@@ -83,7 +83,7 @@ export const Pricing = () => {
               className={`relative rounded-2xl p-8 ${
                 plan.popular
                   ? "bg-primary text-white scale-105 shadow-2xl shadow-primary/20"
-                  : "bg-white border border-slate-200 hover:border-primary/30 shadow-lg hover:shadow-xl"
+                  : "bg-white/10 backdrop-blur-md border border-white/10 hover:border-primary/30"
               } transition-all duration-300`}
             >
               {/* Popular badge */}
@@ -97,21 +97,21 @@ export const Pricing = () => {
 
               {/* Plan info */}
               <div className="mb-8">
-                <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? "text-white" : "text-slate-900"}`}>
+                <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? "text-white" : "text-white"}`}>
                   {plan.name}
                 </h3>
-                <p className={plan.popular ? "text-white/80" : "text-slate-500"}>
+                <p className={plan.popular ? "text-white/80" : "text-slate-300"}>
                   {plan.description}
                 </p>
               </div>
 
               {/* Price */}
               <div className="mb-8">
-                <span className={`text-5xl font-bold ${plan.popular ? "text-white" : "text-slate-900"}`}>
+                <span className={`text-5xl font-bold ${plan.popular ? "text-white" : "text-white"}`}>
                   {plan.price}
                 </span>
                 {plan.period && (
-                  <span className={`text-sm ml-2 ${plan.popular ? "text-white/80" : "text-slate-500"}`}>
+                  <span className={`text-sm ml-2 ${plan.popular ? "text-white/80" : "text-slate-300"}`}>
                     {plan.period}
                   </span>
                 )}
@@ -122,11 +122,11 @@ export const Pricing = () => {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      plan.popular ? "bg-white/20" : "bg-blue-50"
+                      plan.popular ? "bg-white/20" : "bg-white/10"
                     }`}>
                       <Check className={`w-3 h-3 ${plan.popular ? "text-white" : "text-primary"}`} />
                     </div>
-                    <span className={`text-sm ${plan.popular ? "text-white/90" : "text-slate-600"}`}>
+                    <span className={`text-sm ${plan.popular ? "text-white/90" : "text-slate-300"}`}>
                       {feature}
                     </span>
                   </li>
@@ -139,7 +139,7 @@ export const Pricing = () => {
                 className={`block w-full py-3 text-center font-semibold rounded-lg transition-all duration-200 hover:scale-105 ${
                   plan.popular
                     ? "bg-white text-primary hover:shadow-lg hover:shadow-white/20"
-                    : "bg-primary text-white hover:bg-primary/90"
+                    : "border-2 border-white/20 text-white hover:bg-white/10"
                 }`}
               >
                 {plan.cta}

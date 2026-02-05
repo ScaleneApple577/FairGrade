@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,11 +13,11 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/10">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-3 group" aria-label="FairGrade Home">
+          <Link to="/" className="flex items-center gap-3 group">
             <div className="w-9 h-11 group-hover:scale-105 transition-transform duration-300">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
                 <path 
@@ -45,21 +44,21 @@ export const Navbar = () => {
               </svg>
             </div>
             <span className="hidden sm:inline text-xl font-bold">
-              <span className="text-slate-900">Fair</span>
-              <span className="text-blue-500">Grade</span>
+              <span className="text-white">Fair</span>
+              <span className="text-blue-400">Grade</span>
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.href}
-                className="text-slate-600 hover:text-primary transition-all duration-200 font-medium text-sm hover:scale-105"
+                to={link.href}
+                className="text-slate-300 hover:text-white transition-all duration-200 font-medium text-sm hover:scale-105"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -67,7 +66,7 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             <Link
               to="/auth"
-              className="px-4 py-2 text-slate-600 hover:text-primary font-medium text-sm transition-all duration-200 hover:scale-105"
+              className="px-4 py-2 text-slate-300 hover:text-white font-medium text-sm transition-all duration-200 hover:scale-105"
             >
               Log in
             </Link>
@@ -81,7 +80,7 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-slate-900"
+            className="md:hidden p-2 text-white"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -96,23 +95,23 @@ export const Navbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden overflow-hidden bg-white"
+              className="md:hidden overflow-hidden bg-slate-900/95 backdrop-blur-md border-t border-white/10"
             >
               <div className="py-4 space-y-3">
                 {navLinks.map((link) => (
-                  <a
+                  <Link
                     key={link.name}
-                    href={link.href}
-                    className="block py-2 text-slate-600 hover:text-primary transition-all duration-200 font-medium hover:translate-x-1"
+                    to={link.href}
+                    className="block py-2 text-slate-300 hover:text-white transition-all duration-200 font-medium hover:translate-x-1"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 ))}
-                <div className="pt-4 space-y-2">
+                <div className="pt-4 space-y-2 border-t border-white/10">
                   <Link
                     to="/auth"
-                    className="block w-full py-3 text-center text-slate-600 border border-slate-200 rounded-lg font-medium transition-all duration-200 hover:bg-slate-50 hover:text-primary"
+                    className="block w-full py-3 text-center text-slate-300 border border-white/20 rounded-lg font-medium transition-all duration-200 hover:bg-white/10 hover:text-white"
                     onClick={() => setIsOpen(false)}
                   >
                     Log in
