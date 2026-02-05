@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Play, ChevronDown, Check } from "lucide-react";
 
-// CSS Keyframes as inline styles workaround
+// CSS Keyframes
 const silkFlowKeyframes = `
 @keyframes silkFlow {
   0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 50% 100%; }
+  75% { background-position: 0% 50%; }
   100% { background-position: 0% 50%; }
 }
 @keyframes fadeSlideUp {
@@ -17,7 +19,70 @@ const silkFlowKeyframes = `
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(8px); }
 }
+@keyframes lineGrow {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
 `;
+
+// Animated Step Component with Intersection Observer
+const AnimatedStep = ({ step, index, totalSteps }: { step: { num: string; title: string; desc: string }; index: number; totalSteps: number }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [lineVisible, setLineVisible] = useState(false);
+  const stepRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+          // Trigger line animation after step appears
+          if (index < totalSteps - 1) {
+            setTimeout(() => setLineVisible(true), 400);
+          }
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (stepRef.current) {
+      observer.observe(stepRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isVisible, index, totalSteps]);
+
+  return (
+    <div 
+      ref={stepRef}
+      className="flex-1 flex flex-col items-center text-center relative"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.6s ease-out ${index * 200}ms, transform 0.6s ease-out ${index * 200}ms`
+      }}
+    >
+      <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg relative z-10">
+        {step.num}
+      </div>
+      <h3 className="text-xl font-semibold text-slate-900 mt-4">{step.title}</h3>
+      <p className="text-slate-500 mt-2">{step.desc}</p>
+      
+      {/* Animated connector line (desktop only) */}
+      {index < totalSteps - 1 && (
+        <div className="hidden md:block absolute top-5 left-[60%] overflow-hidden" style={{ width: '100%' }}>
+          <div 
+            className="border-t-2 border-dashed border-slate-300"
+            style={{
+              width: lineVisible ? '100%' : '0%',
+              transition: 'width 0.5s ease-out'
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -88,16 +153,16 @@ const Index = () => {
       <section 
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
         style={{
-          background: 'linear-gradient(-45deg, #0f172a, #1e293b, #1a1a2e, #16213e, #0f172a)',
-          backgroundSize: '400% 400%',
-          animation: 'silkFlow 15s ease infinite'
+          background: 'linear-gradient(-45deg, #0f172a, #1e3a5f, #1a1a2e, #1e40af, #0f172a, #172554, #1e293b)',
+          backgroundSize: '600% 600%',
+          animation: 'silkFlow 20s ease infinite'
         }}
       >
-        {/* Blue glow overlay */}
+        {/* Animated blue glow overlay */}
         <div 
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-[1]"
           style={{
-            background: 'radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.15), transparent 70%)'
+            background: 'radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(30,58,95,0.2) 0%, transparent 50%)'
           }}
         />
 
@@ -229,18 +294,7 @@ const Index = () => {
               { num: "2", title: "We Track Everything", desc: "FairGrade monitors edits, attendance, peer reviews, and flags issues automatically." },
               { num: "3", title: "Fair Grades, Zero Drama", desc: "Generate detailed contribution reports. Every student gets graded on what they actually did." },
             ].map((step, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center text-center relative">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
-                  {step.num}
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mt-4">{step.title}</h3>
-                <p className="text-slate-500 mt-2">{step.desc}</p>
-                
-                {/* Connector line (desktop only) */}
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-5 left-[60%] w-full border-t-2 border-dashed border-slate-300" />
-                )}
-              </div>
+              <AnimatedStep key={i} step={step} index={i} totalSteps={3} />
             ))}
           </div>
         </div>
