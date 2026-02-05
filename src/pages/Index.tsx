@@ -88,11 +88,18 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div 
+      className="min-h-screen font-sans"
+      style={{
+        background: 'linear-gradient(-45deg, #0f172a, #1e3a5f, #1a1a2e, #1e40af, #0f172a, #172554, #1e293b)',
+        backgroundSize: '600% 600%',
+        animation: 'silkFlow 20s ease infinite'
+      }}
+    >
       <style>{silkFlowKeyframes}</style>
 
       {/* NAVBAR */}
-      <nav className="sticky top-0 bg-white border-b border-slate-200 z-50">
+      <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200/50 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
@@ -150,14 +157,7 @@ const Index = () => {
       </nav>
 
       {/* HERO SECTION */}
-      <section 
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          background: 'linear-gradient(-45deg, #0f172a, #1e3a5f, #1a1a2e, #1e40af, #0f172a, #172554, #1e293b)',
-          backgroundSize: '600% 600%',
-          animation: 'silkFlow 20s ease infinite'
-        }}
-      >
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Animated blue glow overlay */}
         <div 
           className="absolute inset-0 pointer-events-none z-[1]"
@@ -230,7 +230,7 @@ const Index = () => {
       </section>
 
       {/* SOCIAL PROOF BAR */}
-      <section className="bg-slate-50 py-12">
+      <section className="bg-white/90 backdrop-blur-sm py-12">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-slate-400 text-sm uppercase tracking-wider font-medium mb-8">
             Integrated with tools students already use
@@ -246,7 +246,7 @@ const Index = () => {
       </section>
 
       {/* FEATURES GRID */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white/95 backdrop-blur-sm py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
@@ -282,7 +282,7 @@ const Index = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="bg-slate-50 py-20 px-6">
+      <section id="how-it-works" className="bg-slate-100/90 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center">
             How FairGrade works
@@ -301,7 +301,7 @@ const Index = () => {
       </section>
 
       {/* FOR TEACHERS & STUDENTS */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white/95 backdrop-blur-sm py-20 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
           {/* For Teachers */}
           <div className="bg-gradient-to-br from-primary to-primary/80 text-white rounded-2xl p-10">
@@ -356,7 +356,7 @@ const Index = () => {
       </section>
 
       {/* TESTIMONIALS */}
-      <section id="testimonials" className="bg-slate-50 py-20 px-6">
+      <section id="testimonials" className="bg-slate-100/90 backdrop-blur-sm py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center">
             Loved by educators & students
@@ -379,7 +379,7 @@ const Index = () => {
       </section>
 
       {/* CTA BANNER */}
-      <section className="px-6 my-20">
+      <section className="px-6 my-20 relative z-10">
         <div className="max-w-5xl mx-auto bg-gradient-to-r from-primary to-primary/80 rounded-3xl p-12 md:p-16 text-center text-white">
           <h2 className="text-3xl md:text-4xl font-bold">
             Ready to make group work fair?
@@ -397,7 +397,7 @@ const Index = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-slate-900 text-slate-400 py-16 px-6">
+      <footer className="bg-slate-900/95 backdrop-blur-sm text-slate-400 py-16 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-12">
           {/* Logo & Description */}
           <div>
