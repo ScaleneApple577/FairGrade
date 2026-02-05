@@ -1,5 +1,4 @@
 import { startOfWeek, endOfWeek, format, addWeeks, subWeeks } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 interface CalendarHeaderProps {
@@ -28,42 +27,44 @@ export function CalendarHeader({ currentWeekStart, onNavigate }: CalendarHeaderP
     onNavigate(startOfWeek(new Date(), { weekStartsOn: 1 }));
   };
 
+  const isCurrentWeek = format(currentWeekStart, 'yyyy-MM-dd') === format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+
   return (
-    <div className="flex items-center justify-between flex-wrap gap-4">
-      <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-primary" />
-        <h2 className="text-xl font-semibold text-slate-900">{weekLabel}</h2>
+    <div className="flex items-center justify-between">
+      {/* Left: Calendar icon + date range with fixed min-width to prevent layout shift */}
+      <div className="flex items-center gap-2 min-w-[220px]">
+        <Calendar className="h-5 w-5 text-blue-400" />
+        <h2 className="text-lg font-semibold text-white">{weekLabel}</h2>
       </div>
       
+      {/* Right: Navigation buttons */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={handlePreviousWeek}
-          className="border-slate-200 hover:bg-slate-50"
+          className="flex items-center gap-1 bg-white/10 border border-white/10 text-slate-300 hover:bg-white/15 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline ml-1">Previous</span>
-        </Button>
+          <span className="hidden sm:inline">Previous</span>
+        </button>
         
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={handleToday}
-          className="border-slate-200 hover:bg-slate-50"
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            isCurrentWeek
+              ? 'bg-blue-500/20 border border-blue-400/30 text-blue-400'
+              : 'bg-white/10 border border-white/10 text-slate-300 hover:bg-white/15 hover:text-white'
+          }`}
         >
           Today
-        </Button>
+        </button>
         
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={handleNextWeek}
-          className="border-slate-200 hover:bg-slate-50"
+          className="flex items-center gap-1 bg-white/10 border border-white/10 text-slate-300 hover:bg-white/15 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
         >
-          <span className="hidden sm:inline mr-1">Next</span>
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
   );
