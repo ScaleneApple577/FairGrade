@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -23,6 +23,8 @@ import {
   Award,
   Trophy,
   Lock,
+  LogOut,
+  Home,
 } from "lucide-react";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 import {
@@ -42,6 +44,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
@@ -143,7 +147,7 @@ const weeklyActivity = [
 ];
 
 const StudentStats = () => {
-  const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [goalTitle, setGoalTitle] = useState("");
@@ -236,33 +240,61 @@ const StudentStats = () => {
     "bg-green-600",
   ];
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-[#111827] flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 fixed h-full flex flex-col">
-        <div className="p-6 border-b border-slate-200">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FG</span>
+      <aside className="w-64 bg-[#0f172a] border-r border-white/10 fixed h-full flex flex-col">
+        <div className="p-6 border-b border-white/10">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-9 h-11 flex-shrink-0">
+              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
+                <path 
+                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 10 L10 42 Q10 44 8 43.5" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-            <span className="text-xl font-bold text-slate-900">FairGrade</span>
+            <span className="text-xl font-bold">
+              <span className="text-white">Fair</span>
+              <span className="text-blue-400">Grade</span>
+            </span>
           </Link>
         </div>
 
         <nav className="flex-1 p-4">
-          <MenuVertical menuItems={sidebarItems} />
+          <MenuVertical menuItems={sidebarItems} variant="dark" />
         </nav>
 
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-semibold">JS</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">John Smith</p>
-              <p className="text-xs text-slate-500">Student</p>
-            </div>
-          </div>
+        <div className="p-4 border-t border-white/10">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Log Out</span>
+          </button>
         </div>
       </aside>
 
@@ -271,12 +303,12 @@ const StudentStats = () => {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-blue-500/15 rounded-lg flex items-center justify-center">
               <BarChart3 className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">My Stats</h1>
-              <p className="text-slate-600 mt-1">Track your contributions and performance across all projects</p>
+              <h1 className="text-3xl font-bold text-white">My Stats</h1>
+              <p className="text-slate-400 mt-1">Track your contributions and performance across all projects</p>
             </div>
           </div>
         </div>
@@ -364,8 +396,8 @@ const StudentStats = () => {
           {/* LEFT COLUMN - 2/3 width */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contribution Metrics */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Contribution Metrics</h2>
+            <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+              <h2 className="text-xl font-bold text-white mb-6">Contribution Metrics</h2>
               
               <div className="space-y-6">
                 {/* Words Written */}
@@ -373,15 +405,15 @@ const StudentStats = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <FileText className="w-5 h-5 text-blue-500" />
-                      <span className="font-semibold text-slate-900">Words Written</span>
+                      <span className="font-semibold text-white">Words Written</span>
                     </div>
-                    <span className="text-2xl font-bold text-blue-600">{mockStats.contribution_metrics.words_written.toLocaleString()}</span>
+                    <span className="text-2xl font-bold text-blue-400">{mockStats.contribution_metrics.words_written.toLocaleString()}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
                     <div className="bg-blue-500 h-2 rounded-full" style={{ width: '88%' }}></div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">vs. team average ({mockStats.contribution_metrics.team_average_words.toLocaleString()})</span>
+                    <span className="text-slate-400">vs. team average ({mockStats.contribution_metrics.team_average_words.toLocaleString()})</span>
                     <span className="text-green-600 font-medium flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
                       +26%
@@ -394,15 +426,15 @@ const StudentStats = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Edit className="w-5 h-5 text-purple-500" />
-                      <span className="font-semibold text-slate-900">Edit Sessions</span>
+                      <span className="font-semibold text-white">Edit Sessions</span>
                     </div>
-                    <span className="text-2xl font-bold text-purple-600">{mockStats.contribution_metrics.edit_sessions}</span>
+                    <span className="text-2xl font-bold text-purple-400">{mockStats.contribution_metrics.edit_sessions}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
                     <div className="bg-purple-500 h-2 rounded-full" style={{ width: '75%' }}></div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">vs. team average (38)</span>
+                    <span className="text-slate-400">vs. team average (38)</span>
                     <span className="text-green-600 font-medium flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
                       +24%
@@ -415,15 +447,15 @@ const StudentStats = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-green-500" />
-                      <span className="font-semibold text-slate-900">Active Time</span>
+                      <span className="font-semibold text-white">Active Time</span>
                     </div>
-                    <span className="text-2xl font-bold text-green-600">{formatTime(mockStats.contribution_metrics.active_time_minutes)}</span>
+                    <span className="text-2xl font-bold text-green-400">{formatTime(mockStats.contribution_metrics.active_time_minutes)}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
                     <div className="bg-green-500 h-2 rounded-full" style={{ width: '82%' }}></div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">vs. team average (19h 15m)</span>
+                    <span className="text-slate-400">vs. team average (19h 15m)</span>
                     <span className="text-green-600 font-medium flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
                       +27%
@@ -436,18 +468,18 @@ const StudentStats = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-yellow-500" />
-                      <span className="font-semibold text-slate-900">Tasks Completed</span>
+                      <span className="font-semibold text-white">Tasks Completed</span>
                     </div>
-                    <span className="text-2xl font-bold text-yellow-600">
+                    <span className="text-2xl font-bold text-yellow-400">
                       {mockStats.contribution_metrics.tasks_completed}/{mockStats.contribution_metrics.tasks_total}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
                     <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${(mockStats.contribution_metrics.tasks_completed / mockStats.contribution_metrics.tasks_total) * 100}%` }}></div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">{Math.round((mockStats.contribution_metrics.tasks_completed / mockStats.contribution_metrics.tasks_total) * 100)}% completion rate</span>
-                    <span className="text-slate-600 font-medium">{mockStats.contribution_metrics.tasks_total - mockStats.contribution_metrics.tasks_completed} in progress</span>
+                    <span className="text-slate-400">{Math.round((mockStats.contribution_metrics.tasks_completed / mockStats.contribution_metrics.tasks_total) * 100)}% completion rate</span>
+                    <span className="text-slate-400 font-medium">{mockStats.contribution_metrics.tasks_total - mockStats.contribution_metrics.tasks_completed} in progress</span>
                   </div>
                 </div>
               </div>
