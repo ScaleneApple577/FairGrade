@@ -117,7 +117,6 @@ const Index = () => {
             <Link to="/" className="text-slate-300 hover:text-white font-medium transition-colors">Home</Link>
             <Link to="/features" className="text-slate-300 hover:text-white font-medium transition-colors">Features</Link>
             <a href="#how-it-works" className="text-slate-300 hover:text-white font-medium transition-colors">How It Works</a>
-            <a href="#testimonials" className="text-slate-300 hover:text-white font-medium transition-colors">Testimonials</a>
             <Link to="/pricing" className="text-slate-300 hover:text-white font-medium transition-colors">Pricing</Link>
           </div>
 
@@ -144,7 +143,6 @@ const Index = () => {
             <Link to="/" className="block text-slate-300 hover:text-white font-medium">Home</Link>
             <Link to="/features" className="block text-slate-300 hover:text-white font-medium">Features</Link>
             <a href="#how-it-works" className="block text-slate-300 hover:text-white font-medium">How It Works</a>
-            <a href="#testimonials" className="block text-slate-300 hover:text-white font-medium">Testimonials</a>
             <Link to="/pricing" className="block text-slate-300 hover:text-white font-medium">Pricing</Link>
             <div className="pt-4 border-t border-white/10 space-y-3">
               <Link to="/auth" className="block text-slate-300 hover:text-white font-medium">Log In</Link>
@@ -313,28 +311,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section id="testimonials" className="bg-white/5 backdrop-blur-sm py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center">
-            Loved by educators & students
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
-            {[
-              { quote: "FairGrade eliminated all the 'he said, she said' in group project grading. I can see exactly who did what.", author: "Prof. Sarah Chen", role: "Stanford University" },
-              { quote: "Finally, my contributions are visible. No more carrying the team without recognition.", author: "Alex Rivera", role: "Student, UCLA" },
-              { quote: "The live replay feature is a game-changer. It's like having a DVR for student collaboration.", author: "Dr. James Park", role: "MIT" },
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/10">
-                <p className="text-slate-200 italic leading-relaxed">"{testimonial.quote}"</p>
-                <p className="font-semibold text-white mt-6">{testimonial.author}</p>
-                <p className="text-slate-400 text-sm">{testimonial.role}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA BANNER */}
       <section className="px-6 my-20 relative z-10">
