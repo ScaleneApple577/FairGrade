@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { HeatmapView } from "@/components/calendar/HeatmapView";
@@ -15,7 +15,7 @@ import { MeetingList } from "@/components/calendar/MeetingList";
 import { AttendanceWidget } from "@/components/calendar/AttendanceWidget";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { ProjectSelector } from "@/components/calendar/ProjectSelector";
-import { MenuVertical } from "@/components/ui/menu-vertical";
+import { StudentLayout } from "@/components/student/StudentLayout";
 import {
   Calendar,
   Users,
@@ -25,87 +25,7 @@ import {
   LayoutGrid,
   List,
   Vote,
-  Home,
-  FolderOpen,
-  CheckSquare,
-  Star,
-  BarChart3,
-  LogOut,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-// Dark Sidebar component for student navigation
-function StudentSidebar({ currentPath }: { currentPath: string }) {
-  const navigate = useNavigate();
-  
-  const menuItems = [
-    { label: "Dashboard", href: "/student/dashboard", icon: Home },
-    { label: "My Projects", href: "/student/projects", icon: FolderOpen },
-    { label: "Calendar", href: "/student/calendar", icon: Calendar },
-    { label: "Peer Reviews", href: "/student/reviews", icon: Star },
-    { label: "My Stats", href: "/student/stats", icon: BarChart3 },
-  ];
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
-  return (
-    <div className="w-64 h-screen bg-[#0f172a] border-r border-white/10 flex flex-col fixed left-0 top-0">
-      {/* Logo */}
-      <div className="p-6 border-b border-white/10">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-11 flex-shrink-0">
-            <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-              <path 
-                d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                stroke="#3B82F6" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                stroke="#3B82F6" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M10 10 L10 42 Q10 44 8 43.5" 
-                stroke="#3B82F6" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span className="text-xl font-bold">
-            <span className="text-white">Fair</span>
-            <span className="text-blue-400">Grade</span>
-          </span>
-        </Link>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex-1 p-4">
-        <MenuVertical menuItems={menuItems} variant="dark" />
-      </div>
-
-      {/* Logout */}
-      <div className="p-4 border-t border-white/10">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Log Out</span>
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // Generate mock heatmap data with real dates
 function generateMockHeatmapData(weekStart: Date, weekEnd: Date, totalMembers: number) {
@@ -209,7 +129,6 @@ export default function StudentCalendar() {
   const [activeTab, setActiveTab] = useState("heatmap");
   const [isEditing, setIsEditing] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>("proj-1");
   const [userId, setUserId] = useState<string | null>(null);
@@ -275,7 +194,7 @@ export default function StudentCalendar() {
   };
 
   const loadAvailability = async (projectId: string, studentId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("student_availability")
       .select("*")
       .eq("project_id", projectId)
@@ -344,7 +263,7 @@ export default function StudentCalendar() {
     if (!currentProjectId || !userId) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("meetings")
         .insert({
           project_id: currentProjectId,
@@ -400,7 +319,7 @@ export default function StudentCalendar() {
     setCheckingInMeeting(null);
   };
 
-  const handleCheckOut = async (meetingId: string) => {
+  const handleCheckOut = async () => {
     toast({
       title: "Checked out",
       description: "Have a great rest of your day!",
@@ -408,231 +327,229 @@ export default function StudentCalendar() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111827] flex">
-      <StudentSidebar currentPath="/student/calendar" />
-      
-      <main className="flex-1 ml-64">
-        {/* Top Bar */}
-        <header className="h-14 border-b border-white/10 bg-[#0f172a]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
+    <StudentLayout pageTitle="Calendar">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-500/15 rounded-lg flex items-center justify-center">
             <Calendar className="h-5 w-5 text-blue-400" />
-            <h1 className="text-lg font-semibold text-white">Team Calendar</h1>
-            <Badge variant="outline" className="text-blue-400 border-blue-400/30 bg-blue-500/10">
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Team Calendar</h1>
+            <Badge variant="outline" className="text-blue-400 border-blue-400/30 bg-blue-500/10 mt-1">
               <Users className="h-3 w-3 mr-1" />
               {totalMembers} members
             </Badge>
           </div>
-          
-          <div className="flex items-center gap-3">
-            {!isEditing && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                  className="border-white/20 text-blue-400 hover:bg-white/10"
-                >
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit My Availability
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setShowScheduler(true)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Schedule Meeting
-                </Button>
-              </>
-            )}
-          </div>
-        </header>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {!isEditing && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="border-white/20 text-blue-400 hover:bg-white/10"
+              >
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit My Availability
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowScheduler(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Schedule Meeting
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
 
-        <div className="p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {isEditing ? (
-              <Card className="bg-white/5 border-white/10">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Edit3 className="h-5 w-5 text-blue-400" />
-                    Mark Your Availability
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AvailabilityEditor
-                    projectId={currentProjectId || ""}
-                    existingSlots={existingSlots}
-                    onSave={handleSaveAvailability}
-                    onCancel={() => setIsEditing(false)}
-                    isSaving={isSaving}
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {/* Project Selector */}
-                <ProjectSelector
-                  projects={mockProjects}
-                  selectedProjectId={currentProjectId}
-                  onSelectProject={setCurrentProjectId}
-                />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {isEditing ? (
+          <Card className="bg-white/5 border-white/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Edit3 className="h-5 w-5 text-blue-400" />
+                Mark Your Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AvailabilityEditor
+                projectId={currentProjectId || ""}
+                existingSlots={existingSlots}
+                onSave={handleSaveAvailability}
+                onCancel={() => setIsEditing(false)}
+                isSaving={isSaving}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {/* Project Selector */}
+            <ProjectSelector
+              projects={mockProjects}
+              selectedProjectId={currentProjectId}
+              onSelectProject={setCurrentProjectId}
+            />
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  {/* Main calendar area */}
-                  <div className="lg:col-span-3">
-                    <Card className="bg-white/5 border-white/10">
-                      <CardHeader className="space-y-4">
-                        {/* Header row: Title on left, Tabs on right */}
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-2xl font-bold text-white">Team Availability</CardTitle>
-                          <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="bg-white/10 p-1">
-                              <TabsTrigger 
-                                value="heatmap" 
-                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
-                              >
-                                <LayoutGrid className="h-4 w-4 mr-1" />
-                                Heatmap
-                              </TabsTrigger>
-                              <TabsTrigger 
-                                value="meetings" 
-                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
-                              >
-                                <List className="h-4 w-4 mr-1" />
-                                Meetings
-                              </TabsTrigger>
-                              <TabsTrigger 
-                                value="polls" 
-                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
-                              >
-                                <Vote className="h-4 w-4 mr-1" />
-                                Polls
-                              </TabsTrigger>
-                            </TabsList>
-                          </Tabs>
-                        </div>
-                        
-                        {/* Week Navigation - date and buttons on same line */}
-                        {activeTab === "heatmap" && (
-                          <CalendarHeader 
-                            currentWeekStart={currentWeekStart}
-                            onNavigate={handleWeekNavigate}
-                          />
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        {activeTab === "heatmap" && (
-                          <div 
-                            className={`transition-opacity duration-200 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-                            style={{ minHeight: '400px' }}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Main calendar area */}
+              <div className="lg:col-span-3">
+                <Card className="bg-white/5 border-white/10">
+                  <CardHeader className="space-y-4">
+                    {/* Header row: Title on left, Tabs on right */}
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-2xl font-bold text-white">Team Availability</CardTitle>
+                      <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <TabsList className="bg-white/10 p-1">
+                          <TabsTrigger 
+                            value="heatmap" 
+                            className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
                           >
-                            <HeatmapView
-                              heatmapData={heatmapData}
-                              totalMembers={totalMembers}
-                              weekStart={currentWeekStart}
-                              weekEnd={currentWeekEnd}
-                              onCellClick={(date, hour) => {
-                                console.log(`Clicked ${format(date, 'yyyy-MM-dd')} at ${hour}:00`);
-                              }}
-                            />
-                          </div>
-                        )}
-                        {activeTab === "meetings" && (
-                          <MeetingList
-                            meetings={meetings}
-                            currentUserId="user1"
-                            onCheckIn={handleCheckIn}
-                            onCheckOut={handleCheckOut}
-                            onViewDetails={(id) => console.log("View meeting", id)}
-                            isCheckingIn={checkingInMeeting || undefined}
-                          />
-                        )}
-                        {activeTab === "polls" && (
-                          <div className="text-center py-12 text-slate-400">
-                            <Vote className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No active polls</p>
-                            <Button 
-                              variant="outline" 
-                              className="mt-4 border-white/20 text-white hover:bg-white/10"
-                              onClick={() => toast({ title: "Coming soon", description: "Poll creation is under development" })}
-                            >
-                              Create Poll
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Sidebar widgets */}
-                  <div className="space-y-6">
-                    {/* Quick actions */}
-                    <Card className="bg-white/5 border-white/10">
-                      <CardHeader>
-                        <CardTitle className="text-base text-white">Quick Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
-                          onClick={() => setIsEditing(true)}
+                            <LayoutGrid className="h-4 w-4 mr-1" />
+                            Heatmap
+                          </TabsTrigger>
+                          <TabsTrigger 
+                            value="meetings" 
+                            className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
+                          >
+                            <List className="h-4 w-4 mr-1" />
+                            Meetings
+                          </TabsTrigger>
+                          <TabsTrigger 
+                            value="polls" 
+                            className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
+                          >
+                            <Vote className="h-4 w-4 mr-1" />
+                            Polls
+                          </TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </div>
+                    
+                    {/* Week Navigation - date and buttons on same line */}
+                    {activeTab === "heatmap" && (
+                      <CalendarHeader 
+                        currentWeekStart={currentWeekStart}
+                        onNavigate={handleWeekNavigate}
+                      />
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    {activeTab === "heatmap" && (
+                      <div 
+                        className={`transition-opacity duration-200 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+                        style={{ minHeight: '400px' }}
+                      >
+                        <HeatmapView
+                          heatmapData={heatmapData}
+                          totalMembers={totalMembers}
+                          weekStart={currentWeekStart}
+                          weekEnd={currentWeekEnd}
+                          onCellClick={(date, hour) => {
+                            console.log(`Clicked ${format(date, 'yyyy-MM-dd')} at ${hour}:00`);
+                          }}
+                        />
+                      </div>
+                    )}
+                    {activeTab === "meetings" && (
+                      <MeetingList
+                        meetings={meetings}
+                        currentUserId="user1"
+                        onCheckIn={handleCheckIn}
+                        onCheckOut={handleCheckOut}
+                        onViewDetails={(id) => console.log("View meeting", id)}
+                        isCheckingIn={checkingInMeeting || undefined}
+                      />
+                    )}
+                    {activeTab === "polls" && (
+                      <div className="text-center py-12 text-slate-400">
+                        <Vote className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No active polls</p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4 border-white/20 text-white hover:bg-white/10"
+                          onClick={() => toast({ title: "Coming soon", description: "Poll creation is under development" })}
                         >
-                          <Clock className="h-4 w-4 mr-2 text-blue-400" />
-                          Update Availability
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
-                          onClick={() => setShowScheduler(true)}
-                        >
-                          <Plus className="h-4 w-4 mr-2 text-green-400" />
-                          Schedule Meeting
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
-                          onClick={() => setActiveTab("polls")}
-                        >
-                          <Vote className="h-4 w-4 mr-2 text-purple-400" />
                           Create Poll
                         </Button>
-                      </CardContent>
-                    </Card>
-
-                    {/* Attendance stats */}
-                    <AttendanceWidget
-                      attendedCount={3}
-                      totalMeetings={4}
-                      pastMeetings={mockPastMeetings}
-                    />
-
-                    {/* Best times hint */}
-                    <Card className="bg-blue-500/10 border-blue-500/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-blue-500/20">
-                            <Clock className="h-4 w-4 text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-sm text-white">Best Meeting Times</h4>
-                            <p className="text-xs text-slate-400 mt-1">
-                              Tue & Thu at 10am have 100% availability
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            )}
-          </motion.div>
-        </div>
-      </main>
+
+              {/* Sidebar widgets */}
+              <div className="space-y-6">
+                {/* Quick actions */}
+                <Card className="bg-white/5 border-white/10">
+                  <CardHeader>
+                    <CardTitle className="text-base text-white">Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                      Update Availability
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
+                      onClick={() => setShowScheduler(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2 text-green-400" />
+                      Schedule Meeting
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-white/10 text-slate-300 hover:bg-white/10"
+                      onClick={() => setActiveTab("polls")}
+                    >
+                      <Vote className="h-4 w-4 mr-2 text-purple-400" />
+                      Create Poll
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Attendance stats */}
+                <AttendanceWidget
+                  attendedCount={3}
+                  totalMeetings={4}
+                  pastMeetings={mockPastMeetings}
+                />
+
+                {/* Best times hint */}
+                <Card className="bg-blue-500/10 border-blue-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-blue-500/20">
+                        <Clock className="h-4 w-4 text-blue-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-white">Best Meeting Times</h4>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Tue & Thu at 10am have 100% availability
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       {/* Meeting Scheduler Modal */}
       <MeetingScheduler
@@ -642,6 +559,6 @@ export default function StudentCalendar() {
         suggestedTimes={mockSuggestedTimes}
         onSubmit={handleCreateMeeting}
       />
-    </div>
+    </StudentLayout>
   );
 }
