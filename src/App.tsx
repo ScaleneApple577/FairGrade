@@ -24,6 +24,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import FeatureDetailPage from "./pages/FeatureDetailPage";
 import LiveReplay from "./pages/LiveReplay";
 import NotFound from "./pages/NotFound";
+ import TeacherProjects from "./pages/TeacherProjects";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<TeacherDashboard />} />
           <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+           <Route path="/teacher/projects" element={<TeacherProjects />} />
           <Route path="/create" element={<CreateProject />} />
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/project/:id/timeline" element={<Timeline />} />
