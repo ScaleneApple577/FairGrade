@@ -38,7 +38,7 @@ export const AnimatedHero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 overflow-hidden flex flex-col items-center justify-center">
+    <section className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-transparent">
       {/* Trust Badge */}
       <div
         ref={badgeRef}

@@ -31,7 +31,7 @@ export const AnimatedBackground = () => {
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.height = document.documentElement.scrollHeight;
     };
 
     resizeCanvas();
@@ -56,18 +56,17 @@ export const AnimatedBackground = () => {
       // Create gradient background (FairGrade blue tones)
       const gradient = ctx.createLinearGradient(0, 0, width, height);
       gradient.addColorStop(0, '#EFF6FF');    // blue-50
-      gradient.addColorStop(0.5, '#DBEAFE');  // blue-100
-      gradient.addColorStop(1, '#BFDBFE');    // blue-200
+      gradient.addColorStop(0.3, '#DBEAFE');  // blue-100
+      gradient.addColorStop(0.6, '#EFF6FF');  // blue-50
+      gradient.addColorStop(1, '#DBEAFE');    // blue-100
       
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Create silk-like pattern
-      const imageData = ctx.createImageData(width, height);
-      const data = imageData.data;
-
-      for (let x = 0; x < width; x += 2) {
-        for (let y = 0; y < height; y += 2) {
+      // Create silk-like pattern with larger step for performance
+      const step = 3;
+      for (let x = 0; x < width; x += step) {
+        for (let y = 0; y < height; y += step) {
           const u = (x / width) * scale;
           const v = (y / height) * scale;
           
@@ -85,31 +84,22 @@ export const AnimatedBackground = () => {
           const rnd = noise(x, y);
           const intensity = Math.max(0, pattern - rnd / 15.0 * noiseIntensity);
           
-          // FairGrade blue color (#3B82F6 = rgb(59, 130, 246))
-          const r = Math.floor(59 + (196 * (1 - intensity * 0.3)));
-          const g = Math.floor(130 + (125 * (1 - intensity * 0.3)));
-          const b = Math.floor(246 + (9 * (1 - intensity * 0.3)));
-          const a = Math.floor(20 + (50 * intensity));
-
-          const index = (y * width + x) * 4;
-          if (index < data.length) {
-            data[index] = r;
-            data[index + 1] = g;
-            data[index + 2] = b;
-            data[index + 3] = a;
-          }
+          // FairGrade blue color - subtle silk effect
+          const alpha = 0.03 + (0.08 * intensity);
+          
+          ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`;
+          ctx.fillRect(x, y, step, step);
         }
       }
 
-      ctx.putImageData(imageData, 0, 0);
-
-      // Add subtle blue overlay for depth
+      // Add subtle radial overlay for depth
       const overlayGradient = ctx.createRadialGradient(
-        width / 2, height / 3, 0,
-        width / 2, height / 3, Math.max(width, height) / 1.5
+        width / 2, height / 4, 0,
+        width / 2, height / 4, Math.max(width, height) / 1.2
       );
-      overlayGradient.addColorStop(0, 'rgba(59, 130, 246, 0.02)');
-      overlayGradient.addColorStop(1, 'rgba(59, 130, 246, 0.08)');
+      overlayGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+      overlayGradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
+      overlayGradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
       
       ctx.fillStyle = overlayGradient;
       ctx.fillRect(0, 0, width, height);
@@ -131,13 +121,14 @@ export const AnimatedBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 pointer-events-none"
+      className="fixed inset-0 pointer-events-none"
       style={{ 
-        width: '100vw', 
-        height: '100vh',
         position: 'fixed',
         top: 0,
-        left: 0
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: -1
       }}
     />
   );
