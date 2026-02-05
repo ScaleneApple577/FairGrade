@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Pricing } from "@/components/landing/Pricing";
 import { Footer } from "@/components/landing/Footer";
@@ -13,6 +14,10 @@ const silkFlowKeyframes = `
 `;
 
 const PricingPage = () => {
+  useEffect(() => {
+    document.title = "Pricing — FairGrade";
+  }, []);
+
   return (
     <div 
       className="min-h-screen scroll-smooth"
