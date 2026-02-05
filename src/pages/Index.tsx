@@ -218,23 +218,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SOCIAL PROOF BAR */}
-      <section className="bg-white/5 backdrop-blur-sm py-12">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-slate-400 text-sm uppercase tracking-wider font-medium mb-8">
-            Integrated with tools students already use
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            <span className="text-slate-500 font-semibold text-xl">Google Docs</span>
-            <span className="text-slate-500 font-semibold text-xl">Google Sheets</span>
-            <span className="text-slate-500 font-semibold text-xl">Google Slides</span>
-            <span className="text-slate-500 font-semibold text-xl">Canvas</span>
-            <span className="text-slate-500 font-semibold text-xl">Blackboard</span>
-          </div>
-        </div>
-      </section>
-
-
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="bg-white/5 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
