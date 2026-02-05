@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
@@ -13,6 +14,10 @@ const silkFlowKeyframes = `
 `;
 
 const FeaturesPage = () => {
+  useEffect(() => {
+    document.title = "Features — FairGrade";
+  }, []);
+
   return (
     <div 
       className="min-h-screen scroll-smooth"
