@@ -116,7 +116,6 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-slate-300 hover:text-white font-medium transition-colors">Home</Link>
             <Link to="/features" className="text-slate-300 hover:text-white font-medium transition-colors">Features</Link>
-            <a href="#how-it-works" className="text-slate-300 hover:text-white font-medium transition-colors">How It Works</a>
             <Link to="/pricing" className="text-slate-300 hover:text-white font-medium transition-colors">Pricing</Link>
           </div>
 
@@ -142,7 +141,6 @@ const Index = () => {
           <div className="md:hidden bg-slate-900/95 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-4">
             <Link to="/" className="block text-slate-300 hover:text-white font-medium">Home</Link>
             <Link to="/features" className="block text-slate-300 hover:text-white font-medium">Features</Link>
-            <a href="#how-it-works" className="block text-slate-300 hover:text-white font-medium">How It Works</a>
             <Link to="/pricing" className="block text-slate-300 hover:text-white font-medium">Pricing</Link>
             <div className="pt-4 border-t border-white/10 space-y-3">
               <Link to="/auth" className="block text-slate-300 hover:text-white font-medium">Log In</Link>
