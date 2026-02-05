@@ -216,6 +216,7 @@ export default function StudentCalendar() {
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [meetings, setMeetings] = useState(mockMeetings);
   const [checkingInMeeting, setCheckingInMeeting] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Week navigation state
   const [currentWeekStart, setCurrentWeekStart] = useState(() => 
@@ -227,6 +228,15 @@ export default function StudentCalendar() {
     endOfWeek(currentWeekStart, { weekStartsOn: 1 }),
     [currentWeekStart]
   );
+
+  // Handle week navigation with transition
+  const handleWeekNavigate = (newWeekStart: Date) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentWeekStart(newWeekStart);
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 100);
+  };
 
   // Get current project details
   const currentProject = mockProjects.find(p => p.id === currentProjectId);
@@ -475,48 +485,61 @@ export default function StudentCalendar() {
                   {/* Main calendar area */}
                   <div className="lg:col-span-3">
                     <Card className="bg-white/5 border-white/10">
-                      <CardHeader className="flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <CardTitle className="text-white">Team Availability</CardTitle>
-                            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                              <TabsList className="bg-white/10">
-                                <TabsTrigger value="heatmap" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
-                                  <LayoutGrid className="h-4 w-4 mr-1" />
-                                  Heatmap
-                                </TabsTrigger>
-                                <TabsTrigger value="meetings" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
-                                  <List className="h-4 w-4 mr-1" />
-                                  Meetings
-                                </TabsTrigger>
-                                <TabsTrigger value="polls" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400">
-                                  <Vote className="h-4 w-4 mr-1" />
-                                  Polls
-                                </TabsTrigger>
-                              </TabsList>
-                            </Tabs>
-                          </div>
+                      <CardHeader className="space-y-4">
+                        {/* Header row: Title on left, Tabs on right */}
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-2xl font-bold text-white">Team Availability</CardTitle>
+                          <Tabs value={activeTab} onValueChange={setActiveTab}>
+                            <TabsList className="bg-white/10 p-1">
+                              <TabsTrigger 
+                                value="heatmap" 
+                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
+                              >
+                                <LayoutGrid className="h-4 w-4 mr-1" />
+                                Heatmap
+                              </TabsTrigger>
+                              <TabsTrigger 
+                                value="meetings" 
+                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
+                              >
+                                <List className="h-4 w-4 mr-1" />
+                                Meetings
+                              </TabsTrigger>
+                              <TabsTrigger 
+                                value="polls" 
+                                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-lg text-sm font-medium"
+                              >
+                                <Vote className="h-4 w-4 mr-1" />
+                                Polls
+                              </TabsTrigger>
+                            </TabsList>
+                          </Tabs>
                         </div>
                         
-                        {/* Week Navigation */}
+                        {/* Week Navigation - date and buttons on same line */}
                         {activeTab === "heatmap" && (
                           <CalendarHeader 
                             currentWeekStart={currentWeekStart}
-                            onNavigate={setCurrentWeekStart}
+                            onNavigate={handleWeekNavigate}
                           />
                         )}
                       </CardHeader>
                       <CardContent>
                         {activeTab === "heatmap" && (
-                          <HeatmapView
-                            heatmapData={heatmapData}
-                            totalMembers={totalMembers}
-                            weekStart={currentWeekStart}
-                            weekEnd={currentWeekEnd}
-                            onCellClick={(date, hour) => {
-                              console.log(`Clicked ${format(date, 'yyyy-MM-dd')} at ${hour}:00`);
-                            }}
-                          />
+                          <div 
+                            className={`transition-opacity duration-200 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+                            style={{ minHeight: '400px' }}
+                          >
+                            <HeatmapView
+                              heatmapData={heatmapData}
+                              totalMembers={totalMembers}
+                              weekStart={currentWeekStart}
+                              weekEnd={currentWeekEnd}
+                              onCellClick={(date, hour) => {
+                                console.log(`Clicked ${format(date, 'yyyy-MM-dd')} at ${hour}:00`);
+                              }}
+                            />
+                          </div>
                         )}
                         {activeTab === "meetings" && (
                           <MeetingList
