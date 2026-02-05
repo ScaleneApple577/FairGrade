@@ -1,14 +1,29 @@
-  import { useState, useEffect } from "react";
-  import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
- import { 
-    X, Download, Play, Pause, SkipBack, SkipForward, 
-    Maximize, Clock, Circle, Plus, Minus, FileText,
-    LayoutDashboard, FolderOpen, Users, BarChart3, Activity,
-    Settings, LogOut, ChevronRight, Table, Presentation, Search
- } from "lucide-react";
- import { Button } from "@/components/ui/button";
-  import { supabase } from "@/integrations/supabase/client";
-  import { toast } from "sonner";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { 
+  X, Download, Play, Pause, SkipBack, SkipForward, 
+  Maximize, Clock, Circle, Plus, Minus, FileText,
+  LayoutDashboard, FolderOpen, Users, BarChart3, Activity,
+  Settings, LogOut, ChevronRight, Table, Presentation, Search,
+  HelpCircle, FastForward, Rewind, Eye, EyeOff
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// Helper component for keyboard shortcut rows
+const ShortcutRow = ({ keys, description }: { keys: string[], description: string }) => (
+  <div className="flex items-center justify-between py-1">
+    <div className="flex gap-2">
+      {keys.map(key => (
+        <kbd key={key} className="px-2 py-1 bg-slate-700 text-white rounded border border-slate-600 font-mono text-xs">
+          {key}
+        </kbd>
+      ))}
+    </div>
+    <span className="text-slate-300 text-sm">{description}</span>
+  </div>
+);
  
  interface TimelineEvent {
    id: string;
@@ -221,10 +236,17 @@
    const [totalDuration, setTotalDuration] = useState(0);
    const [fileName, setFileName] = useState("");
    const [projectName, setProjectName] = useState("");
-   const [selectedAuthor, setSelectedAuthor] = useState("all");
-   const [isLoading, setIsLoading] = useState(true);
-   const [error, setError] = useState<string | null>(null);
- 
+  const [selectedAuthor, setSelectedAuthor] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Keyboard shortcuts state
+  const [showCaptions, setShowCaptions] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [speedOverlay, setSpeedOverlay] = useState<string | null>(null);
+  const [skipOverlay, setSkipOverlay] = useState<{ direction: 'forward' | 'backward', amount: number } | null>(null);
+
     const isActive = (path: string) => location.pathname === path || location.pathname.startsWith("/teacher/live");
 
     const handleLogout = async () => {
@@ -380,51 +402,239 @@
      ? timeline 
      : timeline.filter(e => e.author?.id === selectedAuthor);
  
-   const handleSeek = (seconds: number) => {
-     const index = timeline.findIndex(e => e.seconds_from_start >= seconds);
-     if (index !== -1) {
-       setCurrentIndex(index);
-     }
-   };
- 
-   const handleRewind = () => {
-     setCurrentIndex(prev => Math.max(0, prev - 5));
-   };
- 
-   const handleFastForward = () => {
-     setCurrentIndex(prev => Math.min(timeline.length - 1, prev + 5));
-   };
- 
-   const handlePlayPause = () => {
-     setIsPlaying(!isPlaying);
-   };
- 
-   const jumpToEvent = (index: number) => {
-     setCurrentIndex(index);
-     setIsPlaying(false);
-   };
- 
-   const formatTime = (seconds: number) => {
-     const mins = Math.floor(seconds / 60);
-     const secs = seconds % 60;
-     return `${mins}:${secs.toString().padStart(2, "0")}`;
-   };
- 
-   const formatDate = (timestamp: string) => {
-     return new Date(timestamp).toLocaleString();
-   };
- 
-   const goBack = () => {
-     navigate(-1);
-   };
- 
-   const toggleFullscreen = () => {
-     if (document.fullscreenElement) {
-       document.exitFullscreen();
-     } else {
-       document.documentElement.requestFullscreen();
-     }
-   };
+  const handleSeek = (seconds: number) => {
+    const index = timeline.findIndex(e => e.seconds_from_start >= seconds);
+    if (index !== -1) {
+      setCurrentIndex(index);
+    }
+  };
+
+  const handleRewind = useCallback(() => {
+    setCurrentIndex(prev => Math.max(0, prev - 5));
+    setSkipOverlay({ direction: 'backward', amount: 5 });
+    setTimeout(() => setSkipOverlay(null), 800);
+  }, []);
+
+  const handleFastForward = useCallback(() => {
+    setCurrentIndex(prev => Math.min(timeline.length - 1, prev + 5));
+    setSkipOverlay({ direction: 'forward', amount: 5 });
+    setTimeout(() => setSkipOverlay(null), 800);
+  }, [timeline.length]);
+
+  const handlePlayPause = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
+
+  const jumpToEvent = (index: number) => {
+    setCurrentIndex(index);
+    setIsPlaying(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  const goBack = () => {
+    navigate(-1);
+  };
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    } else {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    }
+  }, []);
+
+  // Skip forward/backward by N events
+  const skipForward = useCallback((events: number) => {
+    setCurrentIndex(prev => Math.min(timeline.length - 1, prev + events));
+    setSkipOverlay({ direction: 'forward', amount: events });
+    setTimeout(() => setSkipOverlay(null), 800);
+  }, [timeline.length]);
+
+  const skipBackward = useCallback((events: number) => {
+    setCurrentIndex(prev => Math.max(0, prev - events));
+    setSkipOverlay({ direction: 'backward', amount: events });
+    setTimeout(() => setSkipOverlay(null), 800);
+  }, []);
+
+  // Speed controls
+  const increaseSpeed = useCallback(() => {
+    setPlaybackSpeed(prev => {
+      const newSpeed = prev === 0.5 ? 1 : prev === 1 ? 2 : 2;
+      setSpeedOverlay(`${newSpeed}x`);
+      setTimeout(() => setSpeedOverlay(null), 800);
+      return newSpeed;
+    });
+  }, []);
+
+  const decreaseSpeed = useCallback(() => {
+    setPlaybackSpeed(prev => {
+      const newSpeed = prev === 2 ? 1 : prev === 1 ? 0.5 : 0.5;
+      setSpeedOverlay(`${newSpeed}x`);
+      setTimeout(() => setSpeedOverlay(null), 800);
+      return newSpeed;
+    });
+  }, []);
+
+  // Jump to start/end
+  const jumpToStart = useCallback(() => {
+    setCurrentIndex(0);
+    toast("Jumped to beginning");
+  }, []);
+
+  const jumpToEnd = useCallback(() => {
+    setCurrentIndex(timeline.length - 1);
+    toast("Jumped to end");
+  }, [timeline.length]);
+
+  // Frame-by-frame navigation
+  const previousFrame = useCallback(() => {
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const nextFrame = useCallback(() => {
+    setCurrentIndex(prev => Math.min(timeline.length - 1, prev + 1));
+  }, [timeline.length]);
+
+  // Jump to percentage
+  const jumpToPercentage = useCallback((percentage: number) => {
+    const targetIndex = Math.floor((timeline.length - 1) * (percentage / 100));
+    setCurrentIndex(targetIndex);
+    toast(`Jumped to ${percentage}%`);
+  }, [timeline.length]);
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    if (currentView !== "replay") return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
+      
+      // Don't trigger shortcuts if user is typing in an input/textarea
+      if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
+        return;
+      }
+
+      switch(e.key.toLowerCase()) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          handlePlayPause();
+          break;
+
+        case 'arrowright':
+          e.preventDefault();
+          skipForward(5);
+          break;
+
+        case 'arrowleft':
+          e.preventDefault();
+          skipBackward(5);
+          break;
+
+        case 'j':
+          e.preventDefault();
+          skipBackward(10);
+          break;
+
+        case 'l':
+          e.preventDefault();
+          skipForward(10);
+          break;
+
+        case 'arrowup':
+          e.preventDefault();
+          increaseSpeed();
+          break;
+
+        case 'arrowdown':
+          e.preventDefault();
+          decreaseSpeed();
+          break;
+
+        case 'c':
+          e.preventDefault();
+          setShowCaptions(prev => !prev);
+          toast(showCaptions ? "Captions hidden" : "Captions shown");
+          break;
+
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+
+        case 'home':
+          e.preventDefault();
+          jumpToStart();
+          break;
+
+        case 'end':
+          e.preventDefault();
+          jumpToEnd();
+          break;
+
+        case ',':
+          if (!isPlaying) {
+            e.preventDefault();
+            previousFrame();
+          }
+          break;
+
+        case '.':
+          if (!isPlaying) {
+            e.preventDefault();
+            nextFrame();
+          }
+          break;
+
+        case '?':
+          e.preventDefault();
+          setShowKeyboardHelp(true);
+          break;
+
+        case 'escape':
+          e.preventDefault();
+          setShowKeyboardHelp(false);
+          break;
+
+        // Number keys (0-9) for percentage jumps
+        case '0': e.preventDefault(); jumpToPercentage(0); break;
+        case '1': e.preventDefault(); jumpToPercentage(10); break;
+        case '2': e.preventDefault(); jumpToPercentage(20); break;
+        case '3': e.preventDefault(); jumpToPercentage(30); break;
+        case '4': e.preventDefault(); jumpToPercentage(40); break;
+        case '5': e.preventDefault(); jumpToPercentage(50); break;
+        case '6': e.preventDefault(); jumpToPercentage(60); break;
+        case '7': e.preventDefault(); jumpToPercentage(70); break;
+        case '8': e.preventDefault(); jumpToPercentage(80); break;
+        case '9': e.preventDefault(); jumpToPercentage(90); break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentView, isPlaying, showCaptions, handlePlayPause, skipForward, skipBackward, 
+      increaseSpeed, decreaseSpeed, toggleFullscreen, jumpToStart, jumpToEnd, 
+      previousFrame, nextFrame, jumpToPercentage]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
  
    const currentEvent = timeline[currentIndex];
    const currentAuthor = currentEvent?.author;
@@ -697,21 +907,21 @@
              )}
            </div>
  
-           {/* Current Author */}
-           {currentAuthor && (
-             <div className="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4 mb-6">
-               <p className="text-xs text-blue-300 mb-2">Currently Editing</p>
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                   {currentAuthor.avatar}
-                 </div>
-                 <div>
-                   <p className="font-semibold text-white">{currentAuthor.name}</p>
-                   <p className="text-xs text-slate-300">{currentAuthor.role}</p>
-                 </div>
-               </div>
-             </div>
-           )}
+          {/* Current Author - Only show if captions enabled */}
+          {showCaptions && currentAuthor && (
+            <div className="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4 mb-6">
+              <p className="text-xs text-blue-300 mb-2">Currently Editing</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {currentAuthor.avatar}
+                </div>
+                <div>
+                  <p className="font-semibold text-white">{currentAuthor.name}</p>
+                  <p className="text-xs text-slate-300">{currentAuthor.role}</p>
+                </div>
+              </div>
+            </div>
+          )}
  
            {/* Change Summary */}
            {currentEvent && (
@@ -850,31 +1060,139 @@
              ))}
            </div>
  
-           {/* Right: Additional Controls */}
-           <div className="flex items-center gap-2">
-             <button 
-               onClick={toggleFullscreen}
-               className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-               title="Toggle fullscreen"
-             >
-               <Maximize className="w-5 h-5 text-white" />
-             </button>
- 
-             <select 
-               className="bg-slate-700 text-white px-3 py-2 rounded-lg text-sm border border-slate-600"
-               value={selectedAuthor}
-               onChange={(e) => setSelectedAuthor(e.target.value)}
-             >
-               <option value="all">All Authors</option>
-               {authors.map(author => (
-                 <option key={author.id} value={author.id}>
-                   {author.name}
-                 </option>
-               ))}
-             </select>
-           </div>
-         </div>
-       </div>
-     </div>
-   );
- }
+          {/* Right: Additional Controls */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowCaptions(!showCaptions)}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              title={showCaptions ? "Hide author names (C)" : "Show author names (C)"}
+            >
+              {showCaptions ? (
+                <Eye className="w-5 h-5 text-white" />
+              ) : (
+                <EyeOff className="w-5 h-5 text-slate-400" />
+              )}
+            </button>
+
+            <button 
+              onClick={toggleFullscreen}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              title="Toggle fullscreen (F)"
+            >
+              <Maximize className="w-5 h-5 text-white" />
+            </button>
+
+            <button 
+              onClick={() => setShowKeyboardHelp(true)}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              title="Keyboard shortcuts (?)"
+            >
+              <HelpCircle className="w-5 h-5 text-white" />
+            </button>
+
+            <select 
+              className="bg-slate-700 text-white px-3 py-2 rounded-lg text-sm border border-slate-600"
+              value={selectedAuthor}
+              onChange={(e) => setSelectedAuthor(e.target.value)}
+            >
+              <option value="all">All Authors</option>
+              {authors.map(author => (
+                <option key={author.id} value={author.id}>
+                  {author.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Speed Change Overlay */}
+      {speedOverlay && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-8 py-4 rounded-lg text-2xl font-bold z-[60] pointer-events-none">
+          {speedOverlay}
+        </div>
+      )}
+
+      {/* Skip Overlay */}
+      {skipOverlay && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-8 py-4 rounded-lg text-xl font-bold z-[60] flex items-center gap-2 pointer-events-none">
+          {skipOverlay.direction === 'forward' ? (
+            <>
+              <FastForward className="w-6 h-6" />
+              +{skipOverlay.amount} events
+            </>
+          ) : (
+            <>
+              <Rewind className="w-6 h-6" />
+              -{skipOverlay.amount} events
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showKeyboardHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100] p-4">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            
+            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+              <h2 className="text-2xl font-bold text-white">Keyboard Shortcuts</h2>
+              <button 
+                onClick={() => setShowKeyboardHelp(false)}
+                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              
+              {/* Playback Controls */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">Playback Controls</h3>
+                <div className="space-y-2">
+                  <ShortcutRow keys={['Space', 'K']} description="Play/Pause" />
+                  <ShortcutRow keys={['→']} description="Skip forward 5 events" />
+                  <ShortcutRow keys={['←']} description="Skip backward 5 events" />
+                  <ShortcutRow keys={['J']} description="Rewind 10 events" />
+                  <ShortcutRow keys={['L']} description="Fast forward 10 events" />
+                  <ShortcutRow keys={['↑']} description="Increase speed" />
+                  <ShortcutRow keys={['↓']} description="Decrease speed" />
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">Navigation</h3>
+                <div className="space-y-2">
+                  <ShortcutRow keys={['0-9']} description="Jump to 0%-90% of timeline" />
+                  <ShortcutRow keys={['Home']} description="Jump to beginning" />
+                  <ShortcutRow keys={['End']} description="Jump to end" />
+                  <ShortcutRow keys={[',']} description="Previous frame (when paused)" />
+                  <ShortcutRow keys={['.']} description="Next frame (when paused)" />
+                </div>
+              </div>
+
+              {/* Display */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">Display</h3>
+                <div className="space-y-2">
+                  <ShortcutRow keys={['C']} description="Toggle author names" />
+                  <ShortcutRow keys={['F']} description="Toggle fullscreen" />
+                  <ShortcutRow keys={['?']} description="Show this help" />
+                </div>
+              </div>
+
+            </div>
+
+            <div className="p-6 border-t border-slate-700">
+              <p className="text-slate-400 text-sm text-center">
+                Press <kbd className="px-2 py-1 bg-slate-700 rounded text-white text-xs">Esc</kbd> or click outside to close
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
