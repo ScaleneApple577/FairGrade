@@ -41,9 +41,9 @@ const FeatureCard = ({
       onClick={() => navigate(`/features/${featureId}`)}
       className={cn(
         "relative group cursor-pointer overflow-hidden rounded-lg",
-        "bg-white border border-slate-200 transition-all duration-300",
-        "hover:border-primary hover:shadow-lg",
-        featured && "ring-1 ring-primary/50 ring-offset-2 ring-offset-white"
+        "bg-white/10 backdrop-blur-md border border-white/10 transition-all duration-300",
+        "hover:border-primary hover:bg-white/15",
+        featured && "ring-1 ring-primary/50"
       )}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -60,16 +60,16 @@ const FeatureCard = ({
       <div className="p-4 md:p-5 flex items-center gap-4">
         <div className={cn(
           "flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300",
-          "bg-blue-50 group-hover:bg-blue-100 group-hover:scale-110"
+          "bg-white/10 group-hover:bg-white/20 group-hover:scale-110"
         )}>
           <Icon className="w-6 h-6 text-primary transition-colors" />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-slate-900 font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
+          <h3 className="text-white font-semibold text-base md:text-lg truncate group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <p className="text-slate-500 text-sm truncate">
+          <p className="text-slate-300 text-sm truncate">
             {subtitle}
           </p>
         </div>
@@ -86,7 +86,7 @@ const FeatureCard = ({
       </div>
 
       {featured && (
-        <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+        <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium bg-primary/20 text-primary">
           Featured
         </div>
       )}
@@ -163,7 +163,7 @@ const teacherFeatures = [
 
 export const Features = () => {
   return (
-    <section id="features" className="bg-slate-50 py-24 md:py-32">
+    <section id="features" className="py-24 md:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -173,10 +173,10 @@ export const Features = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             Features Built For Everyone
           </h2>
-          <p className="text-xl text-slate-600">
+          <p className="text-xl text-slate-300">
             Choose your role to explore
           </p>
         </motion.div>
@@ -192,12 +192,12 @@ export const Features = () => {
           >
             {/* Student Header */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
                 <GraduationCap className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">For Students</h3>
-                <p className="text-slate-500">Tools to prove your contribution</p>
+                <h3 className="text-2xl font-bold text-white">For Students</h3>
+                <p className="text-slate-300">Tools to prove your contribution</p>
               </div>
             </div>
 
@@ -220,12 +220,12 @@ export const Features = () => {
           >
             {/* Teacher Header */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
                 <UserCheck className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">For Teachers</h3>
-                <p className="text-slate-500">Grade fairly with data</p>
+                <h3 className="text-2xl font-bold text-white">For Teachers</h3>
+                <p className="text-slate-300">Grade fairly with data</p>
               </div>
             </div>
 

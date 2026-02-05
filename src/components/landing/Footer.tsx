@@ -2,8 +2,8 @@ import { Mail, Twitter, Linkedin, Github } from "lucide-react";
 
 const footerLinks = {
   Product: [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "Features", href: "/features" },
+    { name: "Pricing", href: "/pricing" },
     { name: "Integrations", href: "#" },
     { name: "Changelog", href: "#" },
   ],
@@ -36,7 +36,7 @@ const socialLinks = [
 
 export const Footer = () => {
   return (
-    <footer className="bg-slate-900 text-white py-16 border-t border-slate-800">
+    <footer className="bg-black/30 backdrop-blur-sm text-white py-16 border-t border-white/10">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
@@ -81,7 +81,7 @@ export const Footer = () => {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 hover:text-primary transition-all duration-200 hover:scale-105"
+                  className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 hover:text-primary transition-all duration-200 hover:scale-105"
                 >
                   <social.icon className="w-5 h-5" />
                 </a>
@@ -112,11 +112,11 @@ export const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm">
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-slate-400 text-sm">
             © {new Date().getFullYear()} FairGrade. All rights reserved.
           </p>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-400 text-sm">
             Made with ❤️ for educators everywhere
           </p>
         </div>
