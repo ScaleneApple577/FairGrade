@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import PulseGridBackground from "@/components/features/PulseGridBackground";
+
+const silkFlowKeyframes = `
+@keyframes silkFlow {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 50% 100%; }
+  75% { background-position: 0% 50%; }
+  100% { background-position: 0% 50%; }
+}
+`;
 
 // Feature data mapped by ID
 const featureData: Record<string, {
@@ -124,14 +135,34 @@ const FeatureDetailPage = () => {
 
   const feature = featureId ? featureData[featureId] : null;
 
+  // Set page title
+  useEffect(() => {
+    if (feature) {
+      document.title = `${feature.title} — FairGrade`;
+    } else {
+      document.title = "Feature — FairGrade";
+    }
+  }, [feature]);
+
+  // Check if this is the real-time tracking feature
+  const isRealTimeTracking = featureId === "track-your-work";
+
   if (!feature) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(-45deg, #0f172a, #1e3a5f, #1a1a2e, #1e40af, #0f172a, #172554, #1e293b)',
+          backgroundSize: '600% 600%',
+          animation: 'silkFlow 20s ease infinite'
+        }}
+      >
+        <style>{silkFlowKeyframes}</style>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Feature not found</h1>
+          <h1 className="text-2xl font-bold text-white mb-4">Feature not found</h1>
           <button
             onClick={() => navigate("/features")}
-            className="text-primary hover:underline"
+            className="text-blue-400 hover:underline"
           >
             Back to Features
           </button>
@@ -141,15 +172,27 @@ const FeatureDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(-45deg, #0f172a, #1e3a5f, #1a1a2e, #1e40af, #0f172a, #172554, #1e293b)',
+        backgroundSize: '600% 600%',
+        animation: 'silkFlow 20s ease infinite'
+      }}
+    >
+      <style>{silkFlowKeyframes}</style>
+      
+      {/* Unique background animation for Real-Time Tracking feature */}
+      {isRealTimeTracking && <PulseGridBackground />}
+      
       <Navbar />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-24 pb-16 relative z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <motion.button
             onClick={() => navigate("/features")}
-            className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors mb-8 group"
+            className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors mb-8 group"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -165,14 +208,14 @@ const FeatureDetailPage = () => {
             transition={{ duration: 0.4 }}
             className="mb-6"
           >
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-blue-50 text-primary border-blue-200">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-400/30">
               {feature.category === "student" ? "For Students" : "For Teachers"}
             </span>
           </motion.div>
 
           {/* Title */}
           <motion.h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -182,7 +225,7 @@ const FeatureDetailPage = () => {
 
           {/* Subtitle */}
           <motion.p
-            className="text-xl md:text-2xl text-slate-500 mb-12"
+            className="text-xl md:text-2xl text-slate-300 mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -198,15 +241,15 @@ const FeatureDetailPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <p className="text-lg text-slate-600 leading-relaxed mb-8">
+              <p className="text-lg text-slate-300 leading-relaxed mb-8">
                 {feature.longDescription}
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 hover:scale-105 transition-all shadow-lg shadow-primary/20">
+                <button className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 hover:scale-105 transition-all shadow-lg shadow-blue-500/20">
                   Sign Up Now
                 </button>
-                <button className="px-6 py-3 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+                <button className="px-6 py-3 border border-white/20 text-white font-medium rounded-lg hover:bg-white/10 transition-colors">
                   Watch Demo
                 </button>
               </div>
@@ -220,7 +263,7 @@ const FeatureDetailPage = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               {/* Primary Image */}
-              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
+              <div className="rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/10 shadow-xl">
                 <img
                   src={feature.primaryImageSrc}
                   alt={feature.title}
@@ -230,7 +273,7 @@ const FeatureDetailPage = () => {
 
               {/* Secondary Image */}
               <motion.div
-                className="absolute -bottom-6 -left-6 w-2/3 rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white"
+                className="absolute -bottom-6 -left-6 w-2/3 rounded-xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/10 shadow-lg"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
