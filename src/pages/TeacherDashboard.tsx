@@ -31,11 +31,11 @@ import { toast } from "sonner";
 // Sidebar navigation items for teachers
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: FolderOpen, label: "All Projects", path: "/dashboard/projects" },
-  { icon: Users, label: "Students", path: "/dashboard/students" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: Activity, label: "Live Monitoring", path: "/live-monitor" },
-  { icon: FileText, label: "Reports", path: "/dashboard/reports" },
+  { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
+  { icon: Users, label: "Students", path: "/teacher/students" },
+  { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
+  { icon: Activity, label: "Live Monitor", path: "/teacher/live-monitor" },
+  { icon: FileText, label: "Reports", path: "/teacher/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

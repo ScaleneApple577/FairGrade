@@ -25,7 +25,7 @@
    { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
    { icon: Users, label: "Students", path: "/teacher/students" },
    { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
-   { icon: Activity, label: "Live Monitoring", path: "/teacher/live-monitor" },
+   { icon: Activity, label: "Live Monitor", path: "/teacher/live-monitor" },
    { icon: FileText, label: "Reports", path: "/teacher/reports" },
    { icon: Settings, label: "Settings", path: "/settings" },
  ];
