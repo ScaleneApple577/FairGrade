@@ -25,24 +25,20 @@ export const AnimatedBackground = () => {
     if (!ctx) return;
 
     let time = 0;
-    const speed = 0.015;
-    const scale = 2;
-    const noiseIntensity = 0.6;
+    const speed = 0.02;
+    const scale = 1.5;
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
-      canvas.height = document.documentElement.scrollHeight;
+      canvas.height = window.innerHeight;
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Simple noise function
-    const noise = (x: number, y: number) => {
-      const G = 2.71828;
-      const rx = G * Math.sin(G * x);
-      const ry = G * Math.sin(G * y);
-      return (rx * ry * (1 + x)) % 1;
+    // Improved noise function for smoother patterns
+    const noise = (x: number, y: number, t: number) => {
+      return Math.sin(x * 0.01 + t) * Math.cos(y * 0.01 + t * 0.5) * 0.5 + 0.5;
     };
 
     const animate = () => {
@@ -53,55 +49,88 @@ export const AnimatedBackground = () => {
 
       const { width, height } = canvas;
       
-      // Create gradient background (FairGrade blue tones)
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#EFF6FF');    // blue-50
-      gradient.addColorStop(0.3, '#DBEAFE');  // blue-100
-      gradient.addColorStop(0.6, '#EFF6FF');  // blue-50
-      gradient.addColorStop(1, '#DBEAFE');    // blue-100
+      // Base gradient - light blue tones
+      const baseGradient = ctx.createLinearGradient(0, 0, width, height);
+      baseGradient.addColorStop(0, '#E0F2FE');    // blue-100
+      baseGradient.addColorStop(0.5, '#DBEAFE');  // blue-100
+      baseGradient.addColorStop(1, '#BFDBFE');    // blue-200
       
-      ctx.fillStyle = gradient;
+      ctx.fillStyle = baseGradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Create silk-like pattern with larger step for performance
-      const step = 3;
+      // Create flowing silk waves - MORE VISIBLE
+      const step = 2;
+      
       for (let x = 0; x < width; x += step) {
         for (let y = 0; y < height; y += step) {
           const u = (x / width) * scale;
           const v = (y / height) * scale;
           
-          const tOffset = speed * time;
-          const tex_x = u;
-          const tex_y = v + 0.03 * Math.sin(8.0 * tex_x - tOffset);
-
-          const pattern = 0.6 + 0.4 * Math.sin(
-            5.0 * (tex_x + tex_y + 
-              Math.cos(3.0 * tex_x + 5.0 * tex_y) + 
-              0.02 * tOffset) +
-            Math.sin(20.0 * (tex_x + tex_y - 0.1 * tOffset))
-          );
-
-          const rnd = noise(x, y);
-          const intensity = Math.max(0, pattern - rnd / 15.0 * noiseIntensity);
+          const tOffset = time * speed;
           
-          // FairGrade blue color - subtle silk effect
-          const alpha = 0.03 + (0.08 * intensity);
+          // Create flowing wave pattern
+          const wave1 = Math.sin(u * 8 + tOffset) * Math.cos(v * 6 - tOffset * 0.7);
+          const wave2 = Math.sin((u + v) * 4 + tOffset * 1.3) * 0.5;
+          const wave3 = Math.cos(u * 3 - v * 5 + tOffset * 0.5) * 0.3;
           
-          ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`;
+          const combinedWave = (wave1 + wave2 + wave3) / 1.8;
+          const intensity = (combinedWave + 1) / 2; // Normalize to 0-1
+          
+          // Add noise for texture
+          const noiseVal = noise(x, y, tOffset);
+          const finalIntensity = intensity * 0.7 + noiseVal * 0.3;
+          
+          // Much more visible blue tones
+          const r = Math.floor(180 - finalIntensity * 80);   // 100-180
+          const g = Math.floor(210 - finalIntensity * 60);   // 150-210
+          const b = Math.floor(255 - finalIntensity * 30);   // 225-255
+          const alpha = 0.4 + finalIntensity * 0.4;          // 0.4-0.8 opacity
+          
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
           ctx.fillRect(x, y, step, step);
         }
       }
 
-      // Add subtle radial overlay for depth
-      const overlayGradient = ctx.createRadialGradient(
-        width / 2, height / 4, 0,
-        width / 2, height / 4, Math.max(width, height) / 1.2
+      // Add flowing highlight streaks
+      ctx.globalAlpha = 0.15;
+      for (let i = 0; i < 5; i++) {
+        const yOffset = (height * 0.2) + (i * height * 0.15);
+        const waveOffset = Math.sin(time * 0.01 + i) * 50;
+        
+        const streakGradient = ctx.createLinearGradient(0, yOffset + waveOffset, width, yOffset + waveOffset + 100);
+        streakGradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
+        streakGradient.addColorStop(0.3, 'rgba(59, 130, 246, 0.3)');
+        streakGradient.addColorStop(0.5, 'rgba(147, 197, 253, 0.5)');
+        streakGradient.addColorStop(0.7, 'rgba(59, 130, 246, 0.3)');
+        streakGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        
+        ctx.fillStyle = streakGradient;
+        ctx.beginPath();
+        ctx.moveTo(0, yOffset + waveOffset);
+        
+        // Create wavy path
+        for (let x = 0; x <= width; x += 20) {
+          const waveY = yOffset + waveOffset + Math.sin(x * 0.01 + time * 0.02 + i) * 30;
+          ctx.lineTo(x, waveY);
+        }
+        
+        ctx.lineTo(width, yOffset + waveOffset + 150);
+        ctx.lineTo(0, yOffset + waveOffset + 150);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Add subtle vignette for depth
+      const vignetteGradient = ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) / 1.3
       );
-      overlayGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-      overlayGradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
-      overlayGradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+      vignetteGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+      vignetteGradient.addColorStop(0.6, 'rgba(147, 197, 253, 0.05)');
+      vignetteGradient.addColorStop(1, 'rgba(59, 130, 246, 0.15)');
       
-      ctx.fillStyle = overlayGradient;
+      ctx.fillStyle = vignetteGradient;
       ctx.fillRect(0, 0, width, height);
 
       time += 1;
