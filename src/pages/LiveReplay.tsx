@@ -410,14 +410,14 @@ const ShortcutRow = ({ keys, description }: { keys: string[], description: strin
   };
 
   const handleRewind = useCallback(() => {
-    setCurrentIndex(prev => Math.max(0, prev - 5));
-    setSkipOverlay({ direction: 'backward', amount: 5 });
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+    setSkipOverlay({ direction: 'backward', amount: 1 });
     setTimeout(() => setSkipOverlay(null), 800);
   }, []);
 
   const handleFastForward = useCallback(() => {
-    setCurrentIndex(prev => Math.min(timeline.length - 1, prev + 5));
-    setSkipOverlay({ direction: 'forward', amount: 5 });
+    setCurrentIndex(prev => Math.min(timeline.length - 1, prev + 1));
+    setSkipOverlay({ direction: 'forward', amount: 1 });
     setTimeout(() => setSkipOverlay(null), 800);
   }, [timeline.length]);
 
@@ -534,22 +534,22 @@ const ShortcutRow = ({ keys, description }: { keys: string[], description: strin
 
         case 'arrowright':
           e.preventDefault();
-          skipForward(5);
+          skipForward(1);
           break;
 
         case 'arrowleft':
           e.preventDefault();
-          skipBackward(5);
+          skipBackward(1);
           break;
 
         case 'j':
           e.preventDefault();
-          skipBackward(10);
+          skipBackward(3);
           break;
 
         case 'l':
           e.preventDefault();
-          skipForward(10);
+          skipForward(3);
           break;
 
         case 'arrowup':
@@ -1152,10 +1152,10 @@ const ShortcutRow = ({ keys, description }: { keys: string[], description: strin
                 <h3 className="text-lg font-bold text-white mb-3">Playback Controls</h3>
                 <div className="space-y-2">
                   <ShortcutRow keys={['Space', 'K']} description="Play/Pause" />
-                  <ShortcutRow keys={['→']} description="Skip forward 5 events" />
-                  <ShortcutRow keys={['←']} description="Skip backward 5 events" />
-                  <ShortcutRow keys={['J']} description="Rewind 10 events" />
-                  <ShortcutRow keys={['L']} description="Fast forward 10 events" />
+                  <ShortcutRow keys={['→']} description="Skip forward 1 event" />
+                  <ShortcutRow keys={['←']} description="Skip backward 1 event" />
+                  <ShortcutRow keys={['J']} description="Rewind 3 events" />
+                  <ShortcutRow keys={['L']} description="Fast forward 3 events" />
                   <ShortcutRow keys={['↑']} description="Increase speed" />
                   <ShortcutRow keys={['↓']} description="Decrease speed" />
                 </div>
