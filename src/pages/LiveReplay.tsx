@@ -1,10 +1,14 @@
- import { useState, useEffect } from "react";
- import { useParams, useNavigate } from "react-router-dom";
+  import { useState, useEffect } from "react";
+  import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
  import { 
-   X, Download, Play, Pause, SkipBack, SkipForward, 
-   Maximize, Clock, Circle, Plus, Minus, FileText
+    X, Download, Play, Pause, SkipBack, SkipForward, 
+    Maximize, Clock, Circle, Plus, Minus, FileText,
+    LayoutDashboard, FolderOpen, Users, BarChart3, Activity,
+    Settings, LogOut, ChevronRight, Table, Presentation, Search
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
+  import { supabase } from "@/integrations/supabase/client";
+  import { toast } from "sonner";
  
  interface TimelineEvent {
    id: string;
@@ -30,6 +34,78 @@
    avatar: string;
  }
  
+  interface Project {
+    id: string;
+    name: string;
+    course: string;
+    status: "healthy" | "needs_attention" | "at_risk";
+    studentCount: number;
+    fileCount: number;
+    lastActivity: string;
+  }
+
+  interface TrackedFile {
+    id: string;
+    name: string;
+    type: "google_doc" | "google_sheet" | "google_slide";
+    lastModified: string;
+    snapshotCount: number;
+    editCount: number;
+  }
+
+  const sidebarItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
+    { icon: Users, label: "Students", path: "/teacher/students" },
+    { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
+    { icon: Activity, label: "Live Monitor", path: "/teacher/live-monitor" },
+    { icon: FileText, label: "Reports", path: "/teacher/reports" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
+
+  // Mock projects data
+  const mockProjects: Project[] = [
+    { id: "p1", name: "AI Ethics Research Project", course: "CS 101", status: "healthy", studentCount: 4, fileCount: 3, lastActivity: "2 hours ago" },
+    { id: "p2", name: "Marketing Strategy Analysis", course: "Business 201", status: "needs_attention", studentCount: 5, fileCount: 2, lastActivity: "1 day ago" },
+    { id: "p3", name: "Ecosystem Study Report", course: "Biology 150", status: "at_risk", studentCount: 3, fileCount: 4, lastActivity: "3 hours ago" },
+    { id: "p4", name: "Literary Analysis Essay", course: "English 102", status: "healthy", studentCount: 4, fileCount: 1, lastActivity: "30 mins ago" },
+    { id: "p5", name: "Data Structures Implementation", course: "CS 201", status: "healthy", studentCount: 6, fileCount: 5, lastActivity: "5 hours ago" },
+    { id: "p6", name: "Financial Modeling Project", course: "Finance 301", status: "needs_attention", studentCount: 4, fileCount: 2, lastActivity: "2 days ago" },
+  ];
+
+  // Mock files for each project
+  const mockFilesMap: Record<string, TrackedFile[]> = {
+    p1: [
+      { id: "f1", name: "Main Research Document.docx", type: "google_doc", lastModified: "2 hours ago", snapshotCount: 47, editCount: 156 },
+      { id: "f2", name: "Data Analysis.xlsx", type: "google_sheet", lastModified: "5 hours ago", snapshotCount: 23, editCount: 89 },
+      { id: "f3", name: "Presentation Slides.pptx", type: "google_slide", lastModified: "1 day ago", snapshotCount: 12, editCount: 34 },
+    ],
+    p2: [
+      { id: "f4", name: "Marketing Plan.docx", type: "google_doc", lastModified: "1 day ago", snapshotCount: 31, editCount: 98 },
+      { id: "f5", name: "Budget Spreadsheet.xlsx", type: "google_sheet", lastModified: "2 days ago", snapshotCount: 18, editCount: 45 },
+    ],
+    p3: [
+      { id: "f6", name: "Ecosystem Report.docx", type: "google_doc", lastModified: "3 hours ago", snapshotCount: 52, editCount: 178 },
+      { id: "f7", name: "Species Data.xlsx", type: "google_sheet", lastModified: "6 hours ago", snapshotCount: 28, editCount: 67 },
+      { id: "f8", name: "Field Notes.docx", type: "google_doc", lastModified: "1 day ago", snapshotCount: 15, editCount: 42 },
+      { id: "f9", name: "Research Presentation.pptx", type: "google_slide", lastModified: "2 days ago", snapshotCount: 8, editCount: 21 },
+    ],
+    p4: [
+      { id: "f10", name: "Literary Analysis.docx", type: "google_doc", lastModified: "30 mins ago", snapshotCount: 38, editCount: 124 },
+    ],
+    p5: [
+      { id: "f11", name: "Algorithm Documentation.docx", type: "google_doc", lastModified: "5 hours ago", snapshotCount: 61, editCount: 203 },
+      { id: "f12", name: "Test Cases.xlsx", type: "google_sheet", lastModified: "8 hours ago", snapshotCount: 34, editCount: 89 },
+      { id: "f13", name: "Project Report.docx", type: "google_doc", lastModified: "1 day ago", snapshotCount: 29, editCount: 76 },
+      { id: "f14", name: "Performance Metrics.xlsx", type: "google_sheet", lastModified: "2 days ago", snapshotCount: 19, editCount: 45 },
+      { id: "f15", name: "Final Presentation.pptx", type: "google_slide", lastModified: "3 days ago", snapshotCount: 11, editCount: 28 },
+    ],
+    p6: [
+      { id: "f16", name: "Financial Model.xlsx", type: "google_sheet", lastModified: "2 days ago", snapshotCount: 42, editCount: 134 },
+      { id: "f17", name: "Analysis Report.docx", type: "google_doc", lastModified: "3 days ago", snapshotCount: 25, editCount: 67 },
+    ],
+  };
+
  // Mock data for demonstration
  const mockTimeline: TimelineEvent[] = [
    {
@@ -127,7 +203,14 @@
  export default function LiveReplay() {
    const { fileId } = useParams();
    const navigate = useNavigate();
+    const location = useLocation();
    
+    // View state: "projects" -> "files" -> "replay"
+    const [currentView, setCurrentView] = useState<"projects" | "files" | "replay">("projects");
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [projectFiles, setProjectFiles] = useState<TrackedFile[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+
    const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
    const [authors, setAuthors] = useState<Author[]>([]);
    const [currentIndex, setCurrentIndex] = useState(0);
@@ -142,36 +225,133 @@
    const [isLoading, setIsLoading] = useState(true);
    const [error, setError] = useState<string | null>(null);
  
-   // Fetch timeline data
+    const isActive = (path: string) => location.pathname === path || location.pathname.startsWith("/teacher/live");
+
+    const handleLogout = async () => {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    };
+
+    // Initialize view based on fileId
    useEffect(() => {
-     const fetchTimeline = async () => {
-       setIsLoading(true);
-       setError(null);
-       
-       try {
-         // Simulate API call - replace with actual API when backend is ready
-         await new Promise(resolve => setTimeout(resolve, 500));
-         
-         // Mock data
-         setTimeline(mockTimeline);
-         setAuthors(mockAuthors);
-         setFileName("AI Ethics Research Project.docx");
-         setProjectName("CS 101 Final Project");
-         setTotalDuration(mockTimeline[mockTimeline.length - 1]?.seconds_from_start || 0);
-         
-         if (mockTimeline.length > 0) {
-           setCurrentContent(mockTimeline[0].content);
-           setCurrentSeconds(mockTimeline[0].seconds_from_start);
+      if (fileId) {
+        // Direct file access - go straight to replay
+        setCurrentView("replay");
+        loadTimelineData();
+      } else {
+        setCurrentView("projects");
+        setIsLoading(false);
+      }
+    }, [fileId]);
+
+    const loadTimelineData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setTimeline(mockTimeline);
+        setAuthors(mockAuthors);
+        setFileName("AI Ethics Research Project.docx");
+        setProjectName("CS 101 Final Project");
+        setTotalDuration(mockTimeline[mockTimeline.length - 1]?.seconds_from_start || 0);
+        
+        if (mockTimeline.length > 0) {
+          setCurrentContent(mockTimeline[0].content);
+          setCurrentSeconds(mockTimeline[0].seconds_from_start);
+        }
+      } catch (err) {
+        setError("Failed to load timeline data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleSelectProject = (project: Project) => {
+      setSelectedProject(project);
+      setProjectFiles(mockFilesMap[project.id] || []);
+      setCurrentView("files");
+    };
+
+    const handleSelectFile = (file: TrackedFile) => {
+      setFileName(file.name);
+      setProjectName(selectedProject?.name || "");
+      setCurrentView("replay");
+      loadTimelineData();
+    };
+
+    const handleBackToProjects = () => {
+      setSelectedProject(null);
+      setProjectFiles([]);
+      setCurrentView("projects");
+    };
+
+    const handleBackToFiles = () => {
+      setCurrentView("files");
+    };
+
+    const filteredProjects = mockProjects.filter(project =>
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.course.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const getFileIcon = (type: string) => {
+      switch (type) {
+        case "google_doc":
+          return <FileText className="w-6 h-6 text-blue-500" />;
+        case "google_sheet":
+          return <Table className="w-6 h-6 text-green-500" />;
+        case "google_slide":
+          return <Presentation className="w-6 h-6 text-orange-500" />;
+        default:
+          return <FileText className="w-6 h-6 text-slate-500" />;
+      }
+    };
+
+    const getStatusColors = (status: string) => {
+      switch (status) {
+        case "healthy":
+          return { bg: "bg-green-100", text: "text-green-700", dot: "bg-green-500" };
+        case "needs_attention":
+          return { bg: "bg-yellow-100", text: "text-yellow-700", dot: "bg-yellow-500" };
+        case "at_risk":
+          return { bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" };
+        default:
+          return { bg: "bg-slate-100", text: "text-slate-700", dot: "bg-slate-500" };
+      }
+    };
+
+    // Fetch timeline data
+    useEffect(() => {
+      if (currentView === "replay" && timeline.length === 0) {
+        const fetchTimeline = async () => {
+          setIsLoading(true);
+          setError(null);
+          
+          try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            setTimeline(mockTimeline);
+            setAuthors(mockAuthors);
+            if (!fileName) setFileName("AI Ethics Research Project.docx");
+            if (!projectName) setProjectName("CS 101 Final Project");
+            setTotalDuration(mockTimeline[mockTimeline.length - 1]?.seconds_from_start || 0);
+            
+            if (mockTimeline.length > 0) {
+              setCurrentContent(mockTimeline[0].content);
+              setCurrentSeconds(mockTimeline[0].seconds_from_start);
+            }
+          } catch (err) {
+            setError("Failed to load timeline data");
+          } finally {
+            setIsLoading(false);
          }
-       } catch (err) {
-         setError("Failed to load timeline data");
-       } finally {
-         setIsLoading(false);
-       }
-     };
+        };
  
-     fetchTimeline();
-   }, [fileId]);
+        fetchTimeline();
+      }
+    }, [currentView]);
  
    // Auto-advance through timeline when playing
    useEffect(() => {
@@ -249,37 +429,226 @@
    const currentEvent = timeline[currentIndex];
    const currentAuthor = currentEvent?.author;
  
-   if (isLoading) {
+    // Sidebar component
+    const Sidebar = () => (
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-40">
+        <div className="p-6 border-b border-slate-200">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-9 h-11">
+              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold"><span className="text-slate-900">Fair</span><span className="text-blue-500">Grade</span></span>
+          </Link>
+          <div className="mt-2">
+            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Teacher</span>
+          </div>
+        </div>
+        <nav className="flex-1 p-4 space-y-1">
+          {sidebarItems.map((item) => (
+            <Link
+              key={item.label}
+              to={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive(item.path)
+                  ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <item.icon className={`h-5 w-5 ${isActive(item.path) ? "text-blue-600" : ""}`} />
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-slate-200">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors w-full"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="font-medium">Log Out</span>
+          </button>
+        </div>
+      </aside>
+    );
+
+    // Projects browser view
+    if (currentView === "projects") {
      return (
-       <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
-         <div className="text-center">
-           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-           <p className="text-white text-lg">Loading timeline...</p>
-         </div>
+        <div className="min-h-screen bg-slate-50 flex">
+          <Sidebar />
+          <div className="flex-1 ml-64 p-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Live Monitor</h1>
+              <p className="text-slate-600">Select a project to view live document replays</p>
+            </div>
+
+            {/* Search */}
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-4 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search projects by name or course..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Projects Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => {
+                const statusColors = getStatusColors(project.status);
+                return (
+                  <div
+                    key={project.id}
+                    onClick={() => handleSelectProject(project)}
+                    className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 cursor-pointer hover:shadow-xl hover:border-blue-300 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 mb-1">{project.name}</h3>
+                        <p className="text-sm text-slate-500">{project.course}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors.bg} ${statusColors.text}`}>
+                        {project.status.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500 mb-1">Students</p>
+                        <p className="text-lg font-bold text-slate-900">{project.studentCount}</p>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500 mb-1">Files</p>
+                        <p className="text-lg font-bold text-slate-900">{project.fileCount}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Last activity: {project.lastActivity}</span>
+                      <ChevronRight className="w-5 h-5 text-blue-500" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {filteredProjects.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-slate-500">No projects found matching your search.</p>
+              </div>
+            )}
+          </div>
        </div>
      );
    }
  
-   if (error) {
+    // Files browser view
+    if (currentView === "files") {
      return (
-       <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
-         <div className="text-center">
-           <p className="text-red-400 text-lg mb-4">{error}</p>
-           <Button onClick={goBack} variant="outline" className="text-white border-white hover:bg-slate-800">
-             Go Back
-           </Button>
-         </div>
+        <div className="min-h-screen bg-slate-50 flex">
+          <Sidebar />
+          <div className="flex-1 ml-64 p-8">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm text-slate-600 mb-6">
+              <button onClick={handleBackToProjects} className="hover:text-blue-600">
+                All Projects
+              </button>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-slate-900 font-medium">{selectedProject?.name}</span>
+            </div>
+
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">{selectedProject?.name}</h1>
+              <p className="text-slate-600">{selectedProject?.course} • Select a file to view its replay</p>
+            </div>
+
+            {/* Files List */}
+            <div className="space-y-4">
+              {projectFiles.map((file) => (
+                <div
+                  key={file.id}
+                  onClick={() => handleSelectFile(file)}
+                  className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 cursor-pointer hover:shadow-xl hover:border-blue-300 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                        {getFileIcon(file.type)}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 mb-1">{file.name}</h3>
+                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                          <span>Last updated: {file.lastModified}</span>
+                          <span>•</span>
+                          <span>{file.snapshotCount} snapshots</span>
+                          <span>•</span>
+                          <span>{file.editCount} edits</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+                        <Play className="w-4 h-4 mr-2" />
+                        View Replay
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {projectFiles.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500">No tracked files in this project.</p>
+              </div>
+            )}
+          </div>
        </div>
      );
    }
  
+    // Replay player view
+    if (isLoading) {
+      return (
+        <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white text-lg">Loading timeline...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-400 text-lg mb-4">{error}</p>
+            <Button onClick={goBack} variant="outline" className="text-white border-white hover:bg-slate-800">
+              Go Back
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
    return (
      <div className="fixed inset-0 bg-slate-900 z-50">
        {/* Top Header Bar */}
        <div className="bg-slate-800 px-6 py-4 flex items-center justify-between">
          <div className="flex items-center gap-4">
            <button 
-             onClick={goBack} 
+              onClick={selectedProject ? handleBackToFiles : goBack} 
              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
            >
              <X className="w-5 h-5 text-white" />
