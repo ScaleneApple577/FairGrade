@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import PulseGridBackground from "@/components/features/PulseGridBackground";
 
 const silkFlowKeyframes = `
 @keyframes silkFlow {
@@ -144,9 +143,6 @@ const FeatureDetailPage = () => {
     }
   }, [feature]);
 
-  // Check if this is the real-time tracking feature
-  const isRealTimeTracking = featureId === "track-your-work";
-
   if (!feature) {
     return (
       <div 
@@ -181,9 +177,6 @@ const FeatureDetailPage = () => {
       }}
     >
       <style>{silkFlowKeyframes}</style>
-      
-      {/* Unique background animation for Real-Time Tracking feature */}
-      {isRealTimeTracking && <PulseGridBackground />}
       
       <Navbar />
       
