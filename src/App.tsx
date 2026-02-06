@@ -30,6 +30,7 @@ import NotFound from "./pages/NotFound";
  import TeacherAnalytics from "./pages/TeacherAnalytics";
  import TeacherLiveMonitor from "./pages/TeacherLiveMonitor";
  import TeacherReports from "./pages/TeacherReports";
+ import TeacherLiveReplay from "./pages/TeacherLiveReplay";
 
 const queryClient = new QueryClient();
 
@@ -66,7 +67,7 @@ const App = () => (
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/features/:featureId" element={<FeatureDetailPage />} />
-          <Route path="/teacher/live-replay/:fileId" element={<LiveReplay />} />
+          <Route path="/teacher/live-replay/:fileId" element={<TeacherLiveReplay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
-import { Edit, Clock, TrendingUp } from "lucide-react";
+import { Edit, Clock, TrendingUp, Play } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
 const activeStudents = [
-  { id: "1", name: "Alice Johnson", avatar: "A", avatarColor: "bg-blue-500", project: "CS 101 Final", activeFor: "32 min", currentFile: "Report.docx", lastEdit: "Just now", wordsToday: 450 },
-  { id: "2", name: "Bob Smith", avatar: "B", avatarColor: "bg-green-500", project: "Business 201", activeFor: "15 min", currentFile: "Analysis.xlsx", lastEdit: "2 min ago", wordsToday: 280 },
-  { id: "3", name: "Carol Williams", avatar: "C", avatarColor: "bg-purple-500", project: "Biology 150", activeFor: "45 min", currentFile: "Lab Notes.docx", lastEdit: "5 min ago", wordsToday: 620 },
-  { id: "4", name: "Dave Wilson", avatar: "D", avatarColor: "bg-orange-500", project: "CS 101 Final", activeFor: "8 min", currentFile: "Code.py", lastEdit: "1 min ago", wordsToday: 150 },
-  { id: "5", name: "Eve Davis", avatar: "E", avatarColor: "bg-pink-500", project: "English 102", activeFor: "22 min", currentFile: "Essay.docx", lastEdit: "3 min ago", wordsToday: 380 },
-  { id: "6", name: "Frank Chen", avatar: "F", avatarColor: "bg-cyan-500", project: "Business 201", activeFor: "12 min", currentFile: "Slides.pptx", lastEdit: "Just now", wordsToday: 95 },
+  { id: "1", name: "Alice Johnson", avatar: "A", avatarColor: "bg-blue-500", project: "CS 101 Final", activeFor: "32 min", currentFile: "Report.docx", fileId: "file-001", lastEdit: "Just now", wordsToday: 450 },
+  { id: "2", name: "Bob Smith", avatar: "B", avatarColor: "bg-green-500", project: "Business 201", activeFor: "15 min", currentFile: "Analysis.xlsx", fileId: "file-002", lastEdit: "2 min ago", wordsToday: 280 },
+  { id: "3", name: "Carol Williams", avatar: "C", avatarColor: "bg-purple-500", project: "Biology 150", activeFor: "45 min", currentFile: "Lab Notes.docx", fileId: "file-003", lastEdit: "5 min ago", wordsToday: 620 },
+  { id: "4", name: "Dave Wilson", avatar: "D", avatarColor: "bg-orange-500", project: "CS 101 Final", activeFor: "8 min", currentFile: "Code.py", fileId: "file-004", lastEdit: "1 min ago", wordsToday: 150 },
+  { id: "5", name: "Eve Davis", avatar: "E", avatarColor: "bg-pink-500", project: "English 102", activeFor: "22 min", currentFile: "Essay.docx", fileId: "file-005", lastEdit: "3 min ago", wordsToday: 380 },
+  { id: "6", name: "Frank Chen", avatar: "F", avatarColor: "bg-cyan-500", project: "Business 201", activeFor: "12 min", currentFile: "Slides.pptx", fileId: "file-006", lastEdit: "Just now", wordsToday: 95 },
 ];
 
 const activityStream = [
@@ -23,6 +24,8 @@ const activityStream = [
 ];
 
 export default function TeacherLiveMonitor() {
+  const navigate = useNavigate();
+
   return (
     <TeacherLayout>
       <div className="p-8">
@@ -68,6 +71,14 @@ export default function TeacherLiveMonitor() {
                   <span>+{student.wordsToday} words today</span>
                 </div>
               </div>
+              {/* View Replay Button */}
+              <button
+                onClick={() => navigate(`/teacher/live-replay/${student.fileId}`)}
+                className="mt-4 flex items-center gap-1.5 text-blue-400 text-xs hover:text-blue-300 transition-colors cursor-pointer"
+              >
+                <Play className="w-3 h-3" />
+                <span>View Replay</span>
+              </button>
             </motion.div>
           ))}
         </div>
