@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,109 +20,39 @@ import {
   Archive,
   FolderPlus,
   Download,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
-// Mock project data
-const mockProjects = [
-  {
-    id: "proj-001",
-    name: "Marketing Campaign Analysis",
-    course: "Business 201",
-    description: "Analyze and create a marketing strategy for a tech startup",
-    deadline: "2026-02-15",
-    student_count: 5,
-    status: "at_risk" as const,
-    risk_score: 85,
-    progress: 35,
-    issues_count: 3,
-    flagged_students: 2,
-    last_activity: "2026-02-05T10:30:00Z",
-    created_at: "2026-01-15T08:00:00Z",
-  },
-  {
-    id: "proj-002",
-    name: "Machine Learning Final Project",
-    course: "CS 101",
-    description: "Build a neural network for image classification",
-    deadline: "2026-02-20",
-    student_count: 4,
-    status: "needs_attention" as const,
-    risk_score: 45,
-    progress: 55,
-    issues_count: 2,
-    flagged_students: 1,
-    last_activity: "2026-02-05T09:15:00Z",
-    created_at: "2026-01-10T10:00:00Z",
-  },
-  {
-    id: "proj-003",
-    name: "Cell Biology Lab Report",
-    course: "Biology 150",
-    description: "Comprehensive lab report on cell division experiments",
-    deadline: "2026-02-25",
-    student_count: 3,
-    status: "healthy" as const,
-    risk_score: 12,
-    progress: 75,
-    issues_count: 0,
-    flagged_students: 0,
-    last_activity: "2026-02-05T11:45:00Z",
-    created_at: "2026-01-08T14:00:00Z",
-  },
-  {
-    id: "proj-004",
-    name: "Shakespeare Analysis Essay",
-    course: "English 102",
-    description: "Comparative analysis of themes in Hamlet and Macbeth",
-    deadline: "2026-02-18",
-    student_count: 2,
-    status: "healthy" as const,
-    risk_score: 8,
-    progress: 90,
-    issues_count: 0,
-    flagged_students: 0,
-    last_activity: "2026-02-05T08:20:00Z",
-    created_at: "2026-01-12T09:00:00Z",
-  },
-  {
-    id: "proj-005",
-    name: "Database Design Project",
-    course: "CS 101",
-    description: "Design and implement a relational database system",
-    deadline: "2026-02-28",
-    student_count: 6,
-    status: "needs_attention" as const,
-    risk_score: 38,
-    progress: 40,
-    issues_count: 1,
-    flagged_students: 0,
-    last_activity: "2026-02-04T16:30:00Z",
-    created_at: "2026-01-20T11:00:00Z",
-  },
-  {
-    id: "proj-006",
-    name: "Financial Statement Analysis",
-    course: "Business 201",
-    description: "Analyze quarterly financial statements of Fortune 500 companies",
-    deadline: "2026-03-01",
-    student_count: 4,
-    status: "healthy" as const,
-    risk_score: 15,
-    progress: 60,
-    issues_count: 0,
-    flagged_students: 0,
-    last_activity: "2026-02-05T07:00:00Z",
-    created_at: "2026-01-18T13:00:00Z",
-  },
-];
+// TODO: Connect to GET http://localhost:8000/api/teacher/projects
+// TODO: Connect to POST http://localhost:8000/api/projects
+
+interface Project {
+  id: string;
+  name: string;
+  course: string;
+  description: string;
+  deadline: string;
+  student_count: number;
+  status: "healthy" | "needs_attention" | "at_risk";
+  risk_score: number;
+  progress: number;
+  issues_count: number;
+  flagged_students: number;
+  last_activity: string;
+  created_at: string;
+}
 
 const courses = ["CS 101", "Business 201", "Biology 150", "English 102"];
 
 export default function TeacherProjects() {
   const navigate = useNavigate();
+
+  // Data states
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,19 +76,28 @@ export default function TeacherProjects() {
   const [fileUrls, setFileUrls] = useState("");
   const [importFromLMS, setImportFromLMS] = useState(false);
 
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/teacher/projects
+    // fetch('http://localhost:8000/api/teacher/projects')
+    //   .then(res => res.json())
+    //   .then(data => { setProjects(data); setIsLoading(false); })
+    //   .catch(err => { setIsLoading(false); })
+    setIsLoading(false);
+  }, []);
+
   // Compute stats
   const stats = useMemo(() => {
     return {
-      total: mockProjects.length,
-      healthy: mockProjects.filter((p) => p.status === "healthy").length,
-      needs_attention: mockProjects.filter((p) => p.status === "needs_attention").length,
-      at_risk: mockProjects.filter((p) => p.status === "at_risk").length,
+      total: projects.length,
+      healthy: projects.filter((p) => p.status === "healthy").length,
+      needs_attention: projects.filter((p) => p.status === "needs_attention").length,
+      at_risk: projects.filter((p) => p.status === "at_risk").length,
     };
-  }, []);
+  }, [projects]);
 
   // Filter and sort projects
   const filteredProjects = useMemo(() => {
-    let result = [...mockProjects];
+    let result = [...projects];
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -195,7 +134,7 @@ export default function TeacherProjects() {
     });
 
     return result;
-  }, [searchQuery, filterStatus, filterCourse, sortBy]);
+  }, [projects, searchQuery, filterStatus, filterCourse, sortBy]);
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -204,6 +143,7 @@ export default function TeacherProjects() {
   };
 
   const handleCreateProject = () => {
+    // TODO: POST http://localhost:8000/api/projects
     toast.success("Project created successfully!");
     setShowCreateProject(false);
     setCurrentStep(1);
@@ -248,6 +188,16 @@ export default function TeacherProjects() {
   };
 
   const hasActiveFilters = filterStatus !== "all" || filterCourse !== "all" || searchQuery;
+
+  if (isLoading) {
+    return (
+      <TeacherLayout>
+        <div className="p-8 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        </div>
+      </TeacherLayout>
+    );
+  }
 
   return (
     <TeacherLayout>
@@ -422,8 +372,21 @@ export default function TeacherProjects() {
           </div>
         </div>
 
-        {/* Projects Grid View */}
-        {viewMode === "grid" && (
+        {/* Empty State or Projects Grid */}
+        {filteredProjects.length === 0 ? (
+          <div className="bg-white/5 rounded-xl border border-white/10 p-16 text-center">
+            <FolderOpen className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
+            <p className="text-slate-400 mb-6">Create your first project to start tracking student contributions</p>
+            <Button
+              onClick={() => setShowCreateProject(true)}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Project
+            </Button>
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => {
               const colors = statusColors[project.status];
@@ -433,18 +396,15 @@ export default function TeacherProjects() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`bg-white/5 rounded-xl border ${colors.border} overflow-hidden cursor-pointer hover:bg-white/10 transition-all`}
-                  onClick={() => navigate(`/project/${project.id}`)}
+                  onClick={() => navigate(`/teacher/projects/${project.id}`)}
                 >
-                  {/* Header */}
                   <div className={`${colors.bg} p-4`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-bold text-white text-lg leading-tight">{project.name}</h3>
                         <p className="text-sm text-slate-400 mt-1">{project.course}</p>
                       </div>
-                      <span
-                        className={`${colors.badge} text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1`}
-                      >
+                      <span className={`${colors.badge} text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1`}>
                         {project.status === "healthy" && <CheckCircle className="w-3 h-3" />}
                         {project.status === "needs_attention" && <AlertCircle className="w-3 h-3" />}
                         {project.status === "at_risk" && <AlertTriangle className="w-3 h-3" />}
@@ -453,7 +413,6 @@ export default function TeacherProjects() {
                     </div>
                   </div>
 
-                  {/* Metrics Grid */}
                   <div className="p-4">
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       <div className="text-center">
@@ -466,17 +425,7 @@ export default function TeacherProjects() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-slate-500">Risk</p>
-                        <p
-                          className={`text-lg font-bold ${
-                            project.risk_score > 70
-                              ? "text-red-400"
-                              : project.risk_score > 40
-                              ? "text-yellow-400"
-                              : "text-green-400"
-                          }`}
-                        >
-                          {project.risk_score}
-                        </p>
+                        <p className={`text-lg font-bold ${colors.text}`}>{project.risk_score}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-slate-500">Issues</p>
@@ -484,283 +433,149 @@ export default function TeacherProjects() {
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                        <span>Completion</span>
-                        <span>{project.progress}%</span>
-                      </div>
-                      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                          style={{ width: `${project.progress}%` }}
-                        />
-                      </div>
+                    <div className="w-full bg-white/10 rounded-full h-1.5 mb-3">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${project.progress}%` }} />
                     </div>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-slate-500">
-                        <Clock className="w-4 h-4" />
-                        <span>Due {formatDate(project.deadline)}</span>
-                      </div>
-                      {project.flagged_students > 0 && (
-                        <div className="flex items-center gap-1 text-red-400">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span>{project.flagged_students} flagged</span>
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Due {formatDate(project.deadline)}
+                      </span>
+                      <span>{getDaysUntil(project.deadline)} days left</span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-2">
-                      Last activity: {formatRelativeTime(project.last_activity)}
-                    </p>
                   </div>
                 </motion.div>
               );
             })}
           </div>
-        )}
-
-        {/* Projects List View */}
-        {viewMode === "list" && (
+        ) : (
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-8 gap-4 px-6 py-3 bg-white/10 border-b border-white/10 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              <div className="col-span-2">Project</div>
-              <div>Course</div>
-              <div>Students</div>
-              <div>Status</div>
-              <div>Progress</div>
-              <div>Deadline</div>
-              <div className="text-right">Actions</div>
-            </div>
+            <table className="w-full">
+              <thead className="bg-white/10 border-b border-white/10">
+                <tr>
+                  <th className="text-left p-4 text-sm font-semibold text-slate-400">Project</th>
+                  <th className="text-center p-4 text-sm font-semibold text-slate-400">Status</th>
+                  <th className="text-center p-4 text-sm font-semibold text-slate-400">Students</th>
+                  <th className="text-center p-4 text-sm font-semibold text-slate-400">Progress</th>
+                  <th className="text-center p-4 text-sm font-semibold text-slate-400">Deadline</th>
+                  <th className="text-right p-4 text-sm font-semibold text-slate-400">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredProjects.map((project) => {
+                  const colors = statusColors[project.status];
+                  return (
+                    <tr key={project.id} className="hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/teacher/projects/${project.id}`)}>
+                      <td className="p-4">
+                        <p className="font-semibold text-white">{project.name}</p>
+                        <p className="text-xs text-slate-500">{project.course}</p>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`${colors.badge} text-white text-xs px-2 py-1 rounded-full`}>
+                          {project.status.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center text-slate-300">{project.student_count}</td>
+                      <td className="p-4 text-center text-slate-300">{project.progress}%</td>
+                      <td className="p-4 text-center text-slate-300">{formatDate(project.deadline)}</td>
+                      <td className="p-4 text-right">
+                        <Button size="sm" className="bg-blue-500 hover:bg-blue-600">View</Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            {/* Table Rows */}
-            <div className="divide-y divide-white/5">
-              {filteredProjects.map((project) => {
-                const colors = statusColors[project.status];
-                return (
-                  <div
-                    key={project.id}
-                    className="grid grid-cols-8 gap-4 px-6 py-4 hover:bg-white/5 cursor-pointer items-center"
-                    onClick={() => navigate(`/project/${project.id}`)}
-                  >
-                    {/* Project Name */}
-                    <div className="col-span-2">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 ${colors.bg} ${colors.border} border rounded-lg flex items-center justify-center`}
-                        >
-                          <FolderOpen className={`w-5 h-5 ${colors.text}`} />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">{project.name}</p>
-                          <p className="text-xs text-slate-500">ID: {project.id.slice(0, 8)}</p>
-                        </div>
-                      </div>
+        {/* Create Project Modal */}
+        {showCreateProject && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-slate-900 border border-white/10 rounded-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Create New Project</h2>
+                <button onClick={() => setShowCreateProject(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Step indicator */}
+              <div className="flex items-center gap-4 mb-8">
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      currentStep >= step ? "bg-blue-500 text-white" : "bg-white/10 text-slate-400"
+                    }`}>
+                      {step}
                     </div>
-
-                    {/* Course */}
-                    <div className="text-slate-300">{project.course}</div>
-
-                    {/* Students */}
-                    <div>
-                      <div className="flex items-center gap-1 text-slate-300">
-                        <Users className="w-4 h-4" />
-                        {project.student_count}
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div>
-                      <span className={`${colors.text} font-medium text-sm`}>
-                        {project.status === "healthy" && "● "}
-                        {project.status === "needs_attention" && "◐ "}
-                        {project.status === "at_risk" && "○ "}
-                        {project.status.replace("_", " ")}
-                      </span>
-                    </div>
-
-                    {/* Progress */}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-white">{project.progress}%</span>
-                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500 rounded-full"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Deadline */}
-                    <div>
-                      <div className="flex items-center gap-1 text-slate-300 text-sm">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(project.deadline)}
-                      </div>
-                      <p className="text-xs text-slate-500">{getDaysUntil(project.deadline)} days</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Menu options coming soon");
-                        }}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <MoreVertical className="w-5 h-5 text-slate-500" />
-                      </button>
-                    </div>
+                    <span className={`text-sm ${currentStep >= step ? "text-white" : "text-slate-500"}`}>
+                      {step === 1 ? "Details" : step === 2 ? "Students" : "Files"}
+                    </span>
+                    {step < 3 && <div className="w-12 h-px bg-white/10" />}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {filteredProjects.length === 0 && (
-          <div className="text-center py-16">
-            <FolderOpen className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No projects found</h3>
-            <p className="text-slate-400 mb-4">
-              {hasActiveFilters
-                ? "Try adjusting your filters"
-                : "Create your first project to get started"}
-            </p>
-            {hasActiveFilters ? (
-              <Button onClick={clearAllFilters} variant="outline" className="bg-white/10 border-white/10 text-white hover:bg-white/15">
-                Clear Filters
-              </Button>
-            ) : (
-              <Button onClick={() => setShowCreateProject(true)} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Project
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Create Project Modal */}
-      {showCreateProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1e293b] border border-white/10 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-2xl font-bold text-white">Create New Project</h2>
-              <button
-                onClick={() => setShowCreateProject(false)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-
-            {/* Step Indicator */}
-            <div className="flex items-center justify-center gap-4 p-6 border-b border-white/10">
-              <div className={`flex items-center gap-2 ${currentStep >= 1 ? "text-blue-400" : "text-slate-500"}`}>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    currentStep >= 1 ? "bg-blue-500 text-white" : "bg-white/10"
-                  }`}
-                >
-                  1
-                </div>
-                <span className="text-sm font-medium">Details</span>
+                ))}
               </div>
-              <div className={`w-16 h-1 rounded ${currentStep >= 2 ? "bg-blue-500" : "bg-white/10"}`} />
-              <div className={`flex items-center gap-2 ${currentStep >= 2 ? "text-blue-400" : "text-slate-500"}`}>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    currentStep >= 2 ? "bg-blue-500 text-white" : "bg-white/10"
-                  }`}
-                >
-                  2
-                </div>
-                <span className="text-sm font-medium">Students</span>
-              </div>
-              <div className={`w-16 h-1 rounded ${currentStep >= 3 ? "bg-blue-500" : "bg-white/10"}`} />
-              <div className={`flex items-center gap-2 ${currentStep >= 3 ? "text-blue-400" : "text-slate-500"}`}>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    currentStep >= 3 ? "bg-blue-500 text-white" : "bg-white/10"
-                  }`}
-                >
-                  3
-                </div>
-                <span className="text-sm font-medium">Files</span>
-              </div>
-            </div>
 
-            {/* Body */}
-            <div className="p-6">
               {/* Step 1: Project Details */}
               {currentStep === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Project Name *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Project Name</label>
                     <input
                       type="text"
-                      placeholder="e.g., Final Group Project"
-                      className="w-full px-4 py-2 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
+                      placeholder="e.g., Marketing Campaign Analysis"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Course *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Course</label>
                     <select
-                      className="w-full px-4 py-2 bg-white/10 border border-white/10 text-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={projectCourse}
                       onChange={(e) => setProjectCourse(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-slate-300 rounded-lg"
                     >
-                      <option value="">Select a course</option>
+                      <option value="">Select a course...</option>
                       {courses.map((course) => (
-                        <option key={course} value={course}>
-                          {course}
-                        </option>
+                        <option key={course} value={course}>{course}</option>
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
                     <textarea
-                      rows={3}
-                      placeholder="Brief description of the project..."
-                      className="w-full px-4 py-2 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}
+                      placeholder="Describe the project objectives..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
                     />
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Deadline *</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Deadline</label>
                       <input
                         type="date"
-                        className="w-full px-4 py-2 bg-white/10 border border-white/10 text-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={projectDeadline}
                         onChange={(e) => setProjectDeadline(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white rounded-lg"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-2">Team Size</label>
                       <select
-                        className="w-full px-4 py-2 bg-white/10 border border-white/10 text-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={teamSize}
                         onChange={(e) => setTeamSize(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/10 text-slate-300 rounded-lg"
                       >
+                        <option value="2">2 students</option>
                         <option value="3">3 students</option>
                         <option value="4">4 students</option>
                         <option value="5">5 students</option>
@@ -773,203 +588,90 @@ export default function TeacherProjects() {
 
               {/* Step 2: Add Students */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <p className="text-sm text-blue-300">
-                      Add students by email. They'll receive an invitation to join the project.
-                    </p>
-                  </div>
-
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Student Emails (one per line)
-                    </label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Add Students by Email</label>
                     <textarea
-                      rows={8}
-                      placeholder={"alice@university.edu\nbob@university.edu\ncarol@university.edu"}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                       value={studentEmails}
                       onChange={(e) => setStudentEmails(e.target.value)}
+                      placeholder="Enter student emails, one per line..."
+                      rows={6}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      {studentEmails.split("\n").filter((e) => e.trim()).length} students added
-                    </p>
+                    <p className="text-xs text-slate-500 mt-2">Students will receive an email invitation to join the project</p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
                     <input
                       type="checkbox"
                       id="importLMS"
                       checked={importFromLMS}
                       onChange={(e) => setImportFromLMS(e.target.checked)}
-                      className="w-4 h-4 text-blue-500 bg-white/10 border-white/20 rounded focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-white/20 bg-white/10"
                     />
-                    <label htmlFor="importLMS" className="text-sm text-slate-400">
-                      Import students from Canvas/Blackboard (coming soon)
+                    <label htmlFor="importLMS" className="text-sm text-slate-300">
+                      Import student roster from Canvas/Blackboard
                     </label>
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Add Files */}
+              {/* Step 3: Connect Files */}
               {currentStep === 3 && (
-                <div className="space-y-4">
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <p className="text-sm text-blue-300">
-                      Add Google Docs, Sheets, or Slides URLs to track. FairGrade will monitor changes and
-                      contributions.
-                    </p>
-                  </div>
-
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Google Drive File URLs (one per line)
-                    </label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Google Docs/Sheets URLs</label>
                     <textarea
-                      rows={6}
-                      placeholder="https://docs.google.com/document/d/..."
-                      className="w-full px-4 py-2 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                       value={fileUrls}
                       onChange={(e) => setFileUrls(e.target.value)}
+                      placeholder="Paste Google Docs, Sheets, or Slides URLs, one per line..."
+                      rows={4}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      {fileUrls.split("\n").filter((u) => u.trim()).length} files added
-                    </p>
+                    <p className="text-xs text-slate-500 mt-2">These documents will be tracked for student contributions</p>
                   </div>
 
-                  <button
-                    onClick={() => toast.info("Google Picker integration coming soon")}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/10 text-blue-400 rounded-lg hover:bg-white/15 transition-colors"
-                  >
-                    <FolderPlus className="w-4 h-4" />
-                    Or select files using Google Picker
-                  </button>
+                  <div className="p-6 border-2 border-dashed border-white/20 rounded-xl text-center hover:border-blue-500/50 transition-colors cursor-pointer">
+                    <FolderPlus className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                    <p className="text-sm text-slate-300 mb-1">Or connect Google Drive folder</p>
+                    <p className="text-xs text-slate-500">All documents in the folder will be automatically tracked</p>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Footer */}
-            <div className="flex gap-3 p-6 border-t border-white/10">
-              {currentStep > 1 && (
-                <Button onClick={() => setCurrentStep(currentStep - 1)} variant="outline" className="bg-white/10 border-white/10 text-white hover:bg-white/15">
-                  ← Back
-                </Button>
-              )}
-              <Button
-                onClick={() => setShowCreateProject(false)}
-                variant="outline"
-                className="flex-1 bg-white/10 border-white/10 text-white hover:bg-white/15"
-              >
-                Cancel
-              </Button>
-              {currentStep < 3 ? (
-                <Button onClick={() => setCurrentStep(currentStep + 1)} className="flex-1 bg-blue-500 hover:bg-blue-600">
-                  Next →
-                </Button>
-              ) : (
-                <Button onClick={handleCreateProject} className="flex-1 bg-blue-500 hover:bg-blue-600">
-                  Create Project
-                </Button>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Bulk Actions Modal */}
-      {showBulkActions && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1e293b] border border-white/10 rounded-2xl max-w-2xl w-full"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-2xl font-bold text-white">Bulk Actions</h2>
-              <button
-                onClick={() => setShowBulkActions(false)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-400">
-                Apply actions to multiple projects at once. Select projects first, then choose an action.
-              </p>
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => {
-                    toast.success("Generating reports...");
-                    setShowBulkActions(false);
-                  }}
-                  className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Download className="w-5 h-5 text-blue-400" />
-                    <span className="font-semibold text-white">Export All Reports</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Download PDF reports for all selected projects</p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    toast.success("Sending reminders...");
-                    setShowBulkActions(false);
-                  }}
-                  className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Mail className="w-5 h-5 text-blue-400" />
-                    <span className="font-semibold text-white">Send Reminder</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Email reminder to all students in selected projects</p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    toast.success("Deadline extended!");
-                    setShowBulkActions(false);
-                  }}
-                  className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar className="w-5 h-5 text-blue-400" />
-                    <span className="font-semibold text-white">Extend Deadline</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Add extra days to selected project deadlines</p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    toast.success("Projects archived!");
-                    setShowBulkActions(false);
-                  }}
-                  className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-red-500/10 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Archive className="w-5 h-5 text-red-400" />
-                    <span className="font-semibold text-white">Archive Projects</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Move selected projects to archive</p>
-                </button>
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
+                {currentStep > 1 ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    className="bg-white/10 border-white/10 text-white hover:bg-white/20"
+                  >
+                    Back
+                  </Button>
+                ) : (
+                  <div />
+                )}
+                {currentStep < 3 ? (
+                  <Button
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    Continue
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleCreateProject}
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    Create Project
+                  </Button>
+                )}
               </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 p-6 border-t border-white/10">
-              <Button onClick={() => setShowBulkActions(false)} variant="outline" className="flex-1 bg-white/10 border-white/10 text-white hover:bg-white/15">
-                Close
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
+      </div>
     </TeacherLayout>
   );
 }

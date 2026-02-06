@@ -1,30 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Play, Filter, ChevronDown, MessageSquare, Trash2, Type, Upload, Palette } from "lucide-react";
+import { FileText, Play, ChevronDown, MessageSquare, Trash2, Palette, Upload, Activity, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
-// Mock activity feed data
-const mockActivityFeed = [
-  { id: "1", studentName: "Alice Johnson", studentAvatar: "A", studentColor: "bg-blue-500", action: "edited", fileName: "Research_Report.docx", fileId: "file-001", projectName: "CS 101 Final Project", timestamp: "2 minutes ago", detail: "Added 47 words to Section 3" },
-  { id: "2", studentName: "Bob Smith", studentAvatar: "B", studentColor: "bg-green-500", action: "commented", fileName: "Research_Report.docx", fileId: "file-001", projectName: "CS 101 Final Project", timestamp: "5 minutes ago", detail: "Left comment on Introduction paragraph" },
-  { id: "3", studentName: "Carol Williams", studentAvatar: "C", studentColor: "bg-purple-500", action: "formatted", fileName: "Budget_Analysis.xlsx", fileId: "file-002", projectName: "Business 201", timestamp: "8 minutes ago", detail: "Applied heading style to row 1" },
-  { id: "4", studentName: "Dave Wilson", studentAvatar: "D", studentColor: "bg-orange-500", action: "deleted", fileName: "Presentation_Deck.pptx", fileId: "file-003", projectName: "CS 101 Final Project", timestamp: "12 minutes ago", detail: "Removed slide 5" },
-  { id: "5", studentName: "Eve Davis", studentAvatar: "E", studentColor: "bg-pink-500", action: "edited", fileName: "Marketing_Strategy.docx", fileId: "file-004", projectName: "Marketing 301", timestamp: "15 minutes ago", detail: "Added 89 words to Conclusion" },
-  { id: "6", studentName: "Frank Chen", studentAvatar: "F", studentColor: "bg-cyan-500", action: "uploaded", fileName: "Team_Photo.png", fileId: "file-005", projectName: "Business 201", timestamp: "20 minutes ago", detail: "Uploaded new image asset" },
-  { id: "7", studentName: "Alice Johnson", studentAvatar: "A", studentColor: "bg-blue-500", action: "edited", fileName: "Research_Report.docx", fileId: "file-001", projectName: "CS 101 Final Project", timestamp: "25 minutes ago", detail: "Revised paragraph 4 in Section 2" },
-  { id: "8", studentName: "Grace Lee", studentAvatar: "G", studentColor: "bg-indigo-500", action: "commented", fileName: "Budget_Analysis.xlsx", fileId: "file-002", projectName: "Business 201", timestamp: "32 minutes ago", detail: "Added review comment on cell B12" },
-  { id: "9", studentName: "Bob Smith", studentAvatar: "B", studentColor: "bg-green-500", action: "formatted", fileName: "Research_Report.docx", fileId: "file-001", projectName: "CS 101 Final Project", timestamp: "45 minutes ago", detail: "Applied bold formatting to headings" },
-  { id: "10", studentName: "Carol Williams", studentAvatar: "C", studentColor: "bg-purple-500", action: "edited", fileName: "Presentation_Deck.pptx", fileId: "file-003", projectName: "CS 101 Final Project", timestamp: "1 hour ago", detail: "Added speaker notes to slide 3" },
-  { id: "11", studentName: "Dave Wilson", studentAvatar: "D", studentColor: "bg-orange-500", action: "edited", fileName: "Budget_Analysis.xlsx", fileId: "file-002", projectName: "Business 201", timestamp: "1 hour ago", detail: "Updated formula in column D" },
-  { id: "12", studentName: "Eve Davis", studentAvatar: "E", studentColor: "bg-pink-500", action: "commented", fileName: "Marketing_Strategy.docx", fileId: "file-004", projectName: "Marketing 301", timestamp: "2 hours ago", detail: "Suggested revision to opening paragraph" },
-  { id: "13", studentName: "Frank Chen", studentAvatar: "F", studentColor: "bg-cyan-500", action: "edited", fileName: "Team_Charter.docx", fileId: "file-006", projectName: "Business 201", timestamp: "2 hours ago", detail: "Added team roles section" },
-  { id: "14", studentName: "Alice Johnson", studentAvatar: "A", studentColor: "bg-blue-500", action: "deleted", fileName: "Research_Report.docx", fileId: "file-001", projectName: "CS 101 Final Project", timestamp: "3 hours ago", detail: "Removed outdated references" },
-  { id: "15", studentName: "Grace Lee", studentAvatar: "G", studentColor: "bg-indigo-500", action: "formatted", fileName: "Presentation_Deck.pptx", fileId: "file-003", projectName: "CS 101 Final Project", timestamp: "4 hours ago", detail: "Applied consistent slide theme" },
-  { id: "16", studentName: "Bob Smith", studentAvatar: "B", studentColor: "bg-green-500", action: "uploaded", fileName: "Data_Chart.png", fileId: "file-007", projectName: "CS 101 Final Project", timestamp: "5 hours ago", detail: "Uploaded chart visualization" },
-  { id: "17", studentName: "Carol Williams", studentAvatar: "C", studentColor: "bg-purple-500", action: "edited", fileName: "Budget_Analysis.xlsx", fileId: "file-002", projectName: "Business 201", timestamp: "6 hours ago", detail: "Added new budget category" },
-  { id: "18", studentName: "Dave Wilson", studentAvatar: "D", studentColor: "bg-orange-500", action: "commented", fileName: "Team_Charter.docx", fileId: "file-006", projectName: "Business 201", timestamp: "8 hours ago", detail: "Flagged meeting schedule conflict" },
-];
+// TODO: Connect to GET http://localhost:8000/api/teacher/live-activity — returns recent activity feed with filters
+
+interface ActivityItem {
+  id: string;
+  studentName: string;
+  studentAvatar: string;
+  studentColor: string;
+  action: string;
+  fileName: string;
+  fileId: string;
+  projectName: string;
+  timestamp: string;
+  detail: string;
+}
 
 const actionIcons = {
   edited: FileText,
@@ -42,16 +35,16 @@ const actionLabels = {
   uploaded: "uploaded",
 };
 
-// TODO: Connect to GET /api/teacher/live-activity — returns recent activity feed with filters
-
 export default function TeacherLiveMonitor() {
   const navigate = useNavigate();
+  const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [projectFilter, setProjectFilter] = useState("all");
   const [studentFilter, setStudentFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("24h");
 
-  const projects = ["All Projects", "CS 101 Final Project", "Business 201", "Marketing 301"];
-  const students = ["All Students", "Alice Johnson", "Bob Smith", "Carol Williams", "Dave Wilson", "Eve Davis", "Frank Chen", "Grace Lee"];
+  const projects = ["All Projects"];
+  const students = ["All Students"];
   const timeRanges = [
     { value: "1h", label: "Last Hour" },
     { value: "24h", label: "Last 24 Hours" },
@@ -59,12 +52,31 @@ export default function TeacherLiveMonitor() {
     { value: "30d", label: "Last 30 Days" },
   ];
 
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/teacher/live-activity
+    // fetch('http://localhost:8000/api/teacher/live-activity')
+    //   .then(res => res.json())
+    //   .then(data => { setActivityFeed(data); setIsLoading(false); })
+    //   .catch(err => { setIsLoading(false); })
+    setIsLoading(false);
+  }, [projectFilter, studentFilter, timeFilter]);
+
   // Filter activity based on selections
-  const filteredActivity = mockActivityFeed.filter((activity) => {
+  const filteredActivity = activityFeed.filter((activity) => {
     if (projectFilter !== "all" && activity.projectName !== projectFilter) return false;
     if (studentFilter !== "all" && activity.studentName !== studentFilter) return false;
     return true;
   });
+
+  if (isLoading) {
+    return (
+      <TeacherLayout>
+        <div className="p-8 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        </div>
+      </TeacherLayout>
+    );
+  }
 
   return (
     <TeacherLayout>
@@ -126,55 +138,56 @@ export default function TeacherLiveMonitor() {
         </div>
 
         {/* Activity Feed */}
-        <div className="space-y-3">
-          {filteredActivity.map((activity, index) => {
-            const ActionIcon = actionIcons[activity.action as keyof typeof actionIcons] || FileText;
-            const actionLabel = actionLabels[activity.action as keyof typeof actionLabels] || activity.action;
+        {filteredActivity.length > 0 ? (
+          <div className="space-y-3">
+            {filteredActivity.map((activity, index) => {
+              const ActionIcon = actionIcons[activity.action as keyof typeof actionIcons] || FileText;
+              const actionLabel = actionLabels[activity.action as keyof typeof actionLabels] || activity.action;
 
-            return (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
-                className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] transition-colors flex items-center gap-4"
-              >
-                {/* Avatar */}
-                <div className={`w-10 h-10 ${activity.studentColor} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
-                  {activity.studentAvatar}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm">
-                    <span className="text-white font-medium">{activity.studentName}</span>
-                    <span className="text-slate-400"> {actionLabel} </span>
-                    <span className="text-blue-400">{activity.fileName}</span>
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-slate-500 text-xs">{activity.projectName}</span>
-                    <span className="text-slate-600 text-xs">•</span>
-                    <span className="text-slate-600 text-xs">{activity.timestamp}</span>
-                  </div>
-                </div>
-
-                {/* View Replay Button */}
-                <button
-                  onClick={() => navigate(`/teacher/live-replay/${activity.fileId}`)}
-                  className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap"
+              return (
+                <motion.div
+                  key={activity.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                  className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] transition-colors flex items-center gap-4"
                 >
-                  <span>View Replay</span>
-                  <Play className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 ${activity.studentColor} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                    {activity.studentAvatar}
+                  </div>
 
-        {filteredActivity.length === 0 && (
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm">
+                      <span className="text-white font-medium">{activity.studentName}</span>
+                      <span className="text-slate-400"> {actionLabel} </span>
+                      <span className="text-blue-400">{activity.fileName}</span>
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-slate-500 text-xs">{activity.projectName}</span>
+                      <span className="text-slate-600 text-xs">•</span>
+                      <span className="text-slate-600 text-xs">{activity.timestamp}</span>
+                    </div>
+                  </div>
+
+                  {/* View Replay Button */}
+                  <button
+                    onClick={() => navigate(`/teacher/live-replay/${activity.fileId}`)}
+                    className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap"
+                  >
+                    <span>View Replay</span>
+                    <Play className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
           <div className="text-center py-16">
-            <Filter className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">No activity matches your filters</p>
+            <Activity className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-400">No recent activity</p>
+            <p className="text-slate-500 text-sm mt-1">Activity will appear here when students start working on their projects</p>
           </div>
         )}
       </div>
