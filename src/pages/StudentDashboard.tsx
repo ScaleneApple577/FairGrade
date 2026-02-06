@@ -329,7 +329,7 @@ export default function StudentDashboard() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {/* Active Projects */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -340,12 +340,6 @@ export default function StudentDashboard() {
             <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
               <FolderOpen className="w-5 h-5 text-blue-400" />
             </div>
-            {data.stats.achievementsUnlocked > 0 && (
-              <span className="flex items-center gap-1 text-yellow-400 text-xs">
-                <Trophy className="w-3 h-3" />
-                {data.stats.achievementsUnlocked}/30
-              </span>
-            )}
           </div>
           <p className="text-3xl font-bold text-white mb-1">{data.stats.activeProjects}</p>
           <p className="text-slate-400 text-sm mb-2">Active Projects</p>
@@ -429,6 +423,27 @@ export default function StudentDashboard() {
             <span>View Calendar</span>
             <ArrowUpRight className="w-3 h-3" />
           </Link>
+        </motion.div>
+
+        {/* Achievements */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          onClick={() => navigate("/student/stats")}
+          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-yellow-500/30 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-yellow-500/15 flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-3xl font-bold text-white">{data.stats.achievementsUnlocked}</span>
+            <span className="text-slate-500 text-lg">/30</span>
+          </div>
+          <p className="text-slate-400 text-sm mb-2">Achievements</p>
+          <p className="text-slate-500 text-xs">View all achievements →</p>
         </motion.div>
       </div>
 
