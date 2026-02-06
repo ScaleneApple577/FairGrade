@@ -48,7 +48,7 @@ const App = () => (
            <Route path="/teacher/projects/:id" element={<TeacherProjectDetail />} />
            <Route path="/teacher/students" element={<TeacherStudents />} />
            <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
-            <Route path="/teacher/live-monitor" element={<LiveReplay />} />
+            <Route path="/teacher/live-monitor" element={<TeacherLiveMonitor />} />
            <Route path="/teacher/reports" element={<TeacherReports />} />
            <Route path="/dashboard/reports" element={<TeacherReports />} />
           <Route path="/create" element={<CreateProject />} />
