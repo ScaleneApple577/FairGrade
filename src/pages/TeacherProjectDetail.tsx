@@ -30,16 +30,16 @@
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
  
- // Sidebar navigation items
- const sidebarItems = [
-   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-   { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
-   { icon: Users, label: "Students", path: "/teacher/students" },
-   { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
-  { icon: Activity, label: "Live Monitor", path: "/teacher/live-monitor" },
-   { icon: FileText, label: "Reports", path: "/teacher/reports" },
-   { icon: Settings, label: "Settings", path: "/settings" },
- ];
+// Sidebar navigation items
+const sidebarItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
+  { icon: Users, label: "Students", path: "/teacher/students" },
+  { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
+  { icon: Activity, label: "Live Activity", path: "/teacher/live-monitor" },
+  { icon: FileText, label: "Reports", path: "/teacher/reports" },
+  { icon: Settings, label: "Settings", path: "/settings" },
+];
  
  // Mock project data
  const mockProject = {

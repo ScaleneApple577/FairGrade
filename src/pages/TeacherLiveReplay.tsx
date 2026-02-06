@@ -14,17 +14,20 @@ import {
   Keyboard,
   X,
   Users,
+  Undo2,
+  Redo2,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Highlighter,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // TODO: Connect to GET /api/files/{file_id}/timeline
-// Returns: { file_name, project_name, authors: [{id, name, color}], events: [{id, timestamp, author_id, action_type, content_delta, position}], total_events: 230 }
-
 // TODO: Connect to GET /api/files/{file_id}/snapshot/{event_id}
-// Returns: { content: "full document HTML at this point", word_counts: {author_id: count} }
-
-// The backend uses two-level storage: Keyframes (every 20 events) + Diffs (between keyframes)
-// Frontend should request keyframes and apply diffs client-side for smooth playback
 
 interface Author {
   id: string;
@@ -32,7 +35,9 @@ interface Author {
   color: string;
   borderColor: string;
   bgColor: string;
+  bgColorLight: string;
   dotColor: string;
+  cursorColor: string;
 }
 
 interface TimelineEvent {
@@ -57,43 +62,50 @@ const mockAuthors: Author[] = [
   {
     id: "alice",
     name: "Alice Johnson",
-    color: "text-blue-400",
+    color: "text-blue-600",
     borderColor: "border-l-blue-500",
     bgColor: "bg-blue-500/5",
+    bgColorLight: "bg-blue-50",
     dotColor: "bg-blue-500",
+    cursorColor: "#3b82f6",
   },
   {
     id: "bob",
     name: "Bob Smith",
-    color: "text-emerald-400",
+    color: "text-emerald-600",
     borderColor: "border-l-emerald-500",
     bgColor: "bg-emerald-500/5",
+    bgColorLight: "bg-emerald-50",
     dotColor: "bg-emerald-500",
+    cursorColor: "#10b981",
   },
   {
     id: "carol",
     name: "Carol Williams",
-    color: "text-purple-400",
+    color: "text-purple-600",
     borderColor: "border-l-purple-500",
     bgColor: "bg-purple-500/5",
+    bgColorLight: "bg-purple-50",
     dotColor: "bg-purple-500",
+    cursorColor: "#a855f7",
   },
   {
     id: "dave",
     name: "Dave Wilson",
-    color: "text-orange-400",
+    color: "text-orange-600",
     borderColor: "border-l-orange-500",
     bgColor: "bg-orange-500/5",
+    bgColorLight: "bg-orange-50",
     dotColor: "bg-orange-500",
+    cursorColor: "#f97316",
   },
 ];
 
-// Generate 230 mock events distributed over 3 weeks
+// Generate 230 mock events
 const generateMockEvents = (): TimelineEvent[] => {
   const events: TimelineEvent[] = [];
   const baseDate = new Date("2026-01-15T09:00:00Z");
 
-  // Distribution: Alice ~80, Bob ~60, Carol ~55, Dave ~35
   const authorDistribution = [
     ...Array(80).fill("alice"),
     ...Array(60).fill("bob"),
@@ -101,7 +113,6 @@ const generateMockEvents = (): TimelineEvent[] => {
     ...Array(35).fill("dave"),
   ];
 
-  // Shuffle the distribution
   for (let i = authorDistribution.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [authorDistribution[i], authorDistribution[j]] = [authorDistribution[j], authorDistribution[i]];
@@ -159,137 +170,29 @@ const generateMockEvents = (): TimelineEvent[] => {
     });
   }
 
-  // Sort by timestamp
   events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-  // Reassign IDs after sorting
   events.forEach((e, idx) => (e.id = idx + 1));
 
   return events;
 };
 
-// Mock document sections that appear progressively
 const mockDocumentSections: DocumentSection[] = [
-  {
-    id: "title",
-    authorId: "alice",
-    type: "title",
-    content: "AI Ethics Research Project",
-    appearsAtEvent: 1,
-  },
-  {
-    id: "intro-heading",
-    authorId: "bob",
-    type: "heading",
-    content: "1. Introduction",
-    appearsAtEvent: 15,
-  },
-  {
-    id: "intro-p1",
-    authorId: "bob",
-    type: "paragraph",
-    content:
-      "Artificial intelligence has evolved from a theoretical concept to a practical reality that influences decisions in healthcare, finance, criminal justice, and countless other domains. The rapid advancement of machine learning and deep learning techniques has enabled systems that can outperform humans in specific tasks, raising profound questions about the future of work, privacy, and human autonomy.",
-    appearsAtEvent: 25,
-  },
-  {
-    id: "intro-p2",
-    authorId: "bob",
-    type: "paragraph",
-    content:
-      "This paper aims to provide a thorough analysis of the key ethical challenges posed by AI, drawing on philosophical frameworks, case studies, and emerging regulatory approaches. We examine both the promises and perils of artificial intelligence in modern society.",
-    appearsAtEvent: 40,
-  },
-  {
-    id: "privacy-heading",
-    authorId: "carol",
-    type: "heading",
-    content: "2. Privacy and Data Rights",
-    appearsAtEvent: 55,
-  },
-  {
-    id: "privacy-p1",
-    authorId: "carol",
-    type: "paragraph",
-    content:
-      "One of the most pressing ethical concerns surrounding AI is the collection, storage, and utilization of personal data. Modern AI systems require vast datasets to train effectively, often harvesting information from users without their explicit understanding of how that data will be used. This raises fundamental questions about consent, data ownership, and the right to privacy in the digital age.",
-    appearsAtEvent: 70,
-  },
-  {
-    id: "privacy-p2",
-    authorId: "carol",
-    type: "paragraph",
-    content:
-      "The European Union's General Data Protection Regulation (GDPR) represents one attempt to address these concerns, establishing principles such as the right to explanation and the right to be forgotten. However, enforcement remains challenging in our globally connected world.",
-    appearsAtEvent: 90,
-  },
-  {
-    id: "bias-heading",
-    authorId: "alice",
-    type: "heading",
-    content: "3. Algorithmic Bias",
-    appearsAtEvent: 110,
-  },
-  {
-    id: "bias-p1",
-    authorId: "alice",
-    type: "paragraph",
-    content:
-      "AI systems can perpetuate and even amplify existing societal biases present in their training data. Documented cases include facial recognition systems that perform poorly on individuals with darker skin tones, hiring algorithms that discriminate against women, and predictive policing tools that disproportionately target minority communities.",
-    appearsAtEvent: 125,
-  },
-  {
-    id: "bias-p2",
-    authorId: "alice",
-    type: "paragraph",
-    content:
-      "Addressing algorithmic bias requires a multi-pronged approach: diverse development teams, rigorous testing across demographic groups, and ongoing monitoring of deployed systems. Transparency in AI decision-making is essential for accountability.",
-    appearsAtEvent: 145,
-  },
-  {
-    id: "autonomous-heading",
-    authorId: "dave",
-    type: "heading",
-    content: "4. Autonomous Systems",
-    appearsAtEvent: 160,
-  },
-  {
-    id: "autonomous-p1",
-    authorId: "dave",
-    type: "paragraph",
-    content:
-      "As AI systems gain the ability to make autonomous decisions—from self-driving cars to automated weapons systems—questions of accountability become increasingly complex. When an autonomous vehicle causes an accident, who bears responsibility: the manufacturer, the software developer, or the vehicle owner? These questions challenge our existing legal and ethical frameworks.",
-    appearsAtEvent: 175,
-  },
-  {
-    id: "regulatory-heading",
-    authorId: "carol",
-    type: "heading",
-    content: "5. Regulatory Frameworks",
-    appearsAtEvent: 190,
-  },
-  {
-    id: "regulatory-p1",
-    authorId: "carol",
-    type: "paragraph",
-    content:
-      "Governments worldwide are grappling with how to regulate AI development and deployment. The EU's AI Act represents the most comprehensive attempt to date, classifying AI systems by risk level and imposing corresponding requirements. The United States has taken a more sector-specific approach, while China has focused on algorithmic transparency.",
-    appearsAtEvent: 205,
-  },
-  {
-    id: "conclusion-heading",
-    authorId: "bob",
-    type: "heading",
-    content: "6. Conclusion",
-    appearsAtEvent: 215,
-  },
-  {
-    id: "conclusion-p1",
-    authorId: "bob",
-    type: "paragraph",
-    content:
-      "The ethical challenges posed by artificial intelligence are complex and multifaceted, requiring ongoing dialogue between technologists, ethicists, policymakers, and the public. As AI continues to evolve, establishing robust ethical guidelines and regulatory frameworks will be essential to ensure these powerful technologies benefit humanity while minimizing potential harms.",
-    appearsAtEvent: 225,
-  },
+  { id: "title", authorId: "alice", type: "title", content: "AI Ethics Research Project", appearsAtEvent: 1 },
+  { id: "intro-heading", authorId: "bob", type: "heading", content: "1. Introduction", appearsAtEvent: 15 },
+  { id: "intro-p1", authorId: "bob", type: "paragraph", content: "Artificial intelligence has evolved from a theoretical concept to a practical reality that influences decisions in healthcare, finance, criminal justice, and countless other domains. The rapid advancement of machine learning and deep learning techniques has enabled systems that can outperform humans in specific tasks, raising profound questions about the future of work, privacy, and human autonomy.", appearsAtEvent: 25 },
+  { id: "intro-p2", authorId: "bob", type: "paragraph", content: "This paper aims to provide a thorough analysis of the key ethical challenges posed by AI, drawing on philosophical frameworks, case studies, and emerging regulatory approaches. We examine both the promises and perils of artificial intelligence in modern society.", appearsAtEvent: 40 },
+  { id: "privacy-heading", authorId: "carol", type: "heading", content: "2. Privacy and Data Rights", appearsAtEvent: 55 },
+  { id: "privacy-p1", authorId: "carol", type: "paragraph", content: "One of the most pressing ethical concerns surrounding AI is the collection, storage, and utilization of personal data. Modern AI systems require vast datasets to train effectively, often harvesting information from users without their explicit understanding of how that data will be used. This raises fundamental questions about consent, data ownership, and the right to privacy in the digital age.", appearsAtEvent: 70 },
+  { id: "privacy-p2", authorId: "carol", type: "paragraph", content: "The European Union's General Data Protection Regulation (GDPR) represents one attempt to address these concerns, establishing principles such as the right to explanation and the right to be forgotten. However, enforcement remains challenging in our globally connected world.", appearsAtEvent: 90 },
+  { id: "bias-heading", authorId: "alice", type: "heading", content: "3. Algorithmic Bias", appearsAtEvent: 110 },
+  { id: "bias-p1", authorId: "alice", type: "paragraph", content: "AI systems can perpetuate and even amplify existing societal biases present in their training data. Documented cases include facial recognition systems that perform poorly on individuals with darker skin tones, hiring algorithms that discriminate against women, and predictive policing tools that disproportionately target minority communities.", appearsAtEvent: 125 },
+  { id: "bias-p2", authorId: "alice", type: "paragraph", content: "Addressing algorithmic bias requires a multi-pronged approach: diverse development teams, rigorous testing across demographic groups, and ongoing monitoring of deployed systems. Transparency in AI decision-making is essential for accountability.", appearsAtEvent: 145 },
+  { id: "autonomous-heading", authorId: "dave", type: "heading", content: "4. Autonomous Systems", appearsAtEvent: 160 },
+  { id: "autonomous-p1", authorId: "dave", type: "paragraph", content: "As AI systems gain the ability to make autonomous decisions—from self-driving cars to automated weapons systems—questions of accountability become increasingly complex. When an autonomous vehicle causes an accident, who bears responsibility: the manufacturer, the software developer, or the vehicle owner? These questions challenge our existing legal and ethical frameworks.", appearsAtEvent: 175 },
+  { id: "regulatory-heading", authorId: "carol", type: "heading", content: "5. Regulatory Frameworks", appearsAtEvent: 190 },
+  { id: "regulatory-p1", authorId: "carol", type: "paragraph", content: "Governments worldwide are grappling with how to regulate AI development and deployment. The EU's AI Act represents the most comprehensive attempt to date, classifying AI systems by risk level and imposing corresponding requirements. The United States has taken a more sector-specific approach, while China has focused on algorithmic transparency.", appearsAtEvent: 205 },
+  { id: "conclusion-heading", authorId: "bob", type: "heading", content: "6. Conclusion", appearsAtEvent: 215 },
+  { id: "conclusion-p1", authorId: "bob", type: "paragraph", content: "The ethical challenges posed by artificial intelligence are complex and multifaceted, requiring ongoing dialogue between technologists, ethicists, policymakers, and the public. As AI continues to evolve, establishing robust ethical guidelines and regulatory frameworks will be essential to ensure these powerful technologies benefit humanity while minimizing potential harms.", appearsAtEvent: 225 },
 ];
 
 const mockEvents = generateMockEvents();
@@ -309,6 +212,7 @@ export default function TeacherLiveReplay() {
   const [hoveredEvent, setHoveredEvent] = useState<TimelineEvent | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showCursor, setShowCursor] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const documentRef = useRef<HTMLDivElement>(null);
@@ -319,7 +223,19 @@ export default function TeacherLiveReplay() {
   const currentEventData = mockEvents[currentEvent];
   const currentAuthor = mockAuthors.find((a) => a.id === currentEventData?.authorId);
 
-  // Calculate cumulative word counts up to current event
+  // Cursor blink effect
+  useEffect(() => {
+    if (isPlaying) {
+      const blinkInterval = setInterval(() => {
+        setShowCursor((prev) => !prev);
+      }, 530);
+      return () => clearInterval(blinkInterval);
+    } else {
+      setShowCursor(true);
+    }
+  }, [isPlaying]);
+
+  // Calculate cumulative word counts
   const wordCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     mockAuthors.forEach((a) => (counts[a.id] = 0));
@@ -334,12 +250,12 @@ export default function TeacherLiveReplay() {
     return counts;
   }, [currentEvent]);
 
-  // Get visible sections based on current event
+  // Get visible sections
   const visibleSections = useMemo(() => {
     return mockDocumentSections.filter((s) => s.appearsAtEvent <= currentEvent + 1);
   }, [currentEvent]);
 
-  // Find the currently active section (most recently added)
+  // Track active section
   useEffect(() => {
     const latestSection = [...mockDocumentSections]
       .filter((s) => s.appearsAtEvent <= currentEvent + 1)
@@ -347,7 +263,6 @@ export default function TeacherLiveReplay() {
 
     if (latestSection && latestSection.appearsAtEvent === currentEvent + 1) {
       setActiveSection(latestSection.id);
-      // Auto-scroll to new section
       setTimeout(() => {
         const element = document.getElementById(`section-${latestSection.id}`);
         element?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -519,17 +434,12 @@ export default function TeacherLiveReplay() {
 
   const toggleAuthor = (authorId: string) => {
     setActiveAuthors((prev) =>
-      prev.includes(authorId)
-        ? prev.filter((id) => id !== authorId)
-        : [...prev, authorId]
+      prev.includes(authorId) ? prev.filter((id) => id !== authorId) : [...prev, authorId]
     );
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-[#0a0a0a] flex flex-col"
-    >
+    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] flex flex-col">
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/10 h-14 px-6 flex items-center justify-between">
         <button
@@ -564,97 +474,158 @@ export default function TeacherLiveReplay() {
         </div>
       </div>
 
-      {/* Author Legend Bar */}
-      <div className="fixed top-14 left-0 right-0 z-40 bg-[#0f0f0f]/80 border-b border-white/5 py-2.5 px-6">
-        <div className="flex items-center justify-center gap-8">
-          {mockAuthors.map((author) => (
-            <div
-              key={author.id}
-              className={`flex items-center gap-2 transition-opacity ${
-                activeAuthors.includes(author.id) ? "opacity-100" : "opacity-40"
-              }`}
-            >
-              <div className={`w-3 h-3 rounded-full ${author.dotColor}`} />
-              <span className="text-slate-300 text-sm font-medium">{author.name}</span>
-              <span className="text-slate-600 text-xs">
-                ({wordCounts[author.id]?.toLocaleString() || 0} words)
-              </span>
-            </div>
-          ))}
+      {/* Main Document Viewer - Google Docs Style */}
+      <div ref={documentRef} className="flex-1 bg-[#f0f0f0] overflow-y-auto pt-14 pb-36">
+        {/* Page Ruler */}
+        <div className="bg-white border-b border-gray-200 h-6 flex items-center justify-center sticky top-0 z-30">
+          <div className="w-full max-w-[816px] px-[72px] flex items-center">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((inch) => (
+              <div key={inch} className="flex-1 flex items-center">
+                <span className="text-[9px] text-gray-400">{inch}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Main Document Viewer */}
-      <div
-        ref={documentRef}
-        className="flex-1 bg-[#111111] overflow-y-auto pt-28 pb-36"
-      >
-        {/* Document Paper */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1a1a1e] border border-white/[0.06] rounded-2xl max-w-3xl mx-auto my-8 mx-4 p-10 shadow-2xl shadow-black/50 min-h-[600px] relative"
-        >
-          {visibleSections.length === 0 ? (
-            <div className="flex items-center justify-center h-[400px] text-slate-600">
-              <p className="text-center">
-                Press <kbd className="px-2 py-1 bg-white/10 rounded text-slate-400 mx-1">Space</kbd> to start playback
-              </p>
+        {/* Google Docs Toolbar */}
+        <div className="bg-white border-b border-gray-200 px-4 py-1.5 flex items-center gap-1 sticky top-6 z-30">
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <Redo2 className="w-4 h-4" />
+          </button>
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
+            B
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 italic text-sm">
+            I
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 underline text-sm">
+            U
+          </button>
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+          <button className="bg-transparent border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50">
+            Arial ▾
+          </button>
+          <button className="bg-transparent border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50 ml-1">
+            11 ▾
+          </button>
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 text-sm underline decoration-2">
+            A
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <Highlighter className="w-4 h-4" />
+          </button>
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <AlignLeft className="w-4 h-4" />
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <AlignCenter className="w-4 h-4" />
+          </button>
+          <button className="w-7 h-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600">
+            <AlignRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Document Page */}
+        <div className="flex justify-center py-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white shadow-md rounded-sm w-full max-w-[816px] min-h-[1056px] px-[72px] py-[96px] relative"
+            style={{ fontFamily: "'Arial', sans-serif" }}
+          >
+            {/* Author Legend - Floating Pill */}
+            <div className="absolute top-4 right-4 bg-white border border-gray-200 shadow-sm rounded-full px-4 py-2 flex items-center gap-4 z-20">
+              {mockAuthors.map((author) => (
+                <div key={author.id} className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${author.dotColor}`} />
+                  <span className="text-gray-600 text-xs">{author.name.split(" ")[0]}</span>
+                  <span className="text-gray-400 text-xs">({wordCounts[author.id] || 0})</span>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-6">
-              {visibleSections.map((section) => {
-                const author = mockAuthors.find((a) => a.id === section.authorId);
-                const isActive = activeSection === section.id;
 
-                return (
-                  <motion.div
-                    key={section.id}
-                    id={`section-${section.id}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`pl-4 border-l-[3px] ${author?.borderColor} transition-all duration-500 ${
-                      isActive ? author?.bgColor : ""
-                    }`}
-                  >
-                    {section.type === "title" && (
-                      <h1 className="text-2xl font-bold text-white">{section.content}</h1>
-                    )}
-                    {section.type === "heading" && (
-                      <h2 className="text-lg font-semibold text-white mt-2">{section.content}</h2>
-                    )}
-                    {section.type === "paragraph" && (
-                      <p className="text-slate-200 leading-relaxed">{section.content}</p>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+            {visibleSections.length === 0 ? (
+              <div className="flex items-center justify-center h-[400px] text-gray-400">
+                <p className="text-center">
+                  Press <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600 mx-1 text-sm">Space</kbd> to start playback
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {visibleSections.map((section) => {
+                  const author = mockAuthors.find((a) => a.id === section.authorId);
+                  const isActive = activeSection === section.id;
 
-          {/* Author Captions Overlay */}
-          <AnimatePresence>
-            {showCaptions && currentEventData && currentAuthor && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-6 left-6 right-6 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-3 rounded-lg flex items-center gap-3"
-              >
-                <div className={`w-2.5 h-2.5 rounded-full ${currentAuthor.dotColor}`} />
-                <span className={`font-medium ${currentAuthor.color}`}>{currentAuthor.name}</span>
-                <span className="text-slate-500">—</span>
-                <span className="text-slate-300">
-                  {currentEventData.actionType === "added" && `typed: "${currentEventData.contentPreview}"`}
-                  {currentEventData.actionType === "deleted" && "deleted text"}
-                  {currentEventData.actionType === "edited" && "revised text"}
-                  {currentEventData.actionType === "formatted" && "applied formatting"}
-                  {currentEventData.actionType === "comment" && "added a comment"}
-                </span>
-              </motion.div>
+                  return (
+                    <motion.div
+                      key={section.id}
+                      id={`section-${section.id}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className={`pl-3 border-l-[3px] ${author?.borderColor} transition-all duration-500 relative ${
+                        isActive ? author?.bgColorLight : ""
+                      }`}
+                    >
+                      {section.type === "title" && (
+                        <h1 className="text-2xl font-bold text-gray-900 mb-4">{section.content}</h1>
+                      )}
+                      {section.type === "heading" && (
+                        <h2 className="text-lg font-bold text-gray-900 mt-6 mb-2">{section.content}</h2>
+                      )}
+                      {section.type === "paragraph" && (
+                        <p className="text-gray-800 text-[11pt] leading-relaxed">{section.content}</p>
+                      )}
+
+                      {/* Cursor simulation for active section */}
+                      {isActive && isPlaying && showCursor && author && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          <div
+                            className="w-0.5 h-5 rounded-full animate-pulse"
+                            style={{ backgroundColor: author.cursorColor }}
+                          />
+                          <span
+                            className="text-white text-xs px-2 py-0.5 rounded whitespace-nowrap"
+                            style={{ backgroundColor: author.cursorColor }}
+                          >
+                            {author.name.split(" ")[0]}
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
             )}
-          </AnimatePresence>
-        </motion.div>
+
+            {/* Author Captions Overlay */}
+            <AnimatePresence>
+              {showCaptions && currentEventData && currentAuthor && visibleSections.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="fixed bottom-40 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-lg flex items-center gap-3 max-w-md text-center z-40"
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full ${currentAuthor.dotColor} flex-shrink-0`} />
+                  <span className={`font-medium ${currentAuthor.color}`}>{currentAuthor.name}</span>
+                  <span className="text-slate-300">
+                    {currentEventData.actionType === "added" && `typed: "${currentEventData.contentPreview}"`}
+                    {currentEventData.actionType === "deleted" && "deleted text"}
+                    {currentEventData.actionType === "edited" && "revised text"}
+                    {currentEventData.actionType === "formatted" && "applied formatting"}
+                    {currentEventData.actionType === "comment" && "added a comment"}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </div>
 
       {/* Timeline Panel */}
@@ -710,7 +681,9 @@ export default function TeacherLiveReplay() {
                 <p className="text-white text-sm font-medium">
                   {mockAuthors.find((a) => a.id === hoveredEvent.authorId)?.name}
                 </p>
-                <p className="text-slate-500 text-xs capitalize">{hoveredEvent.actionType} {hoveredEvent.wordCountDelta > 0 ? `${hoveredEvent.wordCountDelta} words` : ""}</p>
+                <p className="text-slate-500 text-xs capitalize">
+                  {hoveredEvent.actionType} {hoveredEvent.wordCountDelta > 0 ? `${hoveredEvent.wordCountDelta} words` : ""}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -724,11 +697,7 @@ export default function TeacherLiveReplay() {
               onClick={() => setIsPlaying((prev) => !prev)}
               className="w-10 h-10 bg-white/10 hover:bg-white/15 rounded-full flex items-center justify-center transition-colors"
             >
-              {isPlaying ? (
-                <Pause className="w-5 h-5 text-white" />
-              ) : (
-                <Play className="w-5 h-5 text-white ml-0.5" />
-              )}
+              {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white ml-0.5" />}
             </button>
 
             <button
@@ -815,7 +784,7 @@ export default function TeacherLiveReplay() {
               CC
             </button>
 
-            {/* Frame Step Buttons (only when paused) */}
+            {/* Frame Step Buttons */}
             {!isPlaying && (
               <>
                 <button
