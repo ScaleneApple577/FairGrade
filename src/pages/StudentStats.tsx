@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -20,6 +20,8 @@ import {
   Lock,
   Calendar,
   Star,
+  Loader2,
+  FolderOpen,
 } from "lucide-react";
 import {
   Dialog,
@@ -40,96 +42,90 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { StudentLayout } from "@/components/student/StudentLayout";
 
-// Mock data - in production this would come from API
-const mockStats = {
-  overall_score: 87,
-  score_trend: 12,
-  percentile: 73,
+// All 30 achievements definition
+const allAchievements = [
+  // Contribution Milestones (6)
+  { id: "first_words", emoji: "📝", name: "First Words", description: "Write your first 100 words in a project", category: "contribution" },
+  { id: "wordsmith", emoji: "✍️", name: "Wordsmith", description: "Write 1,000 total words across all projects", category: "contribution" },
+  { id: "author", emoji: "📚", name: "Author", description: "Write 5,000 total words across all projects", category: "contribution" },
+  { id: "prolific_writer", emoji: "📖", name: "Prolific Writer", description: "Write 10,000 total words across all projects", category: "contribution" },
+  { id: "builder", emoji: "🏗️", name: "Builder", description: "Complete 10 tasks across all projects", category: "contribution" },
+  { id: "task_machine", emoji: "⚡", name: "Task Machine", description: "Complete 50 tasks across all projects", category: "contribution" },
+  // Collaboration Milestones (6)
+  { id: "communicator", emoji: "💬", name: "Communicator", description: "Leave 10 comments on shared documents", category: "collaboration" },
+  { id: "feedback_pro", emoji: "🗣️", name: "Feedback Pro", description: "Leave 50 comments across all projects", category: "collaboration" },
+  { id: "team_player", emoji: "🤝", name: "Team Player", description: "Attend 10 team meetings", category: "collaboration" },
+  { id: "reliable", emoji: "🎯", name: "Reliable", description: "Attend 25 consecutive meetings without missing one", category: "collaboration" },
+  { id: "helpful_reviewer", emoji: "⭐", name: "Helpful Reviewer", description: "Submit 5 peer reviews", category: "collaboration" },
+  { id: "review_master", emoji: "🌟", name: "Review Master", description: "Submit 20 peer reviews", category: "collaboration" },
+  // Consistency Milestones (6)
+  { id: "day_one", emoji: "📆", name: "Day One", description: "Make a contribution on your first day in a project", category: "consistency" },
+  { id: "streak_starter", emoji: "🔥", name: "Streak Starter", description: "Contribute 3 days in a row", category: "consistency" },
+  { id: "on_fire", emoji: "🔥🔥", name: "On Fire", description: "Contribute 7 days in a row", category: "consistency" },
+  { id: "unstoppable", emoji: "🔥🔥🔥", name: "Unstoppable", description: "Contribute 14 days in a row", category: "consistency" },
+  { id: "early_bird", emoji: "⏰", name: "Early Bird", description: "Submit a task more than 48 hours before the deadline", category: "consistency" },
+  { id: "steady_pace", emoji: "📊", name: "Steady Pace", description: "Maintain an even work distribution (consistency score > 80) on a project", category: "consistency" },
+  // Quality Milestones (6)
+  { id: "quality_work", emoji: "💎", name: "Quality Work", description: "Have 95%+ of your words survive to the final document", category: "quality" },
+  { id: "peer_approved", emoji: "🎖️", name: "Peer Approved", description: "Receive an average peer rating of 4.0+ on a project", category: "quality" },
+  { id: "mvp", emoji: "👑", name: "MVP", description: "Receive the highest peer rating on your team for a project", category: "quality" },
+  { id: "original_thinker", emoji: "🧠", name: "Original Thinker", description: "Complete a project with 0 AI content flags", category: "quality" },
+  { id: "integrity_first", emoji: "✅", name: "Integrity First", description: "Complete a project with 0 plagiarism flags", category: "quality" },
+  { id: "high_scorer", emoji: "🏆", name: "High Scorer", description: "Achieve a FairScore of 90+ on any project", category: "quality" },
+  // Social & Team Milestones (6)
+  { id: "first_project", emoji: "👋", name: "First Project", description: "Join your first project", category: "social" },
+  { id: "multi_tasker", emoji: "🎓", name: "Multi-Tasker", description: "Be active in 3+ projects simultaneously", category: "social" },
+  { id: "schedule_master", emoji: "📅", name: "Schedule Master", description: "Mark availability and help schedule 5 meetings", category: "social" },
+  { id: "poll_creator", emoji: "🗳️", name: "Poll Creator", description: "Create a When2Meet-style availability poll", category: "social" },
+  { id: "goal_setter", emoji: "🎯", name: "Goal Setter", description: "Set and complete a personal goal", category: "social" },
+  { id: "well_rounded", emoji: "🌈", name: "Well-Rounded", description: "Score above 70 in ALL five FairScore categories on a single project", category: "social" },
+];
+
+interface Stats {
+  overall_score: number | null;
+  score_trend: number;
+  percentile: number | null;
   breakdown: {
-    task_completion: 92,
-    meeting_attendance: 85,
-    contribution_volume: 88,
-    peer_reviews: 84,
-    quality: 86,
-  },
+    task_completion: number | null;
+    meeting_attendance: number | null;
+    contribution_volume: number | null;
+    peer_reviews: number | null;
+    quality: number | null;
+  };
   contribution_metrics: {
-    words_written: 12847,
-    edit_sessions: 47,
-    active_time_minutes: 1472,
-    tasks_completed: 18,
-    tasks_total: 22,
-    team_average_words: 10200,
-  },
+    words_written: number;
+    edit_sessions: number;
+    active_time_minutes: number;
+    tasks_completed: number;
+    tasks_total: number;
+    team_average_words: number;
+  };
   meeting_stats: {
-    meetings_attended: 15,
-    meetings_total: 18,
-    attendance_percentage: 83,
-    average_duration_minutes: 48,
-    average_response_time_hours: 2.3,
-    peer_rating: 4.2,
-  },
-  recent_meetings: [
-    { title: "Team Retro - CS 101", project: "CS 101", date: "Feb 2", duration_minutes: 45, attended: true },
-    { title: "Client Call - Marketing", project: "Marketing", date: "Jan 31", duration_minutes: null, attended: false },
-    { title: "Design Review - Marketing", project: "Marketing", date: "Jan 29", duration_minutes: 52, attended: true },
-  ],
-  project_breakdown: [
-    { project_id: "1", project_name: "CS 101 Final Project", course: "Computer Science", score: 92, words_written: 3847, tasks_completed: 8, tasks_total: 9, meetings_attended: 5, meetings_total: 5, peer_rating: 4.5, status: "excellent" as const },
-    { project_id: "2", project_name: "Marketing Campaign", course: "Business 201", score: 78, words_written: 5200, tasks_completed: 6, tasks_total: 8, meetings_attended: 7, meetings_total: 9, peer_rating: 4.0, status: "good" as const },
-    { project_id: "3", project_name: "Biology Lab Report", course: "Biology 150", score: 65, words_written: 3800, tasks_completed: 4, tasks_total: 5, meetings_attended: 3, meetings_total: 4, peer_rating: 3.8, status: "fair" as const },
-  ],
-  improvement_suggestions: [
-    { type: "critical" as const, title: "Improve Meeting Attendance", description: "You've missed 3 meetings. Aim for 100% attendance to boost your score by 5 points.", potential_score_increase: 5 },
-    { type: "warning" as const, title: "Complete Pending Tasks", description: "You have 4 tasks in progress. Complete them before deadlines to improve reliability.", potential_score_increase: 3 },
-    { type: "info" as const, title: "Faster Response Times", description: "Respond to messages within 24hrs. Your avg. is 2.3hrs - keep it up!", potential_score_increase: 0 },
-    { type: "success" as const, title: "Great Contribution Volume", description: "You're writing 26% more than your team avg. Keep up the excellent work!", potential_score_increase: 0 },
-  ],
-  weekly_summary: {
-    total_contributions: 58,
-    tasks_completed: 5,
-    meetings_attended: 3,
-    meetings_total: 3,
-    words_written: 2450,
-    active_time_minutes: 495,
-  },
-  achievements: [
-    { id: "1", title: "Perfect Week", description: "100% attendance", icon: "trophy", earned: true, earned_at: "2026-01-15" },
-    { id: "2", title: "Speed Demon", description: "Fast responder", icon: "zap", earned: true, earned_at: "2026-01-20" },
-    { id: "3", title: "Task Master", description: "10 tasks done", icon: "check", earned: true, earned_at: "2026-01-25" },
-    { id: "4", title: "Team Player", description: "4.5+ rating", icon: "lock", earned: false, earned_at: null },
-  ],
-};
+    meetings_attended: number;
+    meetings_total: number;
+    attendance_percentage: number;
+    average_duration_minutes: number;
+    average_response_time_hours: number;
+    peer_rating: number | null;
+  };
+}
 
-const mockGoals = [
-  { id: "1", title: "Attend 100% of meetings", goal_type: "meeting_attendance", target_value: 100, current_value: 83, progress_percentage: 83, deadline: "2026-02-28", status: "on_track" as const },
-  { id: "2", title: "Complete tasks 1 day before deadline", goal_type: "task_completion", target_value: 100, current_value: 92, progress_percentage: 92, deadline: "2026-03-15", status: "on_track" as const },
-  { id: "3", title: "Reach 90+ contribution score", goal_type: "contribution_score", target_value: 90, current_value: 87, progress_percentage: 97, deadline: "2026-02-15", status: "at_risk" as const },
-];
+interface Goal {
+  id: string;
+  title: string;
+  goal_type: string;
+  target_value: number;
+  current_value: number;
+  progress_percentage: number;
+  deadline: string;
+  status: "on_track" | "at_risk" | "completed";
+}
 
-// Generate activity data for heatmap
-const generateActivityData = () => {
-  const data: number[][] = [];
-  for (let week = 0; week < 12; week++) {
-    const weekData: number[] = [];
-    for (let day = 0; day < 7; day++) {
-      weekData.push(Math.floor(Math.random() * 5));
-    }
-    data.push(weekData);
-  }
-  return data;
-};
-
-const activityData = generateActivityData();
-
-const weeklyActivity = [
-  { day: "Mon", contributions: 12 },
-  { day: "Tue", contributions: 8 },
-  { day: "Wed", contributions: 15 },
-  { day: "Thu", contributions: 6 },
-  { day: "Fri", contributions: 10 },
-  { day: "Sat", contributions: 3 },
-  { day: "Sun", contributions: 0 },
-];
+interface Achievement {
+  id: string;
+  unlocked: boolean;
+  unlocked_at: string | null;
+}
 
 const StudentStats = () => {
   const { toast } = useToast();
@@ -138,8 +134,37 @@ const StudentStats = () => {
   const [goalType, setGoalType] = useState("contribution_score");
   const [goalTarget, setGoalTarget] = useState("");
   const [goalDeadline, setGoalDeadline] = useState("");
-  const [goals, setGoals] = useState(mockGoals);
   const [timeFilter, setTimeFilter] = useState("30");
+  const [selectedAchievement, setSelectedAchievement] = useState<typeof allAchievements[0] | null>(null);
+
+  // Data states
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/student/stats
+    // fetch('http://localhost:8000/api/student/stats')
+    //   .then(res => res.json())
+    //   .then(data => { setStats(data); setIsLoading(false); })
+    //   .catch(err => { setIsLoading(false); })
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/student/goals
+    // fetch('http://localhost:8000/api/student/goals')
+    //   .then(res => res.json())
+    //   .then(data => setGoals(data))
+  }, []);
+
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/student/achievements
+    // fetch('http://localhost:8000/api/student/achievements')
+    //   .then(res => res.json())
+    //   .then(data => setAchievements(data))
+  }, []);
 
   const handleCreateGoal = () => {
     if (!goalTitle || !goalTarget || !goalDeadline) {
@@ -151,7 +176,8 @@ const StudentStats = () => {
       return;
     }
 
-    const newGoal = {
+    // TODO: POST http://localhost:8000/api/student/goals
+    const newGoal: Goal = {
       id: Date.now().toString(),
       title: goalTitle,
       goal_type: goalType,
@@ -159,7 +185,7 @@ const StudentStats = () => {
       current_value: 0,
       progress_percentage: 0,
       deadline: goalDeadline,
-      status: "on_track" as const,
+      status: "on_track",
     };
 
     setGoals([...goals, newGoal]);
@@ -200,7 +226,8 @@ const StudentStats = () => {
     return `${hours}h ${mins}m`;
   };
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null) => {
+    if (score === null) return "text-slate-400";
     if (score >= 90) return "text-green-400";
     if (score >= 70) return "text-blue-400";
     if (score >= 50) return "text-yellow-400";
@@ -216,6 +243,10 @@ const StudentStats = () => {
     }
   };
 
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const isAchievementUnlocked = (id: string) => achievements.find(a => a.id === id)?.unlocked || false;
+  const getAchievementUnlockDate = (id: string) => achievements.find(a => a.id === id)?.unlocked_at || null;
+
   const heatmapColors = [
     "bg-white/5",
     "bg-green-500/30",
@@ -223,6 +254,19 @@ const StudentStats = () => {
     "bg-green-500/70",
     "bg-green-500",
   ];
+
+  // Generate empty activity data for heatmap
+  const activityData: number[][] = Array(12).fill(null).map(() => Array(7).fill(0));
+
+  if (isLoading) {
+    return (
+      <StudentLayout pageTitle="My Stats">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        </div>
+      </StudentLayout>
+    );
+  }
 
   return (
     <StudentLayout pageTitle="My Stats">
@@ -250,16 +294,22 @@ const StudentStats = () => {
           <div className="flex-1">
             <p className="text-blue-100 text-sm mb-2">Your Overall Contribution Score</p>
             <div className="flex items-baseline gap-4 mb-4">
-              <span className="text-7xl font-bold">{mockStats.overall_score}</span>
+              <span className="text-7xl font-bold">{stats?.overall_score ?? "—"}</span>
               <span className="text-3xl text-blue-100">/100</span>
             </div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-300" />
-              <span className="text-green-300 font-semibold">+{mockStats.score_trend} points from last month</span>
-            </div>
-            <p className="text-blue-100 text-sm mt-3">
-              You're performing better than <strong className="text-white">{mockStats.percentile}% of students</strong> in your classes
-            </p>
+            {stats?.score_trend ? (
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-300" />
+                <span className="text-green-300 font-semibold">+{stats.score_trend} points from last month</span>
+              </div>
+            ) : (
+              <p className="text-blue-100 text-sm">No trend data available yet</p>
+            )}
+            {stats?.percentile ? (
+              <p className="text-blue-100 text-sm mt-3">
+                You're performing better than <strong className="text-white">{stats.percentile}% of students</strong> in your classes
+              </p>
+            ) : null}
           </div>
 
           {/* Right Side: Circular Progress */}
@@ -280,13 +330,13 @@ const StudentStats = () => {
                 stroke="white"
                 strokeWidth="12"
                 fill="none"
-                strokeDasharray={`${mockStats.overall_score * 5.53} 553`}
+                strokeDasharray={`${(stats?.overall_score ?? 0) * 5.53} 553`}
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-5xl font-bold">{mockStats.overall_score}</p>
+                <p className="text-5xl font-bold">{stats?.overall_score ?? "—"}</p>
                 <p className="text-sm text-blue-100">Score</p>
               </div>
             </div>
@@ -298,23 +348,23 @@ const StudentStats = () => {
           <p className="text-sm text-blue-100 mb-3">Score Breakdown</p>
           <div className="grid grid-cols-5 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold">{mockStats.breakdown.task_completion}</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.task_completion ?? "—"}</p>
               <p className="text-xs text-blue-100 mt-1">Task Completion</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockStats.breakdown.meeting_attendance}</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.meeting_attendance ?? "—"}</p>
               <p className="text-xs text-blue-100 mt-1">Meeting Attendance</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockStats.breakdown.contribution_volume}</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.contribution_volume ?? "—"}</p>
               <p className="text-xs text-blue-100 mt-1">Contribution Volume</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockStats.breakdown.peer_reviews}</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.peer_reviews ?? "—"}</p>
               <p className="text-xs text-blue-100 mt-1">Peer Reviews</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockStats.breakdown.quality}</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.quality ?? "—"}</p>
               <p className="text-xs text-blue-100 mt-1">Quality</p>
             </div>
           </div>
@@ -329,147 +379,108 @@ const StudentStats = () => {
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <h2 className="text-xl font-bold text-white mb-6">Contribution Metrics</h2>
             
-            <div className="space-y-6">
-              {/* Words Written */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-blue-400" />
-                    <span className="font-semibold text-white">Words Written</span>
+            {stats ? (
+              <div className="space-y-6">
+                {/* Words Written */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-400" />
+                      <span className="font-semibold text-white">Words Written</span>
+                    </div>
+                    <span className="text-2xl font-bold text-blue-400">{stats.contribution_metrics.words_written.toLocaleString()}</span>
                   </div>
-                  <span className="text-2xl font-bold text-blue-400">{mockStats.contribution_metrics.words_written.toLocaleString()}</span>
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
+                  <div className="text-sm text-slate-400">vs. team average ({stats.contribution_metrics.team_average_words.toLocaleString()})</div>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2 mb-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '88%' }}></div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">vs. team average ({mockStats.contribution_metrics.team_average_words.toLocaleString()})</span>
-                  <span className="text-green-400 font-medium flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    +26%
-                  </span>
-                </div>
-              </div>
 
-              {/* Edit Sessions */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Edit className="w-5 h-5 text-purple-400" />
-                    <span className="font-semibold text-white">Edit Sessions</span>
+                {/* Edit Sessions */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Edit className="w-5 h-5 text-purple-400" />
+                      <span className="font-semibold text-white">Edit Sessions</span>
+                    </div>
+                    <span className="text-2xl font-bold text-purple-400">{stats.contribution_metrics.edit_sessions}</span>
                   </div>
-                  <span className="text-2xl font-bold text-purple-400">{mockStats.contribution_metrics.edit_sessions}</span>
+                  <div className="w-full bg-white/10 rounded-full h-2"></div>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2 mb-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">vs. team average (38)</span>
-                  <span className="text-green-400 font-medium flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    +24%
-                  </span>
-                </div>
-              </div>
 
-              {/* Active Time */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-green-400" />
-                    <span className="font-semibold text-white">Active Time</span>
+                {/* Active Time */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-green-400" />
+                      <span className="font-semibold text-white">Active Time</span>
+                    </div>
+                    <span className="text-2xl font-bold text-green-400">{formatTime(stats.contribution_metrics.active_time_minutes)}</span>
                   </div>
-                  <span className="text-2xl font-bold text-green-400">{formatTime(mockStats.contribution_metrics.active_time_minutes)}</span>
+                  <div className="w-full bg-white/10 rounded-full h-2"></div>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-2 mb-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '82%' }}></div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">vs. team average (19h 15m)</span>
-                  <span className="text-green-400 font-medium flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    +27%
-                  </span>
-                </div>
-              </div>
 
-              {/* Tasks Completed */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-yellow-400" />
-                    <span className="font-semibold text-white">Tasks Completed</span>
+                {/* Tasks Completed */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-yellow-400" />
+                      <span className="font-semibold text-white">Tasks Completed</span>
+                    </div>
+                    <span className="text-2xl font-bold text-yellow-400">
+                      {stats.contribution_metrics.tasks_completed}/{stats.contribution_metrics.tasks_total}
+                    </span>
                   </div>
-                  <span className="text-2xl font-bold text-yellow-400">
-                    {mockStats.contribution_metrics.tasks_completed}/{mockStats.contribution_metrics.tasks_total}
-                  </span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2 mb-2">
-                  <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${(mockStats.contribution_metrics.tasks_completed / mockStats.contribution_metrics.tasks_total) * 100}%` }}></div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">{Math.round((mockStats.contribution_metrics.tasks_completed / mockStats.contribution_metrics.tasks_total) * 100)}% completion rate</span>
-                  <span className="text-slate-400 font-medium">{mockStats.contribution_metrics.tasks_total - mockStats.contribution_metrics.tasks_completed} in progress</span>
+                  <div className="w-full bg-white/10 rounded-full h-2"></div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">No contribution data yet</p>
+                <p className="text-slate-500 text-sm mt-1">Start contributing to your projects to see metrics here</p>
+              </div>
+            )}
           </div>
 
           {/* Meeting & Collaboration Stats */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <h2 className="text-xl font-bold text-white mb-6">Meeting & Collaboration</h2>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                <Calendar className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-green-400 mb-1">{mockStats.meeting_stats.meetings_attended}/{mockStats.meeting_stats.meetings_total}</p>
-                <p className="text-sm text-slate-400">Meetings Attended</p>
-                <p className="text-xs text-green-400 font-medium mt-1">{mockStats.meeting_stats.attendance_percentage}% attendance</p>
-              </div>
+            {stats ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <Calendar className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                  <p className="text-3xl font-bold text-green-400 mb-1">{stats.meeting_stats.meetings_attended}/{stats.meeting_stats.meetings_total}</p>
+                  <p className="text-sm text-slate-400">Meetings Attended</p>
+                  <p className="text-xs text-green-400 font-medium mt-1">{stats.meeting_stats.attendance_percentage}% attendance</p>
+                </div>
 
-              <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-blue-400 mb-1">{mockStats.meeting_stats.average_duration_minutes}m</p>
-                <p className="text-sm text-slate-400">Avg. Duration</p>
-                <p className="text-xs text-blue-400 font-medium mt-1">per meeting</p>
-              </div>
+                <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                  <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                  <p className="text-3xl font-bold text-blue-400 mb-1">{stats.meeting_stats.average_duration_minutes}m</p>
+                  <p className="text-sm text-slate-400">Avg. Duration</p>
+                </div>
 
-              <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                <MessageSquare className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-purple-400 mb-1">{mockStats.meeting_stats.average_response_time_hours}h</p>
-                <p className="text-sm text-slate-400">Avg. Response Time</p>
-                <p className="text-xs text-purple-400 font-medium mt-1">to messages</p>
-              </div>
+                <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                  <MessageSquare className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                  <p className="text-3xl font-bold text-purple-400 mb-1">{stats.meeting_stats.average_response_time_hours}h</p>
+                  <p className="text-sm text-slate-400">Avg. Response Time</p>
+                </div>
 
-              <div className="text-center p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                <Star className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-yellow-400 mb-1">{mockStats.meeting_stats.peer_rating}/5</p>
-                <p className="text-sm text-slate-400">Peer Rating</p>
-                <p className="text-xs text-yellow-400 font-medium mt-1">from teammates</p>
+                <div className="text-center p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                  <Star className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                  <p className="text-3xl font-bold text-yellow-400 mb-1">{stats.meeting_stats.peer_rating ?? "—"}/5</p>
+                  <p className="text-sm text-slate-400">Peer Rating</p>
+                </div>
               </div>
-            </div>
-
-            {/* Recent Meetings */}
-            <div className="mt-6 pt-6 border-t border-white/10">
-              <h3 className="font-semibold text-white mb-4">Recent Meetings</h3>
-              <div className="space-y-2">
-                {mockStats.recent_meetings.map((meeting, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
-                    <div className="flex items-center gap-2">
-                      {meeting.attended ? (
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-red-400" />
-                      )}
-                      <span className="text-sm text-slate-300">{meeting.title}</span>
-                    </div>
-                    <span className="text-xs text-slate-500">
-                      {meeting.date}, {meeting.attended ? `${meeting.duration_minutes}m` : "Missed"}
-                    </span>
-                  </div>
-                ))}
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">No meeting data yet</p>
+                <p className="text-slate-500 text-sm mt-1">Attend meetings to see collaboration stats</p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Activity Timeline */}
@@ -487,7 +498,7 @@ const StudentStats = () => {
               </select>
             </div>
 
-            {/* Activity Heatmap */}
+            {/* Activity Heatmap - Empty */}
             <div className="mb-6">
               <p className="text-sm text-slate-400 mb-3">Contribution activity</p>
               <div className="flex gap-1 overflow-x-auto pb-2">
@@ -496,8 +507,8 @@ const StudentStats = () => {
                     {week.map((activityLevel, dayIndex) => (
                       <div
                         key={dayIndex}
-                        className={`w-3 h-3 rounded-sm ${heatmapColors[activityLevel]}`}
-                        title={`${activityLevel} contributions`}
+                        className="w-3 h-3 rounded-sm bg-white/5"
+                        title="No activity"
                       />
                     ))}
                   </div>
@@ -514,25 +525,9 @@ const StudentStats = () => {
               </div>
             </div>
 
-            {/* Daily Breakdown */}
-            <div>
-              <p className="text-sm font-semibold text-white mb-3">This Week's Activity</p>
-              <div className="space-y-2">
-                {weeklyActivity.map((item) => (
-                  <div key={item.day} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-8">{item.day}</span>
-                    <div className="flex-1 bg-white/10 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full" 
-                        style={{ width: `${Math.min(item.contributions * 6, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-slate-400 w-16 text-right">
-                      {item.contributions} {item.contributions === 1 ? 'edit' : 'edits'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            {/* Empty state */}
+            <div className="text-center py-8 border-t border-white/10">
+              <p className="text-slate-500 text-sm">No activity recorded yet</p>
             </div>
           </div>
 
@@ -540,46 +535,52 @@ const StudentStats = () => {
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <h2 className="text-xl font-bold text-white mb-6">Performance by Project</h2>
             
-            <div className="space-y-4">
-              {mockStats.project_breakdown.map((project) => {
-                const statusInfo = getStatusColor(project.status);
+            <div className="text-center py-12">
+              <FolderOpen className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400">No project data yet</p>
+              <p className="text-slate-500 text-sm mt-1">Join a project to see your performance breakdown</p>
+            </div>
+          </div>
+
+          {/* Achievements Section */}
+          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-400" />
+                <h2 className="text-xl font-semibold text-white">Achievements</h2>
+              </div>
+              <span className="text-slate-500 text-sm">{unlockedCount} / 30 unlocked</span>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">Earn achievements by being a great teammate</p>
+
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+              {allAchievements.map((achievement) => {
+                const unlocked = isAchievementUnlocked(achievement.id);
+                const unlockDate = getAchievementUnlockDate(achievement.id);
+                
                 return (
-                  <div key={project.project_id} className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold text-white">{project.project_name}</h3>
-                        <p className="text-xs text-slate-500">{project.course}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-2xl font-bold ${getScoreColor(project.score)}`}>{project.score}</p>
-                        <p className="text-xs text-slate-500">Score</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-4 gap-2 mb-3">
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-white">{project.words_written.toLocaleString()}</p>
-                        <p className="text-xs text-slate-500">Words</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-white">{project.tasks_completed}/{project.tasks_total}</p>
-                        <p className="text-xs text-slate-500">Tasks</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-white">{project.meetings_attended}/{project.meetings_total}</p>
-                        <p className="text-xs text-slate-500">Meetings</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-white">{project.peer_rating}</p>
-                        <p className="text-xs text-slate-500">Rating</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 ${statusInfo.bg} rounded-full`}></div>
-                      <span className={`text-sm ${statusInfo.text} font-medium`}>{statusInfo.label}</span>
-                    </div>
-                  </div>
+                  <motion.div
+                    key={achievement.id}
+                    whileHover={unlocked ? { scale: 1.05 } : undefined}
+                    onClick={() => setSelectedAchievement(achievement)}
+                    className={`rounded-2xl p-4 text-center cursor-pointer transition-all ${
+                      unlocked 
+                        ? "bg-white/[0.06] border border-white/10 shadow-lg shadow-blue-500/5 hover:border-blue-500/30" 
+                        : "bg-white/[0.03] border border-white/[0.06] opacity-40 grayscale"
+                    }`}
+                  >
+                    <span className="text-3xl">{achievement.emoji}</span>
+                    <p className={`text-xs font-medium mt-2 ${unlocked ? "text-white" : "text-slate-500"}`}>
+                      {achievement.name}
+                    </p>
+                    {unlocked && unlockDate ? (
+                      <p className="text-slate-500 text-[10px] mt-1">
+                        {new Date(unlockDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    ) : (
+                      <p className="text-slate-600 text-[10px] mt-1">🔒</p>
+                    )}
+                  </motion.div>
                 );
               })}
             </div>
@@ -588,36 +589,17 @@ const StudentStats = () => {
 
         {/* RIGHT COLUMN - 1/3 width */}
         <div className="space-y-6">
-          {/* Improvement Suggestions */}
+          {/* Improvement Suggestions - Empty */}
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-5 h-5 text-yellow-400" />
               <h3 className="font-bold text-white">Improvement Suggestions</h3>
             </div>
 
-            <div className="space-y-3">
-              {mockStats.improvement_suggestions.map((suggestion, index) => {
-                const typeStyles = {
-                  critical: { bg: "bg-red-500/10", border: "border-red-500/20", icon: AlertCircle, iconColor: "text-red-400", titleColor: "text-red-300", textColor: "text-red-400/80" },
-                  warning: { bg: "bg-yellow-500/10", border: "border-yellow-500/20", icon: TrendingUp, iconColor: "text-yellow-400", titleColor: "text-yellow-300", textColor: "text-yellow-400/80" },
-                  info: { bg: "bg-blue-500/10", border: "border-blue-500/20", icon: MessageSquare, iconColor: "text-blue-400", titleColor: "text-blue-300", textColor: "text-blue-400/80" },
-                  success: { bg: "bg-green-500/10", border: "border-green-500/20", icon: CheckCircle, iconColor: "text-green-400", titleColor: "text-green-300", textColor: "text-green-400/80" },
-                };
-                const style = typeStyles[suggestion.type];
-                const Icon = style.icon;
-
-                return (
-                  <div key={index} className={`p-3 ${style.bg} border ${style.border} rounded-lg`}>
-                    <div className="flex items-start gap-2">
-                      <Icon className={`w-4 h-4 ${style.iconColor} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className={`text-sm font-semibold ${style.titleColor} mb-1`}>{suggestion.title}</p>
-                        <p className={`text-xs ${style.textColor}`}>{suggestion.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="text-center py-8">
+              <Lightbulb className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm">No suggestions yet</p>
+              <p className="text-slate-500 text-xs mt-1">Keep contributing to receive personalized tips</p>
             </div>
           </div>
 
@@ -637,60 +619,62 @@ const StudentStats = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
-              {goals.map((goal) => {
-                const isAtRisk = goal.status === "at_risk";
-                const isOnTrack = goal.status === "on_track" && goal.progress_percentage >= 90;
-                
-                return (
-                  <div 
-                    key={goal.id} 
-                    className={`border rounded-lg p-4 ${
-                      isAtRisk ? "border-red-500/30 bg-red-500/10" : 
-                      isOnTrack ? "border-green-500/30 bg-green-500/10" : 
-                      "border-white/10 bg-white/5"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold text-white text-sm">{goal.title}</h4>
-                      <button className="p-1 hover:bg-white/10 rounded transition-colors">
-                        <MoreVertical className="w-4 h-4 text-slate-400" />
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-3">Complete by: {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                    <div className="mb-2">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-400">Progress</span>
-                        <span className={`font-semibold ${isAtRisk ? "text-red-400" : isOnTrack ? "text-green-400" : "text-white"}`}>
-                          {goal.progress_percentage}%
-                        </span>
+            {goals.length > 0 ? (
+              <div className="space-y-4">
+                {goals.map((goal) => {
+                  const isAtRisk = goal.status === "at_risk";
+                  const isOnTrack = goal.status === "on_track" && goal.progress_percentage >= 90;
+                  
+                  return (
+                    <div 
+                      key={goal.id} 
+                      className={`border rounded-lg p-4 ${
+                        isAtRisk ? "border-red-500/30 bg-red-500/10" : 
+                        isOnTrack ? "border-green-500/30 bg-green-500/10" : 
+                        "border-white/10 bg-white/5"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-white text-sm">{goal.title}</h4>
+                        <button className="p-1 hover:bg-white/10 rounded transition-colors">
+                          <MoreVertical className="w-4 h-4 text-slate-400" />
+                        </button>
                       </div>
-                      <div className={`w-full rounded-full h-2 ${isAtRisk ? "bg-red-500/20" : isOnTrack ? "bg-green-500/20" : "bg-white/10"}`}>
-                        <div 
-                          className={`h-2 rounded-full ${isAtRisk ? "bg-red-500" : isOnTrack ? "bg-green-500" : "bg-blue-500"}`} 
-                          style={{ width: `${goal.progress_percentage}%` }}
-                        ></div>
+                      <p className="text-xs text-slate-500 mb-3">Complete by: {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      <div className="mb-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-slate-400">Progress</span>
+                          <span className={`font-semibold ${isAtRisk ? "text-red-400" : isOnTrack ? "text-green-400" : "text-white"}`}>
+                            {goal.progress_percentage}%
+                          </span>
+                        </div>
+                        <div className={`w-full rounded-full h-2 ${isAtRisk ? "bg-red-500/20" : isOnTrack ? "bg-green-500/20" : "bg-white/10"}`}>
+                          <div 
+                            className={`h-2 rounded-full ${isAtRisk ? "bg-red-500" : isOnTrack ? "bg-green-500" : "bg-blue-500"}`} 
+                            style={{ width: `${goal.progress_percentage}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                    {isAtRisk && (
-                      <p className="text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {goal.target_value - goal.current_value} more points needed!
-                      </p>
-                    )}
-                    {isOnTrack && (
-                      <p className="text-xs text-green-400 flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        On track to achieve!
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Target className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-400 text-sm">No goals set yet</p>
+                <p className="text-slate-500 text-xs mt-1">Create a personal goal to track your progress</p>
+                <button 
+                  onClick={() => setShowGoalModal(true)}
+                  className="mt-4 text-blue-400 text-sm hover:text-blue-300"
+                >
+                  Add Goal
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Weekly Summary */}
+          {/* Weekly Summary - Empty */}
           <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center gap-2 mb-4">
               <Zap className="w-5 h-5" />
@@ -700,188 +684,152 @@ const StudentStats = () => {
             <div className="space-y-4">
               <div className="bg-white/20 rounded-lg p-3">
                 <p className="text-sm text-purple-100 mb-1">Total Contributions</p>
-                <p className="text-3xl font-bold">{mockStats.weekly_summary.total_contributions}</p>
-                <p className="text-xs text-purple-100 mt-1">+12 from last week</p>
+                <p className="text-3xl font-bold">0</p>
+                <p className="text-xs text-purple-100 mt-1">No activity this week</p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-purple-100">Tasks completed</span>
-                  <span className="font-semibold">{mockStats.weekly_summary.tasks_completed}</span>
+                  <span className="font-semibold">0</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-purple-100">Meetings attended</span>
-                  <span className="font-semibold">{mockStats.weekly_summary.meetings_attended}/{mockStats.weekly_summary.meetings_total}</span>
+                  <span className="font-semibold">0/0</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-purple-100">Words written</span>
-                  <span className="font-semibold">{mockStats.weekly_summary.words_written.toLocaleString()}</span>
+                  <span className="font-semibold">0</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-purple-100">Active time</span>
-                  <span className="font-semibold">{formatTime(mockStats.weekly_summary.active_time_minutes)}</span>
+                  <span className="font-semibold">0h 0m</span>
                 </div>
               </div>
-
-              <button className="w-full mt-4 bg-white text-purple-600 font-semibold py-2 rounded-lg hover:bg-purple-50 transition-colors text-sm">
-                View Full Report
-              </button>
             </div>
-          </div>
-
-          {/* Achievements & Badges */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-yellow-400" />
-              <h3 className="font-bold text-white">Achievements</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {mockStats.achievements.map((achievement) => {
-                if (achievement.earned) {
-                  const colors = {
-                    trophy: { bg: "bg-yellow-500/10", border: "border-yellow-500/30", icon: Trophy, iconColor: "text-yellow-400", titleColor: "text-yellow-300", descColor: "text-yellow-400/70" },
-                    zap: { bg: "bg-blue-500/10", border: "border-blue-500/30", icon: Zap, iconColor: "text-blue-400", titleColor: "text-blue-300", descColor: "text-blue-400/70" },
-                    check: { bg: "bg-green-500/10", border: "border-green-500/30", icon: CheckCircle, iconColor: "text-green-400", titleColor: "text-green-300", descColor: "text-green-400/70" },
-                  };
-                  const style = colors[achievement.icon as keyof typeof colors] || colors.trophy;
-                  const Icon = style.icon;
-
-                  return (
-                    <div key={achievement.id} className={`text-center p-3 ${style.bg} border ${style.border} rounded-lg`}>
-                      <Icon className={`w-10 h-10 ${style.iconColor} mx-auto mb-2`} />
-                      <p className={`text-xs font-semibold ${style.titleColor}`}>{achievement.title}</p>
-                      <p className={`text-xs ${style.descColor} mt-1`}>{achievement.description}</p>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={achievement.id} className="text-center p-3 bg-white/5 border border-white/10 rounded-lg opacity-60">
-                      <Lock className="w-10 h-10 text-slate-500 mx-auto mb-2" />
-                      <p className="text-xs font-semibold text-slate-400">{achievement.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">{achievement.description}</p>
-                    </div>
-                  );
-                }
-              })}
-            </div>
-
-            <button className="w-full mt-4 text-sm text-blue-400 hover:text-blue-300 font-medium">
-              View All Achievements →
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Add Goal Modal */}
+      {/* Goal Modal */}
       <Dialog open={showGoalModal} onOpenChange={setShowGoalModal}>
-        <DialogContent className="max-w-lg bg-[#1e293b] border border-white/10">
+        <DialogContent className="bg-slate-900 border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">Create New Goal</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Create New Goal</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            {/* Goal Title */}
+          <div className="space-y-6 pt-4">
+            {/* Quick Goal Options */}
             <div>
-              <Label className="block text-sm font-medium text-slate-300 mb-2">
-                What's your goal? *
-              </Label>
-              <Input 
-                type="text"
-                placeholder="e.g., Attend 100% of meetings"
-                value={goalTitle}
-                onChange={(e) => setGoalTitle(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
-              />
-            </div>
-
-            {/* Goal Type */}
-            <div>
-              <Label className="block text-sm font-medium text-slate-300 mb-2">
-                Goal Type
-              </Label>
-              <Select value={goalType} onValueChange={setGoalType}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Select goal type" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1e293b] border-white/10">
-                  <SelectItem value="contribution_score">Contribution Score</SelectItem>
-                  <SelectItem value="meeting_attendance">Meeting Attendance</SelectItem>
-                  <SelectItem value="task_completion">Task Completion</SelectItem>
-                  <SelectItem value="peer_rating">Peer Rating</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Target Value */}
-            <div>
-              <Label className="block text-sm font-medium text-slate-300 mb-2">
-                Target Value
-              </Label>
-              <Input 
-                type="number"
-                placeholder="e.g., 90"
-                value={goalTarget}
-                onChange={(e) => setGoalTarget(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
-              />
-            </div>
-
-            {/* Deadline */}
-            <div>
-              <Label className="block text-sm font-medium text-slate-300 mb-2">
-                Deadline
-              </Label>
-              <Input 
-                type="date"
-                value={goalDeadline}
-                onChange={(e) => setGoalDeadline(e.target.value)}
-                className="bg-white/5 border-white/10 text-white"
-              />
-            </div>
-
-            {/* Suggested Goals */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-              <p className="text-sm font-semibold text-blue-300 mb-2">Suggested Goals</p>
-              <div className="space-y-2">
+              <p className="text-sm text-slate-400 mb-3">Quick goals:</p>
+              <div className="flex flex-wrap gap-2">
                 <button 
-                  onClick={() => setQuickGoal('meeting_100')}
-                  className="w-full text-left text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded transition-colors"
+                  onClick={() => setQuickGoal("meeting_100")}
+                  className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition-colors"
                 >
-                  Attend 100% of meetings this month
+                  🎯 100% meeting attendance
                 </button>
                 <button 
-                  onClick={() => setQuickGoal('score_90')}
-                  className="w-full text-left text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded transition-colors"
+                  onClick={() => setQuickGoal("score_90")}
+                  className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors"
                 >
-                  Reach 90+ contribution score
+                  📈 Reach 90+ score
                 </button>
                 <button 
-                  onClick={() => setQuickGoal('tasks_complete')}
-                  className="w-full text-left text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded transition-colors"
+                  onClick={() => setQuickGoal("tasks_complete")}
+                  className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition-colors"
                 >
-                  Complete all assigned tasks on time
+                  ✅ Complete all tasks on time
                 </button>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="goalTitle" className="text-slate-300">Goal Title</Label>
+                <Input
+                  id="goalTitle"
+                  value={goalTitle}
+                  onChange={(e) => setGoalTitle(e.target.value)}
+                  placeholder="e.g., Improve meeting attendance"
+                  className="mt-2 bg-white/10 border-white/10 text-white placeholder:text-slate-500"
+                />
+              </div>
+
+              <div>
+                <Label className="text-slate-300">Goal Type</Label>
+                <Select value={goalType} onValueChange={setGoalType}>
+                  <SelectTrigger className="mt-2 bg-white/10 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-white/10">
+                    <SelectItem value="contribution_score">Contribution Score</SelectItem>
+                    <SelectItem value="meeting_attendance">Meeting Attendance</SelectItem>
+                    <SelectItem value="task_completion">Task Completion</SelectItem>
+                    <SelectItem value="words_written">Words Written</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="goalTarget" className="text-slate-300">Target Value</Label>
+                  <Input
+                    id="goalTarget"
+                    type="number"
+                    value={goalTarget}
+                    onChange={(e) => setGoalTarget(e.target.value)}
+                    placeholder="e.g., 90"
+                    className="mt-2 bg-white/10 border-white/10 text-white placeholder:text-slate-500"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="goalDeadline" className="text-slate-300">Deadline</Label>
+                  <Input
+                    id="goalDeadline"
+                    type="date"
+                    value={goalDeadline}
+                    onChange={(e) => setGoalDeadline(e.target.value)}
+                    className="mt-2 bg-white/10 border-white/10 text-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline" onClick={() => setShowGoalModal(false)} className="bg-white/10 border-white/10 text-white hover:bg-white/20">
+                Cancel
+              </Button>
+              <Button onClick={handleCreateGoal} className="bg-blue-500 hover:bg-blue-600">
+                Create Goal
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex gap-3 pt-4 border-t border-white/10">
-            <Button 
-              variant="outline"
-              onClick={() => setShowGoalModal(false)}
-              className="flex-1 border-white/10 text-slate-300 hover:bg-white/10"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateGoal}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              Create Goal
-            </Button>
-          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Achievement Detail Modal */}
+      <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
+        <DialogContent className="bg-slate-900 border-white/10 text-white max-w-sm">
+          {selectedAchievement && (
+            <div className="text-center py-4">
+              <span className="text-5xl">{selectedAchievement.emoji}</span>
+              <h3 className="text-white font-semibold text-lg mt-4">{selectedAchievement.name}</h3>
+              <p className="text-slate-300 text-sm mt-2">{selectedAchievement.description}</p>
+              <p className="text-slate-500 text-xs mt-4 capitalize">Category: {selectedAchievement.category}</p>
+              {isAchievementUnlocked(selectedAchievement.id) ? (
+                <p className="text-green-400 text-sm mt-3 flex items-center justify-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  Unlocked {getAchievementUnlockDate(selectedAchievement.id) && new Date(getAchievementUnlockDate(selectedAchievement.id)!).toLocaleDateString()}
+                </p>
+              ) : (
+                <p className="text-slate-500 text-sm mt-3 flex items-center justify-center gap-1">
+                  <Lock className="w-4 h-4" />
+                  Not yet unlocked
+                </p>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </StudentLayout>

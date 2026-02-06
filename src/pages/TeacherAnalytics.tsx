@@ -1,18 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { BarChart3, Loader2 } from "lucide-react";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
-const contributionData = [65, 72, 58, 80, 75, 68, 85];
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// TODO: Connect to GET http://localhost:8000/api/teacher/analytics
 
-const courseData = [
-  { course: "CS 101", projects: 8, students: 64, avgScore: 82, completionRate: 87, atRisk: 2 },
-  { course: "Business 201", projects: 6, students: 48, avgScore: 74, completionRate: 78, atRisk: 3 },
-  { course: "Biology 150", projects: 10, students: 74, avgScore: 79, completionRate: 92, atRisk: 0 },
-];
+interface AnalyticsData {
+  totalContributions: number;
+  activeStudents: number;
+  avgContributionScore: number;
+  freeRidersDetected: number;
+  contributionData: number[];
+  scoreDistribution: { label: string; value: number; color: string }[];
+  courseData: { course: string; projects: number; students: number; avgScore: number; completionRate: number; atRisk: number }[];
+}
+
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function TeacherAnalytics() {
   const [timeRange, setTimeRange] = useState("7d");
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // TODO: Connect to GET http://localhost:8000/api/teacher/analytics
+    // fetch('http://localhost:8000/api/teacher/analytics')
+    //   .then(res => res.json())
+    //   .then(data => { setData(data); setIsLoading(false); })
+    //   .catch(err => { setIsLoading(false); })
+    setIsLoading(false);
+  }, [timeRange]);
+
+  if (isLoading) {
+    return (
+      <TeacherLayout>
+        <div className="p-8 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        </div>
+      </TeacherLayout>
+    );
+  }
 
   return (
     <TeacherLayout>
@@ -30,23 +57,23 @@ export default function TeacherAnalytics() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
             <p className="text-blue-100 text-sm mb-2">Total Contributions</p>
-            <p className="text-4xl font-bold mb-2">24,589</p>
-            <p className="text-blue-100 text-sm">+15% from last period</p>
+            <p className="text-4xl font-bold mb-2">{data?.totalContributions ?? 0}</p>
+            <p className="text-blue-100 text-sm">No previous data</p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
             <p className="text-green-100 text-sm mb-2">Active Students</p>
-            <p className="text-4xl font-bold mb-2">186</p>
-            <p className="text-green-100 text-sm">98% engagement rate</p>
+            <p className="text-4xl font-bold mb-2">{data?.activeStudents ?? 0}</p>
+            <p className="text-green-100 text-sm">No engagement data</p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
             <p className="text-purple-100 text-sm mb-2">Avg. Contribution Score</p>
-            <p className="text-4xl font-bold mb-2">78</p>
-            <p className="text-purple-100 text-sm">+3 points from last period</p>
+            <p className="text-4xl font-bold mb-2">{data?.avgContributionScore ?? "—"}</p>
+            <p className="text-purple-100 text-sm">No score data</p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
             <p className="text-red-100 text-sm mb-2">Free-riders Detected</p>
-            <p className="text-4xl font-bold mb-2">12</p>
-            <p className="text-red-100 text-sm">6% of total students</p>
+            <p className="text-4xl font-bold mb-2">{data?.freeRidersDetected ?? 0}</p>
+            <p className="text-red-100 text-sm">No flags</p>
           </motion.div>
         </div>
 
@@ -54,31 +81,53 @@ export default function TeacherAnalytics() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <h2 className="text-xl font-bold text-white mb-4">Contributions Over Time</h2>
-            <div className="h-64 flex items-end gap-2">
-              {contributionData.map((height, idx) => (
-                <div key={idx} className="flex-1 bg-blue-500 rounded-t hover:bg-blue-400 transition-colors cursor-pointer" style={{ height: `${height}%` }} title={`${height}%`} />
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-slate-500 mt-2">
-              {days.map((day) => (<span key={day}>{day}</span>))}
-            </div>
+            {data?.contributionData && data.contributionData.length > 0 ? (
+              <div className="h-64 flex items-end gap-2">
+                {data.contributionData.map((height, idx) => (
+                  <div key={idx} className="flex-1 bg-blue-500 rounded-t hover:bg-blue-400 transition-colors cursor-pointer" style={{ height: `${height}%` }} title={`${height}%`} />
+                ))}
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center">
+                <div className="text-center">
+                  <BarChart3 className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400">No data available</p>
+                  <p className="text-slate-500 text-sm">Start tracking projects to see contribution trends</p>
+                </div>
+              </div>
+            )}
+            {data?.contributionData && data.contributionData.length > 0 && (
+              <div className="flex justify-between text-xs text-slate-500 mt-2">
+                {days.map((day) => (<span key={day}>{day}</span>))}
+              </div>
+            )}
           </div>
 
           <div className="bg-white/5 rounded-xl border border-white/10 p-6">
             <h2 className="text-xl font-bold text-white mb-4">Score Distribution</h2>
-            <div className="space-y-3">
-              {[{ label: "90-100 (Excellent)", value: 24, color: "bg-green-500" }, { label: "70-89 (Good)", value: 45, color: "bg-blue-500" }, { label: "50-69 (Fair)", value: 22, color: "bg-yellow-500" }, { label: "0-49 (Poor)", value: 9, color: "bg-red-500" }].map((item) => (
-                <div key={item.label}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-300">{item.label}</span>
-                    <span className="font-bold text-white">{item.value}%</span>
+            {data?.scoreDistribution && data.scoreDistribution.length > 0 ? (
+              <div className="space-y-3">
+                {data.scoreDistribution.map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-300">{item.label}</span>
+                      <span className="font-bold text-white">{item.value}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-3">
+                      <div className={`${item.color} h-3 rounded-full`} style={{ width: `${item.value}%` }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-white/10 rounded-full h-3">
-                    <div className={`${item.color} h-3 rounded-full`} style={{ width: `${item.value}%` }} />
-                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center">
+                <div className="text-center">
+                  <BarChart3 className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400">No data available</p>
+                  <p className="text-slate-500 text-sm">Score distribution will appear when students have scores</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -98,18 +147,27 @@ export default function TeacherAnalytics() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {courseData.map((row) => (
-                  <tr key={row.course} className="hover:bg-white/5">
-                    <td className="p-3 text-white">{row.course}</td>
-                    <td className="p-3 text-center text-slate-300">{row.projects}</td>
-                    <td className="p-3 text-center text-slate-300">{row.students}</td>
-                    <td className="p-3 text-center">
-                      <span className={`font-bold ${row.avgScore >= 80 ? "text-green-400" : row.avgScore >= 70 ? "text-yellow-400" : "text-red-400"}`}>{row.avgScore}</span>
+                {data?.courseData && data.courseData.length > 0 ? (
+                  data.courseData.map((row) => (
+                    <tr key={row.course} className="hover:bg-white/5">
+                      <td className="p-3 text-white">{row.course}</td>
+                      <td className="p-3 text-center text-slate-300">{row.projects}</td>
+                      <td className="p-3 text-center text-slate-300">{row.students}</td>
+                      <td className="p-3 text-center">
+                        <span className={`font-bold ${row.avgScore >= 80 ? "text-green-400" : row.avgScore >= 70 ? "text-yellow-400" : "text-red-400"}`}>{row.avgScore}</span>
+                      </td>
+                      <td className="p-3 text-center text-slate-300">{row.completionRate}%</td>
+                      <td className="p-3 text-center text-slate-300">{row.atRisk}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="p-12 text-center">
+                      <p className="text-slate-400">No course data available</p>
+                      <p className="text-slate-500 text-sm mt-1">Create projects to see course comparisons</p>
                     </td>
-                    <td className="p-3 text-center text-slate-300">{row.completionRate}%</td>
-                    <td className="p-3 text-center text-slate-300">{row.atRisk}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
