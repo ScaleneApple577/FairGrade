@@ -17,7 +17,7 @@ const sidebarItems = [
   { icon: FolderOpen, label: "All Projects", href: "/teacher/projects" },
   { icon: Users, label: "Students", href: "/teacher/students" },
   { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },
-  { icon: Activity, label: "Live Monitor", href: "/teacher/live-monitor" },
+  { icon: Activity, label: "Live Activity", href: "/teacher/live-monitor" },
   { icon: FileText, label: "Reports", href: "/teacher/reports" },
 ];
 
