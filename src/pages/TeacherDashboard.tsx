@@ -10,7 +10,6 @@ import {
   CheckCircle,
   Clock,
   BarChart3,
-  Settings,
   LogOut,
   LayoutDashboard,
   FolderOpen,
@@ -37,7 +36,6 @@ const sidebarItems = [
   { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },
   { icon: Activity, label: "Live Monitor", href: "/teacher/live-monitor" },
   { icon: FileText, label: "Reports", href: "/teacher/reports" },
-  { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 // Mock data for teacher
