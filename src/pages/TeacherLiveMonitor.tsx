@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Play, ChevronDown, MessageSquare, Trash2, Palette, Upload, Activity, Loader2 } from "lucide-react";
+import { FileText, Play, ChevronDown, MessageSquare, Trash2, Palette, Upload, Activity, Loader2, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
-// TODO: Connect to GET http://localhost:8000/api/teacher/live-activity — returns recent activity feed with filters
+// TODO: GET http://localhost:8000/api/teacher/live-activity — returns recent activity feed with filters
+// Activity types include: edited, commented, deleted, formatted, uploaded, submitted (for file submissions)
 
 interface ActivityItem {
   id: string;
@@ -17,6 +18,7 @@ interface ActivityItem {
   projectName: string;
   timestamp: string;
   detail: string;
+  googleFileUrl?: string; // For file submissions
 }
 
 const actionIcons = {
@@ -25,6 +27,7 @@ const actionIcons = {
   deleted: Trash2,
   formatted: Palette,
   uploaded: Upload,
+  submitted: Upload, // File submission
 };
 
 const actionLabels = {
@@ -33,6 +36,7 @@ const actionLabels = {
   deleted: "deleted from",
   formatted: "formatted",
   uploaded: "uploaded",
+  submitted: "submitted", // File submission
 };
 
 export default function TeacherLiveMonitor() {
@@ -163,6 +167,9 @@ export default function TeacherLiveMonitor() {
                       <span className="text-white font-medium">{activity.studentName}</span>
                       <span className="text-slate-400"> {actionLabel} </span>
                       <span className="text-blue-400">{activity.fileName}</span>
+                      {activity.action === "submitted" && (
+                        <span className="text-slate-400"> to </span>
+                      )}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-slate-500 text-xs">{activity.projectName}</span>
@@ -171,14 +178,25 @@ export default function TeacherLiveMonitor() {
                     </div>
                   </div>
 
-                  {/* View Replay Button */}
-                  <button
-                    onClick={() => navigate(`/teacher/live-replay/${activity.fileId}`)}
-                    className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap"
-                  >
-                    <span>View Replay</span>
-                    <Play className="w-3.5 h-3.5" />
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {activity.googleFileUrl && (
+                      <button
+                        onClick={() => window.open(activity.googleFileUrl, "_blank")}
+                        className="flex items-center gap-1.5 text-slate-400 text-sm hover:text-white transition-colors whitespace-nowrap"
+                      >
+                        <span>Open</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate(`/teacher/live-replay/${activity.fileId}`)}
+                      className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap"
+                    >
+                      <span>View Replay</span>
+                      <Play className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </motion.div>
               );
             })}

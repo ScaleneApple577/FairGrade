@@ -13,6 +13,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentCalendar from "./pages/StudentCalendar";
 import StudentReviews from "./pages/StudentReviews";
 import StudentProjects from "./pages/StudentProjects";
+import StudentProjectDetail from "./pages/StudentProjectDetail";
 import StudentStats from "./pages/StudentStats";
 import LiveMonitor from "./pages/LiveMonitor";
 import Flags from "./pages/Flags";
@@ -24,13 +25,13 @@ import FeaturesPage from "./pages/FeaturesPage";
 import FeatureDetailPage from "./pages/FeatureDetailPage";
 import LiveReplay from "./pages/LiveReplay";
 import NotFound from "./pages/NotFound";
- import TeacherProjects from "./pages/TeacherProjects";
- import TeacherProjectDetail from "./pages/TeacherProjectDetail";
- import TeacherStudents from "./pages/TeacherStudents";
- import TeacherAnalytics from "./pages/TeacherAnalytics";
- import TeacherLiveMonitor from "./pages/TeacherLiveMonitor";
- import TeacherReports from "./pages/TeacherReports";
- import TeacherLiveReplay from "./pages/TeacherLiveReplay";
+import TeacherProjects from "./pages/TeacherProjects";
+import TeacherProjectDetail from "./pages/TeacherProjectDetail";
+import TeacherStudents from "./pages/TeacherStudents";
+import TeacherAnalytics from "./pages/TeacherAnalytics";
+import TeacherLiveMonitor from "./pages/TeacherLiveMonitor";
+import TeacherReports from "./pages/TeacherReports";
+import TeacherLiveReplay from "./pages/TeacherLiveReplay";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
           <Route path="/project/:id/timeline" element={<Timeline />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student/projects" element={<StudentProjects />} />
+          <Route path="/student/projects/:id" element={<StudentProjectDetail />} />
           <Route path="/student/calendar" element={<StudentCalendar />} />
           <Route path="/student/reviews" element={<StudentReviews />} />
           <Route path="/student/stats" element={<StudentStats />} />

@@ -58,6 +58,9 @@ export function ProjectAssignmentBanner({ assignments, onDismiss }: ProjectAssig
               <p className="text-slate-400 text-xs mt-1">
                 Deadline: {assignment.deadline} • Team size: {assignment.teamSize} students
               </p>
+              <p className="text-blue-300 text-xs mt-1">
+                📄 Submit your Google Docs to get started
+              </p>
             </div>
 
             {/* Actions */}

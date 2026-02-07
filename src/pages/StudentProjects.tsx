@@ -31,6 +31,7 @@ interface Project {
   totalTasks: number;
   lastActivity: string;
   isNew?: boolean;
+  filesSubmitted: number; // Number of documents student has submitted
 }
 
 // Health indicator styling
@@ -177,7 +178,7 @@ export default function StudentProjects() {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -4, scale: 1.01 }}
                 className={`bg-white/5 rounded-xl border ${healthStyles.border} p-6 cursor-pointer transition-all hover:bg-white/10 relative`}
-                onClick={() => navigate(`/project/${project.id}`)}
+                onClick={() => navigate(`/student/projects/${project.id}`)}
               >
                 {/* NEW Badge */}
                 {project.isNew && (
@@ -267,9 +268,19 @@ export default function StudentProjects() {
                   </div>
                 </div>
 
-                {/* Last Activity */}
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs text-slate-500">Last activity: {project.lastActivity}</p>
+                {/* File Submission Status */}
+                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                  {project.filesSubmitted > 0 ? (
+                    <span className="text-emerald-400 text-xs flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      {project.filesSubmitted} documents submitted
+                    </span>
+                  ) : (
+                    <span className="text-yellow-400 text-xs flex items-center gap-1">
+                      ⚠ No documents submitted yet
+                    </span>
+                  )}
+                  <p className="text-xs text-slate-500">{project.lastActivity}</p>
                 </div>
               </motion.div>
             );
