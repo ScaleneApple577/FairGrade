@@ -96,63 +96,24 @@ const getEventAccent = (type: string) => {
   }
 };
 
-// Circular Progress Component for contribution score
-function CircularProgress({ value, size = 80, strokeWidth = 6 }: { value: number; size?: number; strokeWidth?: number }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const [animatedValue, setAnimatedValue] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedValue(value);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [value]);
-
-  const offset = circumference - (animatedValue / 100) * circumference;
-
-  return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="rgba(255,255,255,0.1)"
-        strokeWidth={strokeWidth}
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="url(#gradient)"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        style={{ transition: "stroke-dashoffset 1s ease-out" }}
-      />
-      <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#10B981" />
-          <stop offset="100%" stopColor="#34D399" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
+// Get score color for progress bar
+function getScoreColor(score: number | null): string {
+  if (score === null) return "bg-slate-500";
+  if (score >= 75) return "bg-emerald-500";
+  if (score >= 50) return "bg-blue-500";
+  if (score >= 25) return "bg-yellow-500";
+  return "bg-red-500";
 }
 
 // Skeleton loading components
 function SkeletonCard() {
   return (
-    <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 animate-pulse">
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-xl bg-white/10" />
+    <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 animate-pulse">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 rounded-lg bg-white/10" />
       </div>
-      <div className="h-8 w-16 bg-white/10 rounded mb-1" />
-      <div className="h-4 w-24 bg-white/10 rounded mb-2" />
-      <div className="h-3 w-20 bg-white/10 rounded" />
+      <div className="h-7 w-12 bg-white/10 rounded mb-1" />
+      <div className="h-4 w-20 bg-white/10 rounded" />
     </div>
   );
 }
@@ -352,141 +313,123 @@ export default function StudentDashboard() {
       />
 
       {/* Welcome Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
-      >
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            Welcome back, {data.student.firstName}!
+          <h1 className="text-2xl font-bold text-white">
+            Welcome back{(() => {
+              try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                  const user = JSON.parse(storedUser);
+                  const firstName = (user.fullName || user.name || '').split(' ')[0];
+                  if (firstName) return `, ${firstName}`;
+                }
+              } catch {}
+              return '';
+            })()}!
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Here's what's happening with your projects
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-slate-500 text-sm">{formattedDate}</span>
-        </div>
-      </motion.div>
+        <span className="text-slate-500 text-sm">{formattedDate}</span>
+      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      {/* Stats Cards - Compact Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {/* Active Projects */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-white/15 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
-              <FolderOpen className="w-5 h-5 text-blue-400" />
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/15 hover:scale-[1.02] transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center">
+              <FolderOpen className="w-4 h-4 text-blue-400" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{data.stats.activeProjects}</p>
-          <p className="text-slate-400 text-sm mb-2">Active Projects</p>
-        </motion.div>
+          <div className="mt-3">
+            <p className="text-2xl font-bold text-white">{data.stats.activeProjects}</p>
+            <p className="text-slate-400 text-xs mt-0.5">Active Projects</p>
+          </div>
+        </div>
 
-        {/* Contribution Score */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-white/15 hover:scale-[1.02] transition-all duration-300 cursor-pointer relative overflow-hidden"
-        >
-          <div className="absolute top-3 right-3 opacity-50">
-            <CircularProgress value={data.stats.contributionScore ?? 0} size={60} strokeWidth={4} />
-          </div>
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
+        {/* Avg. Score */}
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/15 hover:scale-[1.02] transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
             </div>
           </div>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-3xl font-bold text-white">{data.stats.contributionScore ?? "—"}</span>
-            <span className="text-slate-500 text-lg">/100</span>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-white">{data.stats.contributionScore ?? "—"}</span>
+              <span className="text-slate-500 text-sm">/100</span>
+            </div>
+            <p className="text-slate-400 text-xs mt-0.5">Avg. Score</p>
+            <div className="h-1 bg-white/10 rounded-full w-full mt-2 overflow-hidden">
+              <div 
+                className={`h-full rounded-full ${getScoreColor(data.stats.contributionScore)} transition-all duration-500`}
+                style={{ width: `${data.stats.contributionScore ?? 0}%` }}
+              />
+            </div>
           </div>
-          <p className="text-slate-400 text-sm mb-2">Avg. Score</p>
-        </motion.div>
+        </div>
 
         {/* Tasks Due */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-white/15 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-500/15 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-yellow-400" />
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/15 hover:scale-[1.02] transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-lg bg-yellow-500/15 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-yellow-400" />
             </div>
+            {data.stats.tasksOverdue > 0 && (
+              <span className="text-red-400 text-xs">{data.stats.tasksOverdue} overdue</span>
+            )}
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{data.stats.tasksDueSoon}</p>
-          <p className="text-slate-400 text-sm mb-2">Tasks Due Soon</p>
-          {data.stats.tasksOverdue > 0 && (
-            <div className="flex items-center gap-1 text-red-400 text-xs">
-              <AlertCircle className="w-3 h-3" />
-              <span>{data.stats.tasksOverdue} overdue</span>
-            </div>
-          )}
-        </motion.div>
+          <div className="mt-3">
+            <p className="text-2xl font-bold text-white">{data.stats.tasksDueSoon}</p>
+            <p className="text-slate-400 text-xs mt-0.5">Tasks Due</p>
+          </div>
+        </div>
 
         {/* Next Meeting */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-white/15 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-purple-400" />
+        <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/15 hover:scale-[1.02] transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-lg bg-purple-500/15 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-purple-400" />
             </div>
           </div>
-          {data.stats.nextMeeting ? (
-            <>
-              <p className="text-2xl font-bold text-white mb-1">{data.stats.nextMeeting.date}</p>
-              <p className="text-slate-400 text-sm mb-2">Next Meeting</p>
-              <div className="flex items-center gap-1 text-blue-400 text-xs mb-2">
-                <Clock className="w-3 h-3" />
-                <span>{data.stats.nextMeeting.time}</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-lg font-medium text-slate-400 mb-1">No upcoming meetings</p>
-              <p className="text-slate-500 text-sm mb-2">Next Meeting</p>
-            </>
-          )}
-          <Link
-            to="/student/calendar"
-            className="flex items-center gap-1 text-blue-400 text-xs hover:text-blue-300 transition-colors"
-          >
-            <span>View Calendar</span>
-            <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        </motion.div>
+          <div className="mt-3">
+            <p className="text-lg font-bold text-white">
+              {data.stats.nextMeeting ? data.stats.nextMeeting.date : "None"}
+            </p>
+            <p className="text-slate-400 text-xs mt-0.5">Next Meeting</p>
+            <Link
+              to="/student/calendar"
+              className="text-blue-400 text-[10px] hover:text-blue-300 transition-colors mt-1 inline-block"
+            >
+              View Calendar →
+            </Link>
+          </div>
+        </div>
 
         {/* Achievements */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+        <div 
           onClick={() => navigate("/student/stats")}
-          className="group bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/[0.08] rounded-2xl p-5 hover:border-yellow-500/30 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+          className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-yellow-500/30 hover:scale-[1.02] transition-all duration-200 cursor-pointer"
         >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-500/15 flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-yellow-400" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-lg bg-yellow-500/15 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-yellow-400" />
             </div>
           </div>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-3xl font-bold text-white">{data.stats.achievementsUnlocked}</span>
-            <span className="text-slate-500 text-lg">/30</span>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-white">{data.stats.achievementsUnlocked}</span>
+              <span className="text-slate-500 text-sm">/30</span>
+            </div>
+            <p className="text-slate-400 text-xs mt-0.5">Achievements</p>
+            <span className="text-blue-400 text-[10px] hover:text-blue-300 transition-colors mt-1 inline-block">
+              View all →
+            </span>
           </div>
-          <p className="text-slate-400 text-sm mb-2">Achievements</p>
-          <p className="text-slate-500 text-xs">View all achievements →</p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Main Content */}
