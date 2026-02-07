@@ -27,6 +27,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [existingUser, setExistingUser] = useState<{ id: string; email: string; role?: string } | null>(null);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -55,6 +57,11 @@ const Auth = () => {
           email: session.user.email || "",
           role: userRole?.role
         });
+
+        // If user signed in via OAuth but has no role, they need to select one
+        if (!userRole?.role) {
+          setNeedsRoleSelection(true);
+        }
       }
       setCheckingSession(false);
     });
@@ -79,6 +86,59 @@ const Auth = () => {
   const handleSwitchAccount = async () => {
     await supabase.auth.signOut();
     setExistingUser(null);
+    setNeedsRoleSelection(false);
+  };
+
+  // Save role for OAuth users who signed in without a role
+  const handleSaveOAuthRole = async (selectedRole: RoleType) => {
+    if (!existingUser || !selectedRole) return;
+    
+    setSavingRole(true);
+    try {
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: existingUser.id, role: selectedRole });
+
+      if (roleError) {
+        // Check if role already exists (shouldn't happen but handle it)
+        if (roleError.code === '23505') {
+          // Unique constraint violation - role already exists
+          const { data: existingRole } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", existingUser.id)
+            .single();
+          
+          if (existingRole) {
+            setExistingUser(prev => prev ? { ...prev, role: existingRole.role } : null);
+            setNeedsRoleSelection(false);
+            redirectBasedOnRole(existingRole.role);
+            return;
+          }
+        }
+        throw roleError;
+      }
+
+      // Update local state and redirect
+      setExistingUser(prev => prev ? { ...prev, role: selectedRole } : null);
+      setNeedsRoleSelection(false);
+      
+      toast({
+        title: "Welcome to FairGrade!",
+        description: `You're all set as a ${selectedRole}.`,
+      });
+      
+      redirectBasedOnRole(selectedRole);
+    } catch (error: any) {
+      console.error("Error saving role:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save your role. Please try again.",
+      });
+    } finally {
+      setSavingRole(false);
+    }
   };
 
   const validateInputs = (isSignUp: boolean) => {
@@ -221,8 +281,111 @@ const Auth = () => {
     );
   }
 
-  // Already logged in state - dark theme
-  if (existingUser) {
+  // Already logged in but needs role selection (OAuth users without role)
+  if (existingUser && needsRoleSelection) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md text-center"
+        >
+          <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
+            <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
+              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
+                <path 
+                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 10 L10 42 Q10 44 8 43.5" 
+                  stroke="#3B82F6" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </Link>
+
+          <h1 className="text-2xl font-bold text-white mb-2">One More Step!</h1>
+          <p className="text-slate-400 text-sm mb-2">Welcome, {existingUser.email}</p>
+          <p className="text-slate-500 text-sm mb-8">Please tell us who you are to complete your account setup.</p>
+
+          <div className="space-y-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleSaveOAuthRole("student")}
+              disabled={savingRole}
+              className="w-full bg-white/[0.04] border border-white/10 hover:border-blue-500 rounded-xl p-6 transition-all duration-300 group disabled:opacity-50"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-500/15 rounded-full flex items-center justify-center group-hover:bg-blue-500/25 transition-colors">
+                  <GraduationCap className="h-7 w-7 text-blue-400" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="text-lg font-semibold text-white">I'm a Student</h3>
+                  <p className="text-slate-400 text-sm">Track my contributions</p>
+                </div>
+                {savingRole ? (
+                  <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                )}
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleSaveOAuthRole("teacher")}
+              disabled={savingRole}
+              className="w-full bg-white/[0.04] border border-white/10 hover:border-blue-500 rounded-xl p-6 transition-all duration-300 group disabled:opacity-50"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-500/15 rounded-full flex items-center justify-center group-hover:bg-blue-500/25 transition-colors">
+                  <UserCheck className="h-7 w-7 text-blue-400" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="text-lg font-semibold text-white">I'm a Teacher</h3>
+                  <p className="text-slate-400 text-sm">Grade fairly with data</p>
+                </div>
+                {savingRole ? (
+                  <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                )}
+              </div>
+            </motion.button>
+
+            <Button
+              onClick={handleSwitchAccount}
+              variant="outline"
+              className="w-full mt-4 bg-white/10 border border-white/10 text-white hover:bg-white/15 py-3 rounded-xl"
+              disabled={savingRole}
+            >
+              Sign in with different account
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Already logged in with role - show continue screen
+  if (existingUser && existingUser.role) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
         <motion.div
@@ -269,7 +432,7 @@ const Auth = () => {
               </div>
               <div className="text-left">
                 <p className="text-white font-medium">{existingUser.email}</p>
-                <p className="text-slate-400 text-sm capitalize">{existingUser.role || "Student"}</p>
+                <p className="text-slate-400 text-sm capitalize">{existingUser.role}</p>
               </div>
             </div>
 
