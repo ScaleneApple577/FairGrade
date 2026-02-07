@@ -79,13 +79,55 @@ const Auth = () => {
   };
 
   const handleContinueAsUser = () => {
-    if (existingUser) {
-      redirectBasedOnRole(existingUser.role);
+    // Get role from multiple sources (in order of priority)
+    let role: string | null = null;
+
+    // 1. Check existingUser state first
+    if (existingUser?.role) {
+      role = existingUser.role;
+    }
+
+    // 2. Check user object in localStorage
+    if (!role) {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          role = user.role;
+        } catch (e) {
+          // Invalid JSON, ignore
+        }
+      }
+    }
+
+    // 3. Fallback to stored role
+    if (!role) {
+      role = localStorage.getItem('user_role');
+    }
+
+    // 4. Navigate based on role - instant, no API calls
+    if (role === 'teacher') {
+      navigate('/teacher/dashboard');
+    } else if (role === 'student') {
+      navigate('/student/dashboard');
+    } else {
+      // No role found — go to role selection
+      setNeedsRoleSelection(true);
     }
   };
 
-  const handleSwitchAccount = async () => {
-    await supabase.auth.signOut();
+  const handleSwitchAccount = () => {
+    // Clear all auth data - instant, no API calls needed
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('user_role');
+    sessionStorage.clear();
+    
+    // Sign out from Supabase (fire and forget)
+    supabase.auth.signOut();
+    
+    // Reset state
     setExistingUser(null);
     setNeedsRoleSelection(false);
     setSavingRole(false);
