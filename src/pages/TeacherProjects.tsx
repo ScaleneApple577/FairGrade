@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
+import { CreateProjectWizard } from "@/components/project/CreateProjectWizard";
 
 // TODO: Connect to GET http://localhost:8000/api/teacher/projects
 // TODO: Connect to POST http://localhost:8000/api/projects
@@ -64,17 +65,6 @@ export default function TeacherProjects() {
   // Modal states
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
-
-  // Create project wizard state
-  const [currentStep, setCurrentStep] = useState(1);
-  const [projectName, setProjectName] = useState("");
-  const [projectCourse, setProjectCourse] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-  const [projectDeadline, setProjectDeadline] = useState("");
-  const [teamSize, setTeamSize] = useState("4");
-  const [studentEmails, setStudentEmails] = useState("");
-  const [fileUrls, setFileUrls] = useState("");
-  const [importFromLMS, setImportFromLMS] = useState(false);
 
   useEffect(() => {
     // TODO: Connect to GET http://localhost:8000/api/teacher/projects
@@ -140,20 +130,6 @@ export default function TeacherProjects() {
     setSearchQuery("");
     setFilterStatus("all");
     setFilterCourse("all");
-  };
-
-  const handleCreateProject = () => {
-    // TODO: POST http://localhost:8000/api/projects
-    toast.success("Project created successfully!");
-    setShowCreateProject(false);
-    setCurrentStep(1);
-    setProjectName("");
-    setProjectCourse("");
-    setProjectDescription("");
-    setProjectDeadline("");
-    setTeamSize("4");
-    setStudentEmails("");
-    setFileUrls("");
   };
 
   const formatDate = (dateStr: string) => {
@@ -490,187 +466,11 @@ export default function TeacherProjects() {
           </div>
         )}
 
-        {/* Create Project Modal */}
-        {showCreateProject && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-slate-900 border border-white/10 rounded-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Create New Project</h2>
-                <button onClick={() => setShowCreateProject(false)} className="text-slate-400 hover:text-white">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Step indicator */}
-              <div className="flex items-center gap-4 mb-8">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      currentStep >= step ? "bg-blue-500 text-white" : "bg-white/10 text-slate-400"
-                    }`}>
-                      {step}
-                    </div>
-                    <span className={`text-sm ${currentStep >= step ? "text-white" : "text-slate-500"}`}>
-                      {step === 1 ? "Details" : step === 2 ? "Students" : "Files"}
-                    </span>
-                    {step < 3 && <div className="w-12 h-px bg-white/10" />}
-                  </div>
-                ))}
-              </div>
-
-              {/* Step 1: Project Details */}
-              {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Project Name</label>
-                    <input
-                      type="text"
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                      placeholder="e.g., Marketing Campaign Analysis"
-                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Course</label>
-                    <select
-                      value={projectCourse}
-                      onChange={(e) => setProjectCourse(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-slate-300 rounded-lg"
-                    >
-                      <option value="">Select a course...</option>
-                      {courses.map((course) => (
-                        <option key={course} value={course}>{course}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
-                    <textarea
-                      value={projectDescription}
-                      onChange={(e) => setProjectDescription(e.target.value)}
-                      placeholder="Describe the project objectives..."
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Deadline</label>
-                      <input
-                        type="date"
-                        value={projectDeadline}
-                        onChange={(e) => setProjectDeadline(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Team Size</label>
-                      <select
-                        value={teamSize}
-                        onChange={(e) => setTeamSize(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/10 text-slate-300 rounded-lg"
-                      >
-                        <option value="2">2 students</option>
-                        <option value="3">3 students</option>
-                        <option value="4">4 students</option>
-                        <option value="5">5 students</option>
-                        <option value="6">6 students</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Add Students */}
-              {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Add Students by Email</label>
-                    <textarea
-                      value={studentEmails}
-                      onChange={(e) => setStudentEmails(e.target.value)}
-                      placeholder="Enter student emails, one per line..."
-                      rows={6}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
-                    />
-                    <p className="text-xs text-slate-500 mt-2">Students will receive an email invitation to join the project</p>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <input
-                      type="checkbox"
-                      id="importLMS"
-                      checked={importFromLMS}
-                      onChange={(e) => setImportFromLMS(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/20 bg-white/10"
-                    />
-                    <label htmlFor="importLMS" className="text-sm text-slate-300">
-                      Import student roster from Canvas/Blackboard
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Connect Files */}
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Google Docs/Sheets URLs</label>
-                    <textarea
-                      value={fileUrls}
-                      onChange={(e) => setFileUrls(e.target.value)}
-                      placeholder="Paste Google Docs, Sheets, or Slides URLs, one per line..."
-                      rows={4}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg resize-none"
-                    />
-                    <p className="text-xs text-slate-500 mt-2">These documents will be tracked for student contributions</p>
-                  </div>
-
-                  <div className="p-6 border-2 border-dashed border-white/20 rounded-xl text-center hover:border-blue-500/50 transition-colors cursor-pointer">
-                    <FolderPlus className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                    <p className="text-sm text-slate-300 mb-1">Or connect Google Drive folder</p>
-                    <p className="text-xs text-slate-500">All documents in the folder will be automatically tracked</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
-                {currentStep > 1 ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/20"
-                  >
-                    Back
-                  </Button>
-                ) : (
-                  <div />
-                )}
-                {currentStep < 3 ? (
-                  <Button
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    Continue
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleCreateProject}
-                    className="bg-green-500 hover:bg-green-600"
-                  >
-                    Create Project
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
+        {/* Create Project Wizard Modal */}
+        <CreateProjectWizard
+          isOpen={showCreateProject}
+          onClose={() => setShowCreateProject(false)}
+        />
       </div>
     </TeacherLayout>
   );

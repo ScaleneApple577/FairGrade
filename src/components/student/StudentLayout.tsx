@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -7,7 +7,6 @@ import {
   Star,
   BarChart3,
   LogOut,
-  Bell,
   Search,
   Key,
   Loader2,
@@ -16,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MenuVertical } from "@/components/ui/menu-vertical";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 // Sidebar navigation items
 const sidebarItems = [
@@ -34,6 +34,14 @@ interface StudentLayoutProps {
   isGeneratingToken?: boolean;
 }
 
+// TODO: GET http://localhost:8000/api/auth/profile
+interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  initials: string;
+}
+
 export function StudentLayout({
   children,
   pageTitle,
@@ -42,6 +50,22 @@ export function StudentLayout({
   isGeneratingToken = false,
 }: StudentLayoutProps) {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // TODO: Connect to GET http://localhost:8000/api/auth/profile
+        // const response = await fetch('http://localhost:8000/api/auth/profile');
+        // const data = await response.json();
+        // setProfile(data);
+        setProfile(null);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -141,20 +165,28 @@ export function StudentLayout({
                 />
               </div>
 
-              <button className="relative p-2 hover:bg-white/5 rounded-lg transition-colors">
-                <Bell className="h-5 w-5 text-slate-400 hover:text-white" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
-              </button>
+              <NotificationDropdown />
 
               <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-                <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  SJ
-                </div>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-white">
-                    Sarah Johnson
-                  </p>
-                </div>
+                {profile ? (
+                  <>
+                    <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {profile.initials}
+                    </div>
+                    <div className="hidden md:block">
+                      <p className="text-sm font-medium text-white">
+                        {profile.fullName}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-9 h-9 bg-white/10 rounded-full animate-pulse" />
+                    <div className="hidden md:block">
+                      <div className="h-4 w-24 bg-white/10 rounded animate-pulse" />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -30,6 +30,18 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
+
+// TODO: Connect to GET http://localhost:8000/api/student/notifications?type=project_assignment&status=unread
+interface ProjectAssignment {
+  id: string;
+  notificationId: string;
+  projectId: string;
+  projectName: string;
+  courseName: string;
+  deadline: string;
+  teamSize: number;
+}
 
 // Activity icon mapping
 const getActivityIcon = (type: string) => {
@@ -182,6 +194,27 @@ export default function StudentDashboard() {
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [projectAssignments, setProjectAssignments] = useState<ProjectAssignment[]>([]);
+
+  // TODO: Connect to GET http://localhost:8000/api/student/notifications?type=project_assignment&status=unread
+  useEffect(() => {
+    const fetchProjectAssignments = async () => {
+      try {
+        // const response = await fetch('http://localhost:8000/api/student/notifications?type=project_assignment&status=unread');
+        // const data = await response.json();
+        // setProjectAssignments(data);
+        setProjectAssignments([]);
+      } catch (error) {
+        console.error("Failed to fetch project assignments:", error);
+      }
+    };
+    fetchProjectAssignments();
+  }, []);
+
+  const handleDismissAssignment = (notificationId: string) => {
+    // TODO: PUT http://localhost:8000/api/student/notifications/{notification_id}/dismiss
+    setProjectAssignments(prev => prev.filter(a => a.notificationId !== notificationId));
+  };
 
   // TODO: Connect to GET http://localhost:8000/api/student/dashboard/stats
   // TODO: Connect to GET http://localhost:8000/api/student/activity
@@ -306,6 +339,12 @@ export default function StudentDashboard() {
       onGenerateToken={generateExtensionToken}
       isGeneratingToken={isGenerating}
     >
+      {/* Project Assignment Banners */}
+      <ProjectAssignmentBanner
+        assignments={projectAssignments}
+        onDismiss={handleDismissAssignment}
+      />
+
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -322,9 +361,6 @@ export default function StudentDashboard() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-slate-500 text-sm">{formattedDate}</span>
-          <button className="relative p-2 hover:bg-white/5 rounded-lg transition-colors">
-            <Bell className="h-5 w-5 text-slate-400" />
-          </button>
         </div>
       </motion.div>
 
