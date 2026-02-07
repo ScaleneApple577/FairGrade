@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { JoinProjectModal } from "@/components/student/JoinProjectModal";
 
 // TODO: Connect to GET http://localhost:8000/api/student/projects
 interface Project {
@@ -29,6 +30,7 @@ interface Project {
   tasksCompleted: number;
   totalTasks: number;
   lastActivity: string;
+  isNew?: boolean;
 }
 
 // Health indicator styling
@@ -50,6 +52,7 @@ export default function StudentProjects() {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -70,6 +73,11 @@ export default function StudentProjects() {
     };
     fetchProjects();
   }, []);
+
+  const handleJoinSuccess = () => {
+    // Refresh projects list
+    // fetchProjects();
+  };
 
   const filteredProjects = projects.filter((project) => {
     if (filter === "all") return true;
@@ -109,6 +117,13 @@ export default function StudentProjects() {
               <p className="text-slate-400 mt-1">View and manage your group projects</p>
             </div>
           </div>
+          <Button
+            onClick={() => setShowJoinModal(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Join Project
+          </Button>
         </div>
       </motion.div>
 
@@ -161,9 +176,16 @@ export default function StudentProjects() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -4, scale: 1.01 }}
-                className={`bg-white/5 rounded-xl border ${healthStyles.border} p-6 cursor-pointer transition-all hover:bg-white/10`}
+                className={`bg-white/5 rounded-xl border ${healthStyles.border} p-6 cursor-pointer transition-all hover:bg-white/10 relative`}
                 onClick={() => navigate(`/project/${project.id}`)}
               >
+                {/* NEW Badge */}
+                {project.isNew && (
+                  <Badge className="absolute top-4 right-4 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    NEW
+                  </Badge>
+                )}
+
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -262,12 +284,22 @@ export default function StudentProjects() {
           <p className="text-slate-400 mb-6 max-w-md mx-auto">
             You're not part of any projects yet. Join a project with an invite code or wait for your instructor to add you.
           </p>
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+          <Button 
+            onClick={() => setShowJoinModal(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
             <UserPlus className="w-4 h-4 mr-2" />
             Join Project
           </Button>
         </div>
       )}
+
+      {/* Join Project Modal */}
+      <JoinProjectModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSuccess={handleJoinSuccess}
+      />
     </StudentLayout>
   );
 }
