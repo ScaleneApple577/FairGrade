@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 
 export interface LiveEdit {
@@ -22,37 +22,31 @@ export interface LiveStatusResponse {
 interface UseLiveStatusOptions {
   projectId?: string;
   enabled?: boolean;
-  pollingInterval?: number; // in ms, default 30000
+  pollingInterval?: number; // in ms, default 5000
 }
 
 /**
  * Hook to poll for live editing status across teacher's projects.
+ * Polls every 5 seconds by default. Pauses when tab is hidden.
  * 
  * API Endpoints:
  * - GET /api/teacher/live-status — returns all active edits across all projects
  * - GET /api/projects/{project_id}/live-status — returns active edits for a specific project
- * 
- * Response format:
- * {
- *   activeEdits: [
- *     { fileId, fileName, fileType, projectId, projectName, studentId, studentName, startedAt, lastEditAt, wordsAddedSession }
- *   ],
- *   totalActive: number
- * }
  */
 export function useLiveStatus(options: UseLiveStatusOptions = {}) {
-  const { projectId, enabled = true, pollingInterval = 30000 } = options;
+  const { projectId, enabled = true, pollingInterval = 5000 } = options;
 
   const [liveEdits, setLiveEdits] = useState<LiveEdit[]>([]);
   const [totalActive, setTotalActive] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(!document.hidden);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchLiveStatus = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled || !isVisible) return;
 
     try {
-      // TODO: GET /api/teacher/live-status or GET /api/projects/{project_id}/live-status
       const endpoint = projectId
         ? `/api/projects/${projectId}/live-status`
         : "/api/teacher/live-status";
@@ -62,13 +56,30 @@ export function useLiveStatus(options: UseLiveStatusOptions = {}) {
       setTotalActive(data?.totalActive || 0);
       setError(null);
     } catch (err) {
-      console.warn("Live status check failed:", err);
-      // Don't clear existing data on error to avoid flickering
+      // Don't clear existing data on error — keep showing last known state
+      console.warn("Live status poll failed:", err);
       setError("Failed to fetch live status");
     }
     setLoading(false);
-  }, [projectId, enabled]);
+  }, [projectId, enabled, isVisible]);
 
+  // Handle visibility changes — pause polling when tab is hidden
+  useEffect(() => {
+    const handleVisibility = () => {
+      const visible = !document.hidden;
+      setIsVisible(visible);
+      
+      // Fetch immediately when tab becomes visible again
+      if (visible && enabled) {
+        fetchLiveStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [fetchLiveStatus, enabled]);
+
+  // Main polling effect
   useEffect(() => {
     if (!enabled) {
       setLiveEdits([]);
@@ -77,14 +88,22 @@ export function useLiveStatus(options: UseLiveStatusOptions = {}) {
       return;
     }
 
-    // Fetch immediately
+    // Fetch immediately on mount
     fetchLiveStatus();
 
-    // Then poll at the specified interval
-    const interval = setInterval(fetchLiveStatus, pollingInterval);
+    // Poll every 5 seconds (only when tab is visible)
+    intervalRef.current = setInterval(() => {
+      if (isVisible) {
+        fetchLiveStatus();
+      }
+    }, pollingInterval);
 
-    return () => clearInterval(interval);
-  }, [fetchLiveStatus, pollingInterval, enabled]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [fetchLiveStatus, pollingInterval, enabled, isVisible]);
 
   // Helper functions for consumers
   const isFileLive = useCallback(
