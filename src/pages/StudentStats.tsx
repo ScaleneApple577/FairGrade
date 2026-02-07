@@ -22,6 +22,7 @@ import {
   Star,
   Loader2,
   FolderOpen,
+  Eye,
 } from "lucide-react";
 import {
   Dialog,
@@ -41,6 +42,10 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { api } from "@/lib/api";
+import { CircularScoreRing, getScoreLabel, getScoreColorClass } from "@/components/score/CircularScoreRing";
+import { ScoreBadge } from "@/components/score/ScoreBadge";
+import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 
 // All 30 achievements definition
 const allAchievements = [
@@ -86,11 +91,11 @@ interface Stats {
   score_trend: number;
   percentile: number | null;
   breakdown: {
-    task_completion: number | null;
-    meeting_attendance: number | null;
-    contribution_volume: number | null;
-    peer_reviews: number | null;
-    quality: number | null;
+    work_output: number | null;
+    attendance: number | null;
+    peer_rating: number | null;
+    consistency: number | null;
+    integrity: number | null;
   };
   contribution_metrics: {
     words_written: number;
@@ -108,6 +113,14 @@ interface Stats {
     average_response_time_hours: number;
     peer_rating: number | null;
   };
+  project_scores: ProjectScore[];
+}
+
+interface ProjectScore {
+  project_id: string;
+  project_name: string;
+  fairscore: number | null;
+  last_updated: string;
 }
 
 interface Goal {
@@ -142,28 +155,54 @@ const StudentStats = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectScore | null>(null);
+
+  const handleViewProjectScore = (project: ProjectScore) => {
+    setSelectedProject(project);
+    setScoreModalOpen(true);
+  };
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/student/stats
-    // fetch('http://localhost:8000/api/student/stats')
-    //   .then(res => res.json())
-    //   .then(data => { setStats(data); setIsLoading(false); })
-    //   .catch(err => { setIsLoading(false); })
-    setIsLoading(false);
+    const fetchStats = async () => {
+      try {
+        // TODO: GET /api/student/stats
+        // const data = await api.get('/api/student/stats');
+        // setStats(data);
+        setStats(null);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/student/goals
-    // fetch('http://localhost:8000/api/student/goals')
-    //   .then(res => res.json())
-    //   .then(data => setGoals(data))
+    const fetchGoals = async () => {
+      try {
+        // TODO: GET /api/student/goals
+        // const data = await api.get('/api/student/goals');
+        // setGoals(data);
+      } catch (error) {
+        console.error('Failed to fetch goals:', error);
+      }
+    };
+    fetchGoals();
   }, []);
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/student/achievements
-    // fetch('http://localhost:8000/api/student/achievements')
-    //   .then(res => res.json())
-    //   .then(data => setAchievements(data))
+    const fetchAchievements = async () => {
+      try {
+        // TODO: GET /api/student/achievements
+        // const data = await api.get('/api/student/achievements');
+        // setAchievements(data);
+      } catch (error) {
+        console.error('Failed to fetch achievements:', error);
+      }
+    };
+    fetchAchievements();
   }, []);
 
   const handleCreateGoal = () => {
@@ -345,30 +384,70 @@ const StudentStats = () => {
 
         {/* Score Breakdown Bar */}
         <div className="mt-6 pt-6 border-t border-white/20">
-          <p className="text-sm text-blue-100 mb-3">Score Breakdown</p>
+          <p className="text-sm text-blue-100 mb-3">FairScore Breakdown</p>
           <div className="grid grid-cols-5 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold">{stats?.breakdown?.task_completion ?? "—"}</p>
-              <p className="text-xs text-blue-100 mt-1">Task Completion</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.work_output ?? "—"}</p>
+              <p className="text-xs text-blue-100 mt-1">Work Output</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats?.breakdown?.meeting_attendance ?? "—"}</p>
-              <p className="text-xs text-blue-100 mt-1">Meeting Attendance</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.attendance ?? "—"}</p>
+              <p className="text-xs text-blue-100 mt-1">Attendance</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats?.breakdown?.contribution_volume ?? "—"}</p>
-              <p className="text-xs text-blue-100 mt-1">Contribution Volume</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.peer_rating ?? "—"}</p>
+              <p className="text-xs text-blue-100 mt-1">Peer Rating</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats?.breakdown?.peer_reviews ?? "—"}</p>
-              <p className="text-xs text-blue-100 mt-1">Peer Reviews</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.consistency ?? "—"}</p>
+              <p className="text-xs text-blue-100 mt-1">Consistency</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats?.breakdown?.quality ?? "—"}</p>
-              <p className="text-xs text-blue-100 mt-1">Quality</p>
+              <p className="text-2xl font-bold">{stats?.breakdown?.integrity ?? "—"}</p>
+              <p className="text-xs text-blue-100 mt-1">Integrity</p>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Project Scores */}
+      <div className="bg-white/5 rounded-xl border border-white/10 p-6 mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">FairScores by Project</h2>
+        {(stats?.project_scores ?? []).length > 0 ? (
+          <div className="space-y-3">
+            {stats?.project_scores.map((project) => (
+              <div
+                key={project.project_id}
+                className="bg-white/[0.04] border border-white/10 rounded-xl p-4 flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-white font-medium">{project.project_name}</p>
+                  <p className="text-slate-500 text-xs">
+                    Last updated: {new Date(project.last_updated).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <CircularScoreRing score={project.fairscore} size="md" animate={false} />
+                  <button
+                    onClick={() => handleViewProjectScore(project)}
+                    className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Breakdown
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FolderOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <p className="text-slate-400">No project scores available yet</p>
+            <p className="text-slate-500 text-sm mt-1">
+              Your FairScores will appear here as you contribute to projects
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Two-Column Layout */}
@@ -832,6 +911,19 @@ const StudentStats = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Score Breakdown Modal */}
+      {selectedProject && (
+        <ScoreBreakdownModal
+          open={scoreModalOpen}
+          onOpenChange={setScoreModalOpen}
+          studentId=""
+          studentName="You"
+          projectId={selectedProject.project_id}
+          projectName={selectedProject.project_name}
+          isTeacher={false}
+        />
+      )}
     </StudentLayout>
   );
 };

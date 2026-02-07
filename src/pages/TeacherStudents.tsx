@@ -10,7 +10,7 @@ import {
   Send,
   Trash2,
   FolderPlus,
-  ChevronDown,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { InviteStudentsModal } from "@/components/teacher/InviteStudentsModal";
 import { ImportCSVModal } from "@/components/teacher/ImportCSVModal";
 import { StudentActionsMenu } from "@/components/teacher/StudentActionsMenu";
+import { CircularScoreRing, getScoreColorClass } from "@/components/score/CircularScoreRing";
+import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -31,6 +33,7 @@ interface Student {
   status: "active" | "pending" | "inactive";
   projectCount: number;
   joinedAt: string | null;
+  avgFairscore: number | null;
 }
 
 interface StudentStats {
@@ -55,6 +58,13 @@ export default function TeacherStudents() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [selectedStudentForScore, setSelectedStudentForScore] = useState<Student | null>(null);
+
+  const handleViewScore = (student: Student) => {
+    setSelectedStudentForScore(student);
+    setScoreModalOpen(true);
+  };
 
   const fetchStudents = async () => {
     setIsLoading(true);
@@ -373,6 +383,9 @@ export default function TeacherStudents() {
                     Status
                   </th>
                   <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    Avg. Score
+                  </th>
+                  <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Projects
                   </th>
                   <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
@@ -432,6 +445,25 @@ export default function TeacherStudents() {
                         <span className="bg-slate-500/15 text-slate-400 text-xs px-2.5 py-1 rounded-full">
                           Inactive
                         </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      {student.avgFairscore !== null ? (
+                        <button
+                          onClick={() => handleViewScore(student)}
+                          className="inline-flex items-center gap-2 hover:opacity-80 transition"
+                        >
+                          <CircularScoreRing
+                            score={student.avgFairscore}
+                            size="sm"
+                            animate={false}
+                          />
+                          <span className={`font-bold text-sm ${getScoreColorClass(student.avgFairscore)}`}>
+                            {student.avgFairscore}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-slate-600">—</span>
                       )}
                     </td>
                     <td className="p-4 text-center text-slate-300 text-sm">
@@ -504,6 +536,19 @@ export default function TeacherStudents() {
         onOpenChange={setIsImportModalOpen}
         onSuccess={handleRefresh}
       />
+
+      {selectedStudentForScore && (
+        <ScoreBreakdownModal
+          open={scoreModalOpen}
+          onOpenChange={setScoreModalOpen}
+          studentId={selectedStudentForScore.id}
+          studentName={selectedStudentForScore.name || selectedStudentForScore.email}
+          studentAvatarColor={getAvatarColor(selectedStudentForScore.id)}
+          projectId=""
+          projectName="All Projects (Average)"
+          isTeacher={true}
+        />
+      )}
     </TeacherLayout>
   );
 }
