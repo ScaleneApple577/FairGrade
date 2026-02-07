@@ -23,11 +23,7 @@ import {
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-
-// TODO: GET http://localhost:8000/api/projects/{project_id}
-// TODO: GET http://localhost:8000/api/projects/{project_id}/students
-// TODO: GET http://localhost:8000/api/projects/{project_id}/files — returns all files submitted by students
-// TODO: POST http://localhost:8000/api/projects/{project_id}/remind-files — send reminder to students
+import { api } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -110,10 +106,13 @@ export default function TeacherProjectDetail() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // TODO: GET http://localhost:8000/api/projects/{project_id}
-        // TODO: GET http://localhost:8000/api/projects/{project_id}/students
-        // TODO: GET http://localhost:8000/api/projects/{project_id}/files
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Fetch project details from API
+        // const projectData = await api.get(`/api/projects/${id}`);
+        // const studentsData = await api.get(`/api/projects/${id}/students`);
+        // const filesData = await api.get(`/api/projects/${id}/files`);
+        // setProject(projectData);
+        // setStudents(studentsData);
+        // setFiles(filesData);
         setProject(null);
         setStudents([]);
         setFiles([]);
@@ -121,6 +120,11 @@ export default function TeacherProjectDetail() {
         setAlerts([]);
       } catch (error) {
         console.error("Failed to fetch project:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load project data",
+        });
       } finally {
         setIsLoading(false);
       }

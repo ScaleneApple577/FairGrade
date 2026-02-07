@@ -22,10 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
-
-// TODO: Connect to GET http://localhost:8000/api/teacher/dashboard
-// TODO: Connect to GET http://localhost:8000/api/teacher/projects/health
-// TODO: Connect to GET http://localhost:8000/api/teacher/alerts
+import { api } from "@/lib/api";
 
 interface DashboardStats {
   activeProjects: number;
@@ -69,26 +66,29 @@ export default function TeacherDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/teacher/dashboard
-    // fetch('http://localhost:8000/api/teacher/dashboard')
-    //   .then(res => res.json())
-    //   .then(data => { setStats(data); setIsLoading(false); })
-    //   .catch(err => { setIsLoading(false); })
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/teacher/projects/health
-    // fetch('http://localhost:8000/api/teacher/projects/health')
-    //   .then(res => res.json())
-    //   .then(data => setProjects(data))
-  }, []);
-
-  useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/teacher/alerts
-    // fetch('http://localhost:8000/api/teacher/alerts')
-    //   .then(res => res.json())
-    //   .then(data => setAlerts(data))
+    const fetchDashboard = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch dashboard stats from API
+        // const statsData = await api.get('/api/teacher/dashboard');
+        // setStats(statsData);
+        
+        // Fetch project health
+        // const healthData = await api.get('/api/teacher/projects/health');
+        // setProjects(healthData);
+        
+        // Fetch alerts
+        // const alertsData = await api.get('/api/teacher/alerts');
+        // setAlerts(alertsData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        toast.error("Failed to load dashboard data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDashboard();
   }, []);
 
   const getAlertConfig = (severity: string) => {

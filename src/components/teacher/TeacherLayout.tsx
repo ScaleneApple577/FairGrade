@@ -9,7 +9,7 @@ import {
   FileText,
   LogOut,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 
 const sidebarItems = [
@@ -28,9 +28,10 @@ interface TeacherLayoutProps {
 export function TeacherLayout({ children }: TeacherLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate("/auth");
   };
 

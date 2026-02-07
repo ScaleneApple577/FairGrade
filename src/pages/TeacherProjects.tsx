@@ -26,9 +26,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { CreateProjectWizard } from "@/components/project/CreateProjectWizard";
-
-// TODO: Connect to GET http://localhost:8000/api/teacher/projects
-// TODO: Connect to POST http://localhost:8000/api/projects
+import { api } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -67,12 +65,21 @@ export default function TeacherProjects() {
   const [showBulkActions, setShowBulkActions] = useState(false);
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/teacher/projects
-    // fetch('http://localhost:8000/api/teacher/projects')
-    //   .then(res => res.json())
-    //   .then(data => { setProjects(data); setIsLoading(false); })
-    //   .catch(err => { setIsLoading(false); })
-    setIsLoading(false);
+    const fetchProjects = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch projects from API
+        // const data = await api.get('/api/teacher/projects');
+        // setProjects(data);
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        toast.error("Failed to load projects");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProjects();
   }, []);
 
   // Compute stats
