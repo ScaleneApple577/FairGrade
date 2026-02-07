@@ -23,6 +23,8 @@ import { CircularScoreRing, getScoreColorClass } from "@/components/score/Circul
 import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useLiveStatus } from "@/hooks/useLiveStatus";
+import { StatusDot, EditingLabel } from "@/components/live/LiveIndicator";
 
 interface Student {
   id: string;
@@ -60,6 +62,9 @@ export default function TeacherStudents() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
   const [selectedStudentForScore, setSelectedStudentForScore] = useState<Student | null>(null);
+
+  // Live status
+  const { isStudentLive, getStudentActiveFile } = useLiveStatus();
 
   const handleViewScore = (student: Student) => {
     setSelectedStudentForScore(student);
@@ -415,16 +420,26 @@ export default function TeacherStudents() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={`w-9 h-9 ${getAvatarColor(
-                            student.id
-                          )} rounded-full flex items-center justify-center text-white text-sm font-medium`}
-                        >
-                          {getInitials(student.name, student.email)}
+                        <div className="relative">
+                          <div
+                            className={`w-9 h-9 ${getAvatarColor(
+                              student.id
+                            )} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                          >
+                            {getInitials(student.name, student.email)}
+                          </div>
+                          {isStudentLive(student.id) && (
+                            <StatusDot status="editing" className="absolute -bottom-0.5 -right-0.5" />
+                          )}
                         </div>
-                        <span className="text-white text-sm font-medium">
-                          {student.name || "—"}
-                        </span>
+                        <div>
+                          <span className="text-white text-sm font-medium block">
+                            {student.name || "—"}
+                          </span>
+                          {isStudentLive(student.id) && getStudentActiveFile(student.id) && (
+                            <EditingLabel fileName={getStudentActiveFile(student.id)!.fileName} />
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 text-slate-400 text-sm">

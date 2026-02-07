@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { CreateProjectWizard } from "@/components/project/CreateProjectWizard";
 import { api } from "@/lib/api";
+import { useLiveStatus } from "@/hooks/useLiveStatus";
+import { LiveIndicator } from "@/components/live/LiveIndicator";
 
 interface Project {
   id: string;
@@ -63,6 +65,9 @@ export default function TeacherProjects() {
   // Modal states
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
+
+  // Live status
+  const { isProjectLive, getProjectLiveCount } = useLiveStatus();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -381,10 +386,23 @@ export default function TeacherProjects() {
                   className={`bg-white/5 rounded-xl border ${colors.border} overflow-hidden cursor-pointer hover:bg-white/10 transition-all`}
                   onClick={() => navigate(`/teacher/projects/${project.id}`)}
                 >
-                  <div className={`${colors.bg} p-4`}>
+                  <div className={`${colors.bg} p-4 relative`}>
+                    {/* Live indicator badge - top right */}
+                    {isProjectLive(project.id) && (
+                      <div className="absolute top-2 right-2">
+                        <LiveIndicator isLive={true} size="sm" showTooltip={false} />
+                      </div>
+                    )}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-bold text-white text-lg leading-tight">{project.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-white text-lg leading-tight">{project.name}</h3>
+                          {isProjectLive(project.id) && (
+                            <span className="text-red-400 text-[10px]">
+                              {getProjectLiveCount(project.id)} editing
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-400 mt-1">{project.course}</p>
                       </div>
                       <span className={`${colors.badge} text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1`}>
