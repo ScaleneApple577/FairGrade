@@ -11,6 +11,7 @@ import {
   Upload,
   Loader2,
   RefreshCw,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +87,13 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
   const [addedStudents, setAddedStudents] = useState<AddedStudent[]>([]);
   const [inviteCode, setInviteCode] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  
+  // Classroom roster
+  const [showClassroomRoster, setShowClassroomRoster] = useState(false);
+  const [classroomStudents, setClassroomStudents] = useState<Array<{ id: string; name: string | null; email: string }>>([]);
+  const [isLoadingRoster, setIsLoadingRoster] = useState(false);
+  const [rosterSearch, setRosterSearch] = useState("");
+  const [selectedRosterStudents, setSelectedRosterStudents] = useState<string[]>([]);
 
   // Load courses
   useEffect(() => {
@@ -144,7 +152,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
       toast({ title: "Student already added", variant: "destructive" });
       return;
     }
-    // TODO: POST http://localhost:8000/api/projects/{project_id}/invite
     setAddedStudents([...addedStudents, {
       id: Date.now().toString(),
       email: studentEmail.trim(),
@@ -152,6 +159,47 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     }]);
     setStudentEmail("");
   };
+
+  const handleLoadClassroomRoster = async () => {
+    setShowClassroomRoster(true);
+    setIsLoadingRoster(true);
+    try {
+      // TODO: GET /api/teacher/students?status=active
+      const data = await api.get("/api/teacher/students?status=active");
+      setClassroomStudents(data || []);
+    } catch (error) {
+      console.error("Failed to load classroom roster:", error);
+      setClassroomStudents([]);
+    } finally {
+      setIsLoadingRoster(false);
+    }
+  };
+
+  const handleAddFromRoster = () => {
+    const studentsToAdd = classroomStudents.filter(
+      s => selectedRosterStudents.includes(s.id) && !addedStudents.some(as => as.email === s.email)
+    );
+    
+    const newStudents = studentsToAdd.map(s => ({
+      id: s.id,
+      email: s.email,
+      name: s.name || undefined,
+      role: "member" as const,
+    }));
+    
+    setAddedStudents([...addedStudents, ...newStudents]);
+    setSelectedRosterStudents([]);
+    setShowClassroomRoster(false);
+    toast({ title: `${newStudents.length} student(s) added from roster` });
+  };
+
+  const filteredRosterStudents = classroomStudents.filter(s => {
+    const query = rosterSearch.toLowerCase();
+    return (
+      (s.name && s.name.toLowerCase().includes(query)) ||
+      s.email.toLowerCase().includes(query)
+    );
+  });
 
   const handleRemoveStudent = (id: string) => {
     setAddedStudents(addedStudents.filter(s => s.id !== id));
@@ -236,6 +284,10 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     setLmsCourseId("");
     setAddedStudents([]);
     setInviteCode("");
+    setShowClassroomRoster(false);
+    setClassroomStudents([]);
+    setSelectedRosterStudents([]);
+    setRosterSearch("");
     onClose();
   };
 
@@ -475,9 +527,114 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
               {/* Step 2: Students */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  {/* Add by Email */}
+                  {/* Add from classroom roster */}
                   <div>
-                    <Label className="text-white text-sm font-medium">Add by Email</Label>
+                    <Label className="text-white text-sm font-medium">Add from your classroom roster</Label>
+                    <p className="text-slate-500 text-xs mt-1 mb-3">
+                      Quickly add students who are already in your classroom
+                    </p>
+                    
+                    {!showClassroomRoster ? (
+                      <Button
+                        onClick={handleLoadClassroomRoster}
+                        variant="outline"
+                        className="bg-white/10 border-white/10 text-white hover:bg-white/15"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Select from Roster
+                      </Button>
+                    ) : (
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        {isLoadingRoster ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                          </div>
+                        ) : classroomStudents.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-slate-400 text-sm">No students in your classroom yet.</p>
+                            <p className="text-slate-500 text-xs mt-1">
+                              Go to the Students page to invite students first.
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <Input
+                              value={rosterSearch}
+                              onChange={(e) => setRosterSearch(e.target.value)}
+                              placeholder="Search students..."
+                              className="bg-white/10 border-white/10 text-white placeholder:text-slate-500 mb-3"
+                            />
+                            <div className="max-h-40 overflow-y-auto space-y-1">
+                              {filteredRosterStudents.map((student) => {
+                                const isAdded = addedStudents.some(s => s.email === student.email);
+                                const isSelected = selectedRosterStudents.includes(student.id);
+                                return (
+                                  <div
+                                    key={student.id}
+                                    onClick={() => {
+                                      if (isAdded) return;
+                                      if (isSelected) {
+                                        setSelectedRosterStudents(selectedRosterStudents.filter(id => id !== student.id));
+                                      } else {
+                                        setSelectedRosterStudents([...selectedRosterStudents, student.id]);
+                                      }
+                                    }}
+                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${
+                                      isAdded
+                                        ? "opacity-50 cursor-not-allowed bg-white/[0.02]"
+                                        : isSelected
+                                        ? "bg-blue-500/20 border border-blue-500/30"
+                                        : "hover:bg-white/10"
+                                    }`}
+                                  >
+                                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                      {(student.name || student.email)[0].toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-white text-sm">{student.name || student.email}</p>
+                                      {student.name && (
+                                        <p className="text-slate-500 text-xs">{student.email}</p>
+                                      )}
+                                    </div>
+                                    {isAdded && (
+                                      <span className="text-slate-500 text-xs">Already added</span>
+                                    )}
+                                    {isSelected && !isAdded && (
+                                      <Check className="w-4 h-4 text-blue-400" />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+                              <button
+                                onClick={() => {
+                                  setShowClassroomRoster(false);
+                                  setSelectedRosterStudents([]);
+                                  setRosterSearch("");
+                                }}
+                                className="text-slate-400 text-sm hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                              <Button
+                                onClick={handleAddFromRoster}
+                                disabled={selectedRosterStudents.length === 0}
+                                className="bg-blue-500 hover:bg-blue-600 text-sm"
+                                size="sm"
+                              >
+                                Add Selected ({selectedRosterStudents.length})
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add by Email */}
+                  <div className="pt-4 border-t border-white/10">
+                    <Label className="text-white text-sm font-medium">Or add by Email</Label>
                     <div className="flex gap-2 mt-2">
                       <Input
                         value={studentEmail}
