@@ -11,7 +11,7 @@ import {
   Download,
   Users,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { MetricCard, AlertItem, ActivityItem } from "@/components/project/ProjectWidgets";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -206,7 +206,7 @@ export default function ProjectDetail() {
   const [showReportGenerator, setShowReportGenerator] = useState(false);
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-card border-b border-border px-6 py-4">
@@ -214,7 +214,7 @@ export default function ProjectDetail() {
             <div>
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                <Link to="/teacher/dashboard" className="hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
                 <ChevronRight className="h-4 w-4" />
@@ -600,6 +600,6 @@ export default function ProjectDetail() {
         onClose={() => setShowReportGenerator(false)}
         projectName={projectData.name}
       />
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }

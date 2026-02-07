@@ -144,7 +144,7 @@ export default function TeacherDashboard() {
 
           <div className="flex gap-3">
             <Button
-              onClick={() => navigate("/create")}
+              onClick={() => navigate("/teacher/create")}
               className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
             >
               <Plus className="w-4 h-4" />
@@ -342,7 +342,7 @@ export default function TeacherDashboard() {
                   <p className="text-slate-400">No projects to monitor yet</p>
                   <p className="text-slate-500 text-sm mt-1">Create your first project to see health metrics</p>
                   <Button
-                    onClick={() => navigate("/create")}
+                    onClick={() => navigate("/teacher/create")}
                     className="mt-4 bg-blue-500 hover:bg-blue-600"
                   >
                     <Plus className="w-4 h-4 mr-2" />

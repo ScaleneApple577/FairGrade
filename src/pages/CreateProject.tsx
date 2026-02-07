@@ -20,7 +20,7 @@ import {
   FileEdit,
   Globe,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,7 +67,7 @@ export default function CreateProject() {
   };
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="p-6 lg:p-8 max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -385,7 +385,7 @@ export default function CreateProject() {
         {/* Action Buttons */}
         <div className="flex items-center justify-between mt-8">
           <Button variant="ghost" asChild>
-            <Link to="/dashboard">
+            <Link to="/teacher/projects">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Cancel
             </Link>
@@ -413,6 +413,6 @@ export default function CreateProject() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }

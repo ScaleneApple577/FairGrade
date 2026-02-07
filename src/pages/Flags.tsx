@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Flag, AlertTriangle, Shield, Copy, FileText, Search, ExternalLink, Check, X, MoreHorizontal } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -268,7 +268,7 @@ export default function Flags() {
   });
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-card border-b border-border">
@@ -382,6 +382,6 @@ export default function Flags() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }

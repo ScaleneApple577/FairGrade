@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 
 // TODO: GET http://localhost:8000/api/auth/profile
 // TODO: PUT http://localhost:8000/api/auth/profile
@@ -81,16 +82,16 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#111827]">
-        <div className="p-8 flex items-center justify-center">
+      <TeacherLayout>
+        <div className="p-8 flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
         </div>
-      </div>
+      </TeacherLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#111827]">
+    <TeacherLayout>
       <div className="p-6 lg:p-8 max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -668,6 +669,6 @@ export default function Settings() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </TeacherLayout>
   );
 }

@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TeacherRoute, StudentRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -48,7 +47,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   if (isAuthenticated) {
     // Redirect to appropriate dashboard
     if (role === "teacher") {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/teacher/dashboard" replace />;
     } else if (role === "student") {
       return <Navigate to="/student/dashboard" replace />;
     }
@@ -74,14 +73,6 @@ const AppRoutes = () => (
     <Route path="/features/:featureId" element={<FeatureDetailPage />} />
 
     {/* Teacher routes */}
-    <Route 
-      path="/dashboard" 
-      element={
-        <TeacherRoute>
-          <TeacherDashboard />
-        </TeacherRoute>
-      } 
-    />
     <Route 
       path="/teacher/dashboard" 
       element={
@@ -139,14 +130,6 @@ const AppRoutes = () => (
       } 
     />
     <Route 
-      path="/dashboard/reports" 
-      element={
-        <TeacherRoute>
-          <TeacherReports />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
       path="/teacher/live-replay/:fileId" 
       element={
         <TeacherRoute>
@@ -155,7 +138,7 @@ const AppRoutes = () => (
       } 
     />
     <Route 
-      path="/create" 
+      path="/teacher/create" 
       element={
         <TeacherRoute>
           <CreateProject />
@@ -163,47 +146,7 @@ const AppRoutes = () => (
       } 
     />
     <Route 
-      path="/project/:id" 
-      element={
-        <TeacherRoute>
-          <ProjectDetail />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/project/:id/timeline" 
-      element={
-        <TeacherRoute>
-          <Timeline />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/live-monitor" 
-      element={
-        <TeacherRoute>
-          <LiveMonitor />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/flags" 
-      element={
-        <TeacherRoute>
-          <Flags />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/analytics" 
-      element={
-        <TeacherRoute>
-          <Analytics />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/settings" 
+      path="/teacher/settings" 
       element={
         <TeacherRoute>
           <Settings />

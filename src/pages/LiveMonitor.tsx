@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, Users, Activity, Clock, FileText, MessageSquare, Video, AlertTriangle } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -173,7 +173,7 @@ export default function LiveMonitor() {
   const [project, setProject] = useState("all");
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-card border-b border-border px-8 py-6">
@@ -355,6 +355,6 @@ export default function LiveMonitor() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }

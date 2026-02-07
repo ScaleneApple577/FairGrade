@@ -64,7 +64,7 @@ const Auth = () => {
 
   const redirectBasedOnRole = (userRole?: string) => {
     if (userRole === "teacher") {
-      navigate("/dashboard");
+      navigate("/teacher/dashboard");
     } else {
       navigate("/student/dashboard");
     }
@@ -211,19 +211,20 @@ const Auth = () => {
     }
   };
 
+  // Loading state - dark theme
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center flex-col gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-slate-500">Checking session...</p>
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center flex-col gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <p className="text-slate-400">Checking session...</p>
       </div>
     );
   }
 
-  // Show "already logged in" state
+  // Already logged in state - dark theme
   if (existingUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -258,23 +259,23 @@ const Auth = () => {
             </div>
           </Link>
 
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back!</h1>
-          <p className="text-slate-500 mb-8">You're already signed in</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Welcome Back!</h1>
+          <p className="text-slate-400 text-sm mb-8">You're already signed in</p>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-lg">
+          <div className="bg-white/[0.04] border border-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
             <div className="flex items-center gap-4 justify-center mb-4">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
                 {existingUser.email.charAt(0).toUpperCase()}
               </div>
               <div className="text-left">
-                <p className="text-slate-900 font-medium">{existingUser.email}</p>
-                <p className="text-slate-500 text-sm capitalize">{existingUser.role || "Student"}</p>
+                <p className="text-white font-medium">{existingUser.email}</p>
+                <p className="text-slate-400 text-sm capitalize">{existingUser.role || "Student"}</p>
               </div>
             </div>
 
             <Button
               onClick={handleContinueAsUser}
-              className="w-full mb-3 bg-primary hover:bg-primary/90 text-white"
+              className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium"
             >
               Continue to Dashboard
               <ChevronRight className="h-4 w-4 ml-2" />
@@ -283,7 +284,7 @@ const Auth = () => {
             <Button
               onClick={handleSwitchAccount}
               variant="outline"
-              className="w-full border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              className="w-full bg-white/10 border border-white/10 text-white hover:bg-white/15 py-3 rounded-xl"
             >
               Sign in with different account
             </Button>
@@ -293,16 +294,8 @@ const Auth = () => {
     );
   }
 
-  const accentClasses = {
-    border: "border-primary",
-    bg: "bg-primary",
-    bgHover: "hover:bg-primary/90",
-    text: "text-primary",
-    focus: "focus:border-primary",
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -339,10 +332,10 @@ const Auth = () => {
             </div>
           </Link>
           <h1 className="text-3xl font-bold mb-2">
-            <span className="text-slate-900">Fair</span>
-            <span className="text-blue-500">Grade</span>
+            <span className="text-white">Fair</span>
+            <span className="text-blue-400">Grade</span>
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-400 text-sm">
             {authMode === "signin" ? "Sign in to continue" : "Join FairGrade today"}
           </p>
         </div>
@@ -357,23 +350,23 @@ const Auth = () => {
               exit={{ opacity: 0, x: 20 }}
               className="space-y-4"
             >
-              <p className="text-slate-500 text-center mb-6">I am a...</p>
+              <p className="text-slate-400 text-center mb-6">I am a...</p>
               
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setRole("student")}
-                className="w-full bg-white border-2 border-slate-200 hover:border-primary rounded-xl p-6 transition-all duration-300 group shadow-sm hover:shadow-lg"
+                className="w-full bg-white/[0.04] border border-white/10 hover:border-blue-500 rounded-xl p-6 transition-all duration-300 group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <GraduationCap className="h-7 w-7 text-primary" />
+                  <div className="w-14 h-14 bg-blue-500/15 rounded-full flex items-center justify-center group-hover:bg-blue-500/25 transition-colors">
+                    <GraduationCap className="h-7 w-7 text-blue-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900">I'm a Student</h3>
-                    <p className="text-slate-500 text-sm">Track my contributions</p>
+                    <h3 className="text-lg font-semibold text-white">I'm a Student</h3>
+                    <p className="text-slate-400 text-sm">Track my contributions</p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                  <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-blue-400 transition-colors" />
                 </div>
               </motion.button>
 
@@ -381,17 +374,17 @@ const Auth = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setRole("teacher")}
-                className="w-full bg-white border-2 border-slate-200 hover:border-primary rounded-xl p-6 transition-all duration-300 group shadow-sm hover:shadow-lg"
+                className="w-full bg-white/[0.04] border border-white/10 hover:border-blue-500 rounded-xl p-6 transition-all duration-300 group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <UserCheck className="h-7 w-7 text-primary" />
+                  <div className="w-14 h-14 bg-blue-500/15 rounded-full flex items-center justify-center group-hover:bg-blue-500/25 transition-colors">
+                    <UserCheck className="h-7 w-7 text-blue-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900">I'm a Teacher</h3>
-                    <p className="text-slate-500 text-sm">Grade fairly with data</p>
+                    <h3 className="text-lg font-semibold text-white">I'm a Teacher</h3>
+                    <p className="text-slate-400 text-sm">Grade fairly with data</p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                  <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-blue-400 transition-colors" />
                 </div>
               </motion.button>
             </motion.div>
@@ -407,45 +400,45 @@ const Auth = () => {
               className="space-y-6"
             >
               {/* Role indicator */}
-              <div className={`flex items-center justify-between bg-blue-50 rounded-lg p-3 border ${accentClasses.border}`}>
+              <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
                     {role === "teacher" ? (
-                      <UserCheck className={`h-4 w-4 ${accentClasses.text}`} />
+                      <UserCheck className="h-4 w-4 text-blue-400" />
                     ) : (
-                      <GraduationCap className={`h-4 w-4 ${accentClasses.text}`} />
+                      <GraduationCap className="h-4 w-4 text-blue-400" />
                     )}
                   </div>
-                  <span className="text-slate-700 text-sm">
+                  <span className="text-slate-300 text-sm">
                     {authMode === "signin" ? "Signing in" : "Signing up"} as {role === "teacher" ? "Teacher" : "Student"}
                   </span>
                 </div>
                 <button
                   onClick={() => setRole(null)}
-                  className={`text-sm ${accentClasses.text} hover:underline`}
+                  className="text-sm text-blue-400 hover:text-blue-300"
                 >
                   Change
                 </button>
               </div>
 
               {/* Auth Mode Toggle */}
-              <div className="flex bg-slate-100 rounded-lg p-1">
+              <div className="flex bg-white/10 rounded-xl p-1">
                 <button
                   onClick={() => setAuthMode("signin")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                     authMode === "signin"
-                      ? `${accentClasses.bg} text-white`
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-blue-500 text-white"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => setAuthMode("signup")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                     authMode === "signup"
-                      ? `${accentClasses.bg} text-white`
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-blue-500 text-white"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
                   Sign Up
@@ -455,16 +448,16 @@ const Auth = () => {
               <form onSubmit={authMode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
                 {authMode === "signup" && (
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-slate-700">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-slate-300 text-sm font-medium">Full Name</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                       <Input
                         id="fullName"
                         type="text"
                         placeholder="John Doe"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className={`pl-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 ${accentClasses.focus}`}
+                        className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                         required
                       />
                     </div>
@@ -472,32 +465,32 @@ const Auth = () => {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-slate-700">Email</Label>
+                  <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="you@school.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`pl-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 ${accentClasses.focus}`}
+                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-slate-700">Password</Label>
+                  <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                     <Input
                       id="password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`pl-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 ${accentClasses.focus}`}
+                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                       required
                     />
                   </div>
@@ -510,13 +503,13 @@ const Auth = () => {
                         id="remember"
                         checked={rememberMe}
                         onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                        className="border-slate-300"
+                        className="border-white/20 data-[state=checked]:bg-blue-500"
                       />
-                      <label htmlFor="remember" className="text-sm text-slate-600">
+                      <label htmlFor="remember" className="text-sm text-slate-400">
                         Remember me
                       </label>
                     </div>
-                    <button type="button" className={`text-sm ${accentClasses.text} hover:underline`}>
+                    <button type="button" className="text-sm text-blue-400 hover:text-blue-300">
                       Forgot password?
                     </button>
                   </div>
@@ -524,7 +517,7 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className={`w-full py-3 ${accentClasses.bg} ${accentClasses.bgHover} text-white rounded-lg font-semibold transition-all duration-300`}
+                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-300"
                   disabled={loading}
                 >
                   {loading ? (
@@ -540,16 +533,16 @@ const Auth = () => {
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-200" />
+                  <span className="w-full border-t border-white/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gradient-to-br from-blue-50 via-white to-slate-50 px-2 text-slate-500">Or continue with</span>
+                  <span className="bg-[#0f172a] px-2 text-slate-500">Or continue with</span>
                 </div>
               </div>
 
               <Button
                 variant="outline"
-                className="w-full bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                className="w-full bg-white/10 border border-white/10 text-white hover:bg-white/15 py-3 rounded-xl"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
               >
@@ -564,9 +557,9 @@ const Auth = () => {
 
               <p className="text-center text-sm text-slate-500">
                 By signing up, you agree to our{" "}
-                <Link to="/terms" className={`${accentClasses.text} hover:underline`}>Terms</Link>
+                <Link to="/terms" className="text-blue-400 hover:text-blue-300">Terms</Link>
                 {" "}and{" "}
-                <Link to="/privacy" className={`${accentClasses.text} hover:underline`}>Privacy Policy</Link>
+                <Link to="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>
               </p>
             </motion.div>
           )}

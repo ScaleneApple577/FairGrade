@@ -125,7 +125,7 @@ export function EmptyProjectCard() {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-all duration-300 overflow-hidden"
     >
-      <Link to="/create" className="block p-6 text-center">
+      <Link to="/teacher/create" className="block p-6 text-center">
         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Plus className="h-8 w-8 text-primary" />
         </div>

@@ -144,7 +144,7 @@ export function EmptyProjectCard() {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-colors"
     >
-      <Link to="/create" className="block p-8 text-center h-full flex flex-col items-center justify-center">
+      <Link to="/teacher/create" className="block p-8 text-center h-full flex flex-col items-center justify-center">
         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <Plus className="w-8 h-8 text-primary" />
         </div>

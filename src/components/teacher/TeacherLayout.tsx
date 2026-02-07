@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/teacher/dashboard" },
   { icon: FolderOpen, label: "All Projects", href: "/teacher/projects" },
   { icon: Users, label: "Students", href: "/teacher/students" },
   { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },

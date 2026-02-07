@@ -11,7 +11,7 @@ import {
   Download,
   Filter,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -95,7 +95,7 @@ export default function Analytics() {
   const [timeRange, setTimeRange] = useState("7d");
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="p-6 lg:p-8 space-y-6">
         {/* Header */}
         <motion.div
@@ -486,6 +486,6 @@ export default function Analytics() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }
