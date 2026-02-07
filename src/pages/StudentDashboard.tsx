@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
+import { ClassroomInvitationBanner } from "@/components/student/ClassroomInvitationBanner";
 import { api } from "@/lib/api";
 interface ProjectAssignment {
   id: string;
@@ -341,6 +342,9 @@ export default function StudentDashboard() {
       onGenerateToken={generateExtensionToken}
       isGeneratingToken={isGenerating}
     >
+      {/* Classroom Invitation Banners */}
+      <ClassroomInvitationBanner />
+
       {/* Project Assignment Banners */}
       <ProjectAssignmentBanner
         assignments={projectAssignments}

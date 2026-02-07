@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, FolderOpen, Check, X, Loader2 } from "lucide-react";
+import { Bell, FolderOpen, Check, X, Loader2, GraduationCap, Clock, Users } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Notification {
   id: string;
-  type: "project_assignment" | "deadline_reminder" | "review_request" | "general";
+  type: "project_assignment" | "classroom_invitation" | "deadline_reminder" | "review_request" | "general";
   title: string;
   message: string;
   projectId?: string;
   projectName?: string;
   courseName?: string;
+  teacherName?: string;
   createdAt: string;
   isRead: boolean;
 }
@@ -31,11 +32,11 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     const fetchNotifications = async () => {
       setIsLoading(true);
       try {
-        // Fetch notifications from API
+        // TODO: GET /api/student/notifications
         // const data = await api.get('/api/student/notifications');
         // setNotifications(data.notifications);
         
-        // Fetch unread count
+        // TODO: GET /api/student/notifications/unread-count
         // const countData = await api.get('/api/student/notifications/unread-count');
         // setUnreadCount(countData.count);
         
@@ -52,6 +53,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
   const handleMarkAllRead = async () => {
     try {
+      // TODO: PUT /api/student/notifications/mark-all-read
       // await api.put('/api/student/notifications/mark-all-read');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
@@ -70,6 +72,9 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     // Navigate based on notification type
     if (notification.type === "project_assignment" && notification.projectId) {
       navigate("/student/projects");
+    } else if (notification.type === "classroom_invitation") {
+      // Navigate to dashboard where the invitation banner is shown
+      navigate("/student/dashboard");
     }
 
     setIsOpen(false);
@@ -93,8 +98,29 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     switch (type) {
       case "project_assignment":
         return <FolderOpen className="w-4 h-4 text-blue-400" />;
+      case "classroom_invitation":
+        return <GraduationCap className="w-4 h-4 text-purple-400" />;
+      case "deadline_reminder":
+        return <Clock className="w-4 h-4 text-yellow-400" />;
+      case "review_request":
+        return <Users className="w-4 h-4 text-emerald-400" />;
       default:
         return <Bell className="w-4 h-4 text-slate-400" />;
+    }
+  };
+
+  const getNotificationBgColor = (type: Notification["type"]) => {
+    switch (type) {
+      case "project_assignment":
+        return "bg-blue-500/15";
+      case "classroom_invitation":
+        return "bg-purple-500/15";
+      case "deadline_reminder":
+        return "bg-yellow-500/15";
+      case "review_request":
+        return "bg-emerald-500/15";
+      default:
+        return "bg-white/10";
     }
   };
 
@@ -164,8 +190,8 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                           : "bg-blue-500/10 border-l-2 border-blue-400 hover:bg-blue-500/15"
                       }`}
                     >
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-blue-500/15 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="flex gap-3">
+                        <div className={`w-8 h-8 ${getNotificationBgColor(notification.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
