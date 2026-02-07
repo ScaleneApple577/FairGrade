@@ -27,6 +27,8 @@ import { toast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { ScoreBadge } from "@/components/score/ScoreBadge";
 import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
+import { useLiveStatus } from "@/hooks/useLiveStatus";
+import { LiveIndicator, StatusDot, EditingLabel } from "@/components/live/LiveIndicator";
 
 interface Project {
   id: string;
@@ -106,6 +108,11 @@ export default function TeacherProjectDetail() {
   const [isSendingReminder, setIsSendingReminder] = useState(false);
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  // Live status for this project
+  const { isFileLive, getFileEditors, isStudentLive, getStudentActiveFile } = useLiveStatus({
+    projectId: id,
+  });
 
   const handleViewScore = (student: Student) => {
     setSelectedStudent(student);
@@ -336,8 +343,14 @@ export default function TeacherProjectDetail() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 ${student.avatarColor} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
-                        {student.avatar}
+                      {/* Avatar with live status dot */}
+                      <div className="relative">
+                        <div className={`w-12 h-12 ${student.avatarColor} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                          {student.avatar}
+                        </div>
+                        {isStudentLive(student.id) && (
+                          <StatusDot status="editing" className="absolute -bottom-0.5 -right-0.5" />
+                        )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -345,6 +358,10 @@ export default function TeacherProjectDetail() {
                           <ScoreBadge score={student.fairscore} size="sm" />
                         </div>
                         <p className="text-xs text-slate-500">{student.email}</p>
+                        {/* Show what they're editing */}
+                        {isStudentLive(student.id) && getStudentActiveFile(student.id) && (
+                          <EditingLabel fileName={getStudentActiveFile(student.id)!.fileName} />
+                        )}
                       </div>
                     </div>
                     {student.isFreeRider && (
@@ -478,51 +495,67 @@ export default function TeacherProjectDetail() {
 
                     {/* Student's Files */}
                     <div className="space-y-2 ml-11">
-                      {studentGroup.files.map((file) => (
-                        <div
-                          key={file.id}
-                          className="bg-white/[0.04] border border-white/10 rounded-xl p-4 flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{getFileIcon(file.type)}</span>
-                            <div>
-                              <p className="text-white font-medium">{file.name}</p>
-                              <p className="text-slate-500 text-xs">Submitted {formatDate(file.submittedAt)}</p>
+                      {studentGroup.files.map((file) => {
+                        const fileLive = isFileLive(file.id);
+                        const editors = getFileEditors(file.id);
+                        
+                        return (
+                          <div
+                            key={file.id}
+                            className={`bg-white/[0.04] border rounded-xl p-4 flex items-center justify-between ${
+                              fileLive ? "border-red-500/30" : "border-white/10"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{getFileIcon(file.type)}</span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-white font-medium">{file.name}</p>
+                                  <LiveIndicator isLive={fileLive} editors={editors} />
+                                </div>
+                                {fileLive && editors.length > 0 ? (
+                                  <p className="text-red-400 text-xs">{editors[0]} is editing now</p>
+                                ) : (
+                                  <p className="text-slate-500 text-xs">Submitted {formatDate(file.submittedAt)}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              {/* Tracking Status */}
+                              {file.trackingStatus === "active" ? (
+                                <span className="text-emerald-400 text-xs flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  Tracking active
+                                </span>
+                              ) : (
+                                <span className="text-yellow-400 text-xs flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Pending access
+                                </span>
+                              )}
+
+                              {/* Action Buttons */}
+                              <Button
+                                onClick={() => window.open(file.googleFileUrl, "_blank")}
+                                className={`bg-blue-500/15 text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-500/25 ${
+                                  fileLive ? "border border-red-500/30" : ""
+                                }`}
+                              >
+                                Open
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                              <Button
+                                onClick={() => navigate(`/teacher/live-replay/${file.id}`)}
+                                className="bg-white/10 text-slate-300 px-3 py-2 rounded-lg text-sm hover:bg-white/15"
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                View Replay
+                              </Button>
                             </div>
                           </div>
-
-                          <div className="flex items-center gap-4">
-                            {/* Tracking Status */}
-                            {file.trackingStatus === "active" ? (
-                              <span className="text-emerald-400 text-xs flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" />
-                                Tracking active
-                              </span>
-                            ) : (
-                              <span className="text-yellow-400 text-xs flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                Pending access
-                              </span>
-                            )}
-
-                            {/* Action Buttons */}
-                            <Button
-                              onClick={() => window.open(file.googleFileUrl, "_blank")}
-                              className="bg-blue-500/15 text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-500/25"
-                            >
-                              Open
-                              <ExternalLink className="w-3 h-3 ml-2" />
-                            </Button>
-                            <Button
-                              onClick={() => navigate(`/teacher/live-replay/${file.id}`)}
-                              className="bg-white/10 text-slate-300 px-3 py-2 rounded-lg text-sm hover:bg-white/15"
-                            >
-                              <Play className="w-3 h-3 mr-1" />
-                              View Replay
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

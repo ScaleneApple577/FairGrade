@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
+import { useLiveStatus } from "@/hooks/useLiveStatus";
+import { LiveEditsNotification } from "@/components/live/LiveEditsNotification";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/teacher/dashboard" },
@@ -29,6 +31,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { liveEdits, totalActive } = useLiveStatus();
 
   const handleLogout = async () => {
     await logout();
@@ -78,6 +81,13 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
             </span>
           </div>
         </div>
+
+        {/* Live Edits Counter */}
+        <LiveEditsNotification
+          liveEdits={liveEdits}
+          totalActive={totalActive}
+          variant="sidebar"
+        />
 
         {/* Navigation */}
         <nav className="flex-1 p-4">

@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { api } from "@/lib/api";
+import { useLiveStatus } from "@/hooks/useLiveStatus";
+import { LiveEditsNotification } from "@/components/live/LiveEditsNotification";
 
 interface DashboardStats {
   activeProjects: number;
@@ -64,6 +66,9 @@ export default function TeacherDashboard() {
   const [projects, setProjects] = useState<ProjectHealth[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Live status
+  const { liveEdits, totalActive } = useLiveStatus();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -402,7 +407,7 @@ export default function TeacherDashboard() {
             <div className="bg-white/5 rounded-xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${totalActive > 0 ? "bg-red-500" : "bg-green-500"}`}></div>
                   <h3 className="font-bold text-white">Live Activity</h3>
                 </div>
                 <button
@@ -413,11 +418,19 @@ export default function TeacherDashboard() {
                 </button>
               </div>
 
-              <div className="text-center py-8">
-                <Activity className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">No recent activity</p>
-                <p className="text-slate-500 text-xs mt-1">Activity will appear here when students start working</p>
-              </div>
+              {totalActive > 0 ? (
+                <LiveEditsNotification
+                  liveEdits={liveEdits}
+                  totalActive={totalActive}
+                  variant="dashboard"
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400 text-sm">No recent activity</p>
+                  <p className="text-slate-500 text-xs mt-1">Activity will appear here when students start working</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
