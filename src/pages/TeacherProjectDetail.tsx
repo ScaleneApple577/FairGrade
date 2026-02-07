@@ -19,11 +19,14 @@ import {
   Loader2,
   Bell,
   ArrowLeft,
+  Eye,
 } from "lucide-react";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { ScoreBadge } from "@/components/score/ScoreBadge";
+import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 
 interface Project {
   id: string;
@@ -45,7 +48,7 @@ interface Student {
   email: string;
   avatar: string;
   avatarColor: string;
-  score: number;
+  fairscore: number | null;
   wordsWritten: number;
   tasksCompleted: number;
   tasksTotal: number;
@@ -101,6 +104,13 @@ export default function TeacherProjectDetail() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSendingReminder, setIsSendingReminder] = useState(false);
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  const handleViewScore = (student: Student) => {
+    setSelectedStudent(student);
+    setScoreModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -330,7 +340,10 @@ export default function TeacherProjectDetail() {
                         {student.avatar}
                       </div>
                       <div>
-                        <h3 className="font-bold text-white">{student.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-white">{student.name}</h3>
+                          <ScoreBadge score={student.fairscore} size="sm" />
+                        </div>
                         <p className="text-xs text-slate-500">{student.email}</p>
                       </div>
                     </div>
@@ -344,15 +357,22 @@ export default function TeacherProjectDetail() {
 
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-slate-400">Contribution Score</span>
-                      <span className={`text-2xl font-bold ${student.score >= 80 ? "text-green-400" : student.score >= 60 ? "text-yellow-400" : "text-red-400"}`}>
-                        {student.score}
-                      </span>
+                      <span className="text-sm text-slate-400">FairScore</span>
+                      <button
+                        onClick={() => handleViewScore(student)}
+                        className="text-blue-400 text-xs hover:text-blue-300"
+                      >
+                        View Breakdown
+                      </button>
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full ${student.score >= 80 ? "bg-green-500" : student.score >= 60 ? "bg-yellow-500" : "bg-red-500"}`} 
-                        style={{ width: `${student.score}%` }} 
+                        className={`h-2 rounded-full ${
+                          (student.fairscore ?? 0) >= 80 ? "bg-emerald-500" : 
+                          (student.fairscore ?? 0) >= 60 ? "bg-blue-500" : 
+                          (student.fairscore ?? 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
+                        }`} 
+                        style={{ width: `${student.fairscore ?? 0}%` }} 
                       />
                     </div>
                   </div>
@@ -615,6 +635,21 @@ export default function TeacherProjectDetail() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Score Breakdown Modal */}
+        {selectedStudent && project && (
+          <ScoreBreakdownModal
+            open={scoreModalOpen}
+            onOpenChange={setScoreModalOpen}
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.name}
+            studentAvatar={selectedStudent.avatar}
+            studentAvatarColor={selectedStudent.avatarColor}
+            projectId={project.id}
+            projectName={project.name}
+            isTeacher={true}
+          />
         )}
       </div>
     </TeacherLayout>
