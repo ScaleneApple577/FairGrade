@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,54 +88,64 @@ const Auth = () => {
     await supabase.auth.signOut();
     setExistingUser(null);
     setNeedsRoleSelection(false);
+    setSavingRole(false);
   };
 
-  // Save role for OAuth users who signed in without a role
+  // Save role for users who signed in without a role (Google OAuth or password auth)
   const handleSaveOAuthRole = async (selectedRole: RoleType) => {
     if (!existingUser || !selectedRole) return;
-    
+
     setSavingRole(true);
     try {
+      // Try backend profile update first (non-blocking).
+      // TODO: PUT /api/auth/profile — Body: { role: 'student' | 'teacher' }
+      // Backend should persist the role in the public.user_roles table.
+      try {
+        await api.put("/api/auth/profile", { role: selectedRole });
+      } catch {
+        // Intentionally ignore: we still persist role securely via the database.
+      }
+
+      // Secure persistence (source of truth) — roles stay in user_roles table.
       const { error: roleError } = await supabase
         .from("user_roles")
         .insert({ user_id: existingUser.id, role: selectedRole });
 
       if (roleError) {
-        // Check if role already exists (shouldn't happen but handle it)
-        if (roleError.code === '23505') {
-          // Unique constraint violation - role already exists
-          const { data: existingRole } = await supabase
+        // Unique constraint violation — role already exists.
+        if (roleError.code === "23505") {
+          const { data: existingRole, error: existingRoleError } = await supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", existingUser.id)
             .single();
-          
-          if (existingRole) {
-            setExistingUser(prev => prev ? { ...prev, role: existingRole.role } : null);
+
+          if (!existingRoleError && existingRole?.role) {
+            setExistingUser((prev) => (prev ? { ...prev, role: existingRole.role } : null));
             setNeedsRoleSelection(false);
             redirectBasedOnRole(existingRole.role);
             return;
           }
         }
+
         throw roleError;
       }
 
-      // Update local state and redirect
-      setExistingUser(prev => prev ? { ...prev, role: selectedRole } : null);
+      setExistingUser((prev) => (prev ? { ...prev, role: selectedRole } : null));
       setNeedsRoleSelection(false);
-      
+
       toast({
         title: "Welcome to FairGrade!",
         description: `You're all set as a ${selectedRole}.`,
       });
-      
+
       redirectBasedOnRole(selectedRole);
-    } catch (error: any) {
-      console.error("Error saving role:", error);
+    } catch {
+      // Non-blocking: keep user on this screen so they can retry.
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to save your role. Please try again.",
+        title: "Couldn't finish setup",
+        description: "We couldn't save your role yet. Please try again.",
       });
     } finally {
       setSavingRole(false);
