@@ -38,7 +38,7 @@ export function ProtectedRoute({
   if (requiredRole && role !== requiredRole) {
     // Redirect to the correct dashboard based on their actual role
     if (role === "teacher") {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/teacher/dashboard" replace />;
     } else if (role === "student") {
       return <Navigate to="/student/dashboard" replace />;
     }
@@ -50,7 +50,7 @@ export function ProtectedRoute({
   if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(role)) {
     // Redirect to the correct dashboard based on their actual role
     if (role === "teacher") {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/teacher/dashboard" replace />;
     } else if (role === "student") {
       return <Navigate to="/student/dashboard" replace />;
     }
