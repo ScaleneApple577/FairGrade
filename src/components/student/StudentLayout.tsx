@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
@@ -50,25 +50,29 @@ export function StudentLayout({
   isGeneratingToken = false,
 }: StudentLayoutProps) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
+  // Build profile from auth user
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        // TODO: Connect to GET http://localhost:8000/api/auth/profile
-        // const response = await fetch('http://localhost:8000/api/auth/profile');
-        // const data = await response.json();
-        // setProfile(data);
-        setProfile(null);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-      }
-    };
-    fetchProfile();
-  }, []);
+    if (user) {
+      const initials = user.fullName 
+        ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : user.email.charAt(0).toUpperCase();
+      
+      setProfile({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName || user.email,
+        initials,
+      });
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate("/auth");
   };
 

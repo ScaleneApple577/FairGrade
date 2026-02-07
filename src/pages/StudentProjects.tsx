@@ -14,8 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { JoinProjectModal } from "@/components/student/JoinProjectModal";
-
-// TODO: Connect to GET http://localhost:8000/api/student/projects
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 interface Project {
   id: string;
   name: string;
@@ -59,15 +59,13 @@ export default function StudentProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('http://localhost:8000/api/student/projects');
-        // const data = await response.json();
+        // Fetch student projects from API
+        // const data = await api.get('/api/student/projects');
         // setProjects(data);
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
         setProjects([]);
       } catch (error) {
         console.error("Failed to fetch projects:", error);
+        toast.error("Failed to load projects");
       } finally {
         setIsLoading(false);
       }
@@ -75,9 +73,14 @@ export default function StudentProjects() {
     fetchProjects();
   }, []);
 
-  const handleJoinSuccess = () => {
+  const handleJoinSuccess = async () => {
     // Refresh projects list
-    // fetchProjects();
+    try {
+      // const data = await api.get('/api/student/projects');
+      // setProjects(data);
+    } catch (error) {
+      console.error("Failed to refresh projects:", error);
+    }
   };
 
   const filteredProjects = projects.filter((project) => {

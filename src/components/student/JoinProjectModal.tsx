@@ -4,6 +4,7 @@ import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface JoinProjectModalProps {
   isOpen: boolean;
@@ -26,18 +27,11 @@ export function JoinProjectModal({ isOpen, onClose, onSuccess }: JoinProjectModa
     setError("");
 
     try {
-      // TODO: POST http://localhost:8000/api/student/projects/join
-      // const response = await fetch('http://localhost:8000/api/student/projects/join', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ invite_code: inviteCode.trim() })
-      // });
-      // if (!response.ok) throw new Error('Invalid or expired invite code');
-      // const data = await response.json();
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Join project using API
+      // await api.post('/api/student/projects/join', { invite_code: inviteCode.trim() });
       
-      // Simulate error for demo (remove when connecting to real API)
+      // Simulate for now - remove when connecting real API
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setError("Invalid or expired invite code");
       setIsLoading(false);
       return;
@@ -49,8 +43,8 @@ export function JoinProjectModal({ isOpen, onClose, onSuccess }: JoinProjectModa
       // });
       // onSuccess();
       // onClose();
-    } catch (err) {
-      setError("Invalid or expired invite code");
+    } catch (err: any) {
+      setError(err.message || "Invalid or expired invite code");
     } finally {
       setIsLoading(false);
     }

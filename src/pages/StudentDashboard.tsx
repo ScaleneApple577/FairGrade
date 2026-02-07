@@ -31,8 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
-
-// TODO: Connect to GET http://localhost:8000/api/student/notifications?type=project_assignment&status=unread
+import { api } from "@/lib/api";
 interface ProjectAssignment {
   id: string;
   notificationId: string;
@@ -196,12 +195,11 @@ export default function StudentDashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [projectAssignments, setProjectAssignments] = useState<ProjectAssignment[]>([]);
 
-  // TODO: Connect to GET http://localhost:8000/api/student/notifications?type=project_assignment&status=unread
   useEffect(() => {
     const fetchProjectAssignments = async () => {
       try {
-        // const response = await fetch('http://localhost:8000/api/student/notifications?type=project_assignment&status=unread');
-        // const data = await response.json();
+        // Fetch project assignments from API
+        // const data = await api.get('/api/student/notifications?type=project_assignment&status=unread');
         // setProjectAssignments(data);
         setProjectAssignments([]);
       } catch (error) {
@@ -211,25 +209,28 @@ export default function StudentDashboard() {
     fetchProjectAssignments();
   }, []);
 
-  const handleDismissAssignment = (notificationId: string) => {
-    // TODO: PUT http://localhost:8000/api/student/notifications/{notification_id}/dismiss
-    setProjectAssignments(prev => prev.filter(a => a.notificationId !== notificationId));
+  const handleDismissAssignment = async (notificationId: string) => {
+    try {
+      // await api.put(`/api/student/notifications/${notificationId}/dismiss`);
+      setProjectAssignments(prev => prev.filter(a => a.notificationId !== notificationId));
+    } catch (error) {
+      console.error("Failed to dismiss assignment:", error);
+    }
   };
 
-  // TODO: Connect to GET http://localhost:8000/api/student/dashboard/stats
-  // TODO: Connect to GET http://localhost:8000/api/student/activity
-  // TODO: Connect to GET http://localhost:8000/api/student/tasks
-  // TODO: Connect to GET http://localhost:8000/api/student/calendar/week
-  // TODO: Connect to GET http://localhost:8000/api/student/projects
-  // TODO: Connect to GET http://localhost:8000/api/student/stats/score
-  // TODO: Connect to GET http://localhost:8000/api/student/meetings/next
-  // TODO: Connect to GET http://localhost:8000/api/student/achievements
   useEffect(() => {
     const fetchDashboard = async () => {
       setIsLoading(true);
       try {
-        // Simulated API delay - remove when connecting real API
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Fetch all dashboard data from API
+        // const statsData = await api.get('/api/student/dashboard/stats');
+        // const activityData = await api.get('/api/student/activity');
+        // const tasksData = await api.get('/api/student/tasks');
+        // const calendarData = await api.get('/api/student/calendar/week');
+        // const projectsData = await api.get('/api/student/projects');
+        // const scoreData = await api.get('/api/student/stats/score');
+        // const meetingData = await api.get('/api/student/meetings/next');
+        // const achievementsData = await api.get('/api/student/achievements');
         
         // Initialize with empty data - replace with actual API calls
         setDashboardData({
@@ -250,6 +251,7 @@ export default function StudentDashboard() {
         });
       } catch (error) {
         console.error("Failed to fetch dashboard:", error);
+        toast.error("Failed to load dashboard data");
       } finally {
         setIsLoading(false);
       }

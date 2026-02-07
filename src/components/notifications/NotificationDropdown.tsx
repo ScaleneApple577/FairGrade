@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, FolderOpen, Check, X, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
-// TODO: GET http://localhost:8000/api/student/notifications
 interface Notification {
   id: string;
   type: "project_assignment" | "deadline_reminder" | "review_request" | "general";
@@ -31,17 +31,14 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     const fetchNotifications = async () => {
       setIsLoading(true);
       try {
-        // TODO: Connect to GET http://localhost:8000/api/student/notifications
-        // const response = await fetch('http://localhost:8000/api/student/notifications');
-        // const data = await response.json();
+        // Fetch notifications from API
+        // const data = await api.get('/api/student/notifications');
         // setNotifications(data.notifications);
         
-        // TODO: Connect to GET http://localhost:8000/api/student/notifications/unread-count
-        // const countResponse = await fetch('http://localhost:8000/api/student/notifications/unread-count');
-        // const countData = await countResponse.json();
+        // Fetch unread count
+        // const countData = await api.get('/api/student/notifications/unread-count');
         // setUnreadCount(countData.count);
         
-        await new Promise(resolve => setTimeout(resolve, 300));
         setNotifications([]);
         setUnreadCount(0);
       } catch (error) {
@@ -55,8 +52,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
   const handleMarkAllRead = async () => {
     try {
-      // TODO: PUT http://localhost:8000/api/student/notifications/mark-all-read
-      // await fetch('http://localhost:8000/api/student/notifications/mark-all-read', { method: 'PUT' });
+      // await api.put('/api/student/notifications/mark-all-read');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (error) {

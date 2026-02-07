@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TeacherRoute, StudentRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -35,46 +37,246 @@ import TeacherLiveReplay from "./pages/TeacherLiveReplay";
 
 const queryClient = new QueryClient();
 
+// Auth redirect component - redirects authenticated users away from auth page
+function AuthRedirect({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, role } = useAuth();
+
+  if (isLoading) {
+    return <>{children}</>;
+  }
+
+  if (isAuthenticated) {
+    // Redirect to appropriate dashboard
+    if (role === "teacher") {
+      return <Navigate to="/dashboard" replace />;
+    } else if (role === "student") {
+      return <Navigate to="/student/dashboard" replace />;
+    }
+  }
+
+  return <>{children}</>;
+}
+
+const AppRoutes = () => (
+  <Routes>
+    {/* Public routes */}
+    <Route path="/" element={<Index />} />
+    <Route 
+      path="/auth" 
+      element={
+        <AuthRedirect>
+          <Auth />
+        </AuthRedirect>
+      } 
+    />
+    <Route path="/pricing" element={<PricingPage />} />
+    <Route path="/features" element={<FeaturesPage />} />
+    <Route path="/features/:featureId" element={<FeatureDetailPage />} />
+
+    {/* Teacher routes */}
+    <Route 
+      path="/dashboard" 
+      element={
+        <TeacherRoute>
+          <TeacherDashboard />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/dashboard" 
+      element={
+        <TeacherRoute>
+          <TeacherDashboard />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/projects" 
+      element={
+        <TeacherRoute>
+          <TeacherProjects />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/projects/:id" 
+      element={
+        <TeacherRoute>
+          <TeacherProjectDetail />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/students" 
+      element={
+        <TeacherRoute>
+          <TeacherStudents />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/analytics" 
+      element={
+        <TeacherRoute>
+          <TeacherAnalytics />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/live-monitor" 
+      element={
+        <TeacherRoute>
+          <TeacherLiveMonitor />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/reports" 
+      element={
+        <TeacherRoute>
+          <TeacherReports />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/dashboard/reports" 
+      element={
+        <TeacherRoute>
+          <TeacherReports />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/teacher/live-replay/:fileId" 
+      element={
+        <TeacherRoute>
+          <TeacherLiveReplay />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/create" 
+      element={
+        <TeacherRoute>
+          <CreateProject />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/project/:id" 
+      element={
+        <TeacherRoute>
+          <ProjectDetail />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/project/:id/timeline" 
+      element={
+        <TeacherRoute>
+          <Timeline />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/live-monitor" 
+      element={
+        <TeacherRoute>
+          <LiveMonitor />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/flags" 
+      element={
+        <TeacherRoute>
+          <Flags />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/analytics" 
+      element={
+        <TeacherRoute>
+          <Analytics />
+        </TeacherRoute>
+      } 
+    />
+    <Route 
+      path="/settings" 
+      element={
+        <TeacherRoute>
+          <Settings />
+        </TeacherRoute>
+      } 
+    />
+
+    {/* Student routes */}
+    <Route 
+      path="/student/dashboard" 
+      element={
+        <StudentRoute>
+          <StudentDashboard />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student/projects" 
+      element={
+        <StudentRoute>
+          <StudentProjects />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student/projects/:id" 
+      element={
+        <StudentRoute>
+          <StudentProjectDetail />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student/calendar" 
+      element={
+        <StudentRoute>
+          <StudentCalendar />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student/reviews" 
+      element={
+        <StudentRoute>
+          <StudentReviews />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student/stats" 
+      element={
+        <StudentRoute>
+          <StudentStats />
+        </StudentRoute>
+      } 
+    />
+
+    {/* Catch-all */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<TeacherDashboard />} />
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-           <Route path="/teacher/projects" element={<TeacherProjects />} />
-           <Route path="/teacher/projects/:id" element={<TeacherProjectDetail />} />
-           <Route path="/teacher/students" element={<TeacherStudents />} />
-           <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
-            <Route path="/teacher/live-monitor" element={<TeacherLiveMonitor />} />
-           <Route path="/teacher/reports" element={<TeacherReports />} />
-           <Route path="/dashboard/reports" element={<TeacherReports />} />
-          <Route path="/create" element={<CreateProject />} />
-          <Route path="/project/:id" element={<ProjectDetail />} />
-          <Route path="/project/:id/timeline" element={<Timeline />} />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/projects" element={<StudentProjects />} />
-          <Route path="/student/projects/:id" element={<StudentProjectDetail />} />
-          <Route path="/student/calendar" element={<StudentCalendar />} />
-          <Route path="/student/reviews" element={<StudentReviews />} />
-          <Route path="/student/stats" element={<StudentStats />} />
-          <Route path="/live-monitor" element={<LiveMonitor />} />
-          <Route path="/flags" element={<Flags />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/features/:featureId" element={<FeatureDetailPage />} />
-          <Route path="/teacher/live-replay/:fileId" element={<TeacherLiveReplay />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
