@@ -6,12 +6,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Plus,
   Trash2,
   Copy,
   Upload,
-  FileText,
-  Link2,
   Loader2,
   RefreshCw,
 } from "lucide-react";
@@ -47,17 +44,10 @@ interface AddedStudent {
   role: "member" | "lead";
 }
 
-interface SelectedFile {
-  id: string;
-  name: string;
-  type: "doc" | "sheet" | "slides";
-  url: string;
-}
-
+// 2-step wizard: Details → Students (Files step removed)
 const steps = [
   { number: 1, title: "Details", description: "Project information" },
   { number: 2, title: "Students", description: "Add participants" },
-  { number: 3, title: "Files", description: "Connect documents" },
 ];
 
 export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProps) {
@@ -95,11 +85,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
   const [addedStudents, setAddedStudents] = useState<AddedStudent[]>([]);
   const [inviteCode, setInviteCode] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
-
-  // Step 3: Files
-  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
-  const [fileUrl, setFileUrl] = useState("");
 
   // Load courses
   useEffect(() => {
@@ -194,29 +179,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     toast({ title: "Invite code copied!" });
   };
 
-  const handleConnectGoogle = async () => {
-    // TODO: POST http://localhost:8000/api/integrations/google-drive/connect
-    // This would trigger OAuth flow
-    toast({ title: "Google Drive connection", description: "OAuth flow would start here" });
-  };
-
-  const handleAddFileUrl = () => {
-    if (!fileUrl.trim()) return;
-    // TODO: POST http://localhost:8000/api/projects/{project_id}/files
-    const fileName = fileUrl.split("/").pop() || "Untitled Document";
-    setSelectedFiles([...selectedFiles, {
-      id: Date.now().toString(),
-      name: fileName,
-      type: "doc",
-      url: fileUrl.trim(),
-    }]);
-    setFileUrl("");
-  };
-
-  const handleRemoveFile = (id: string) => {
-    setSelectedFiles(selectedFiles.filter(f => f.id !== id));
-  };
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -238,7 +200,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
       //       integrity: weights.integrity,
       //     },
       //     lms: lmsType !== 'none' ? { type: lmsType, course_id: lmsCourseId } : null,
-      //     files: selectedFiles.map(f => ({ url: f.url })),
       //     students: addedStudents.map(s => ({ email: s.email, role: s.role })),
       //   })
       // });
@@ -274,7 +235,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     setLmsCourseId("");
     setAddedStudents([]);
     setInviteCode("");
-    setSelectedFiles([]);
     onClose();
   };
 
@@ -305,7 +265,7 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
               </button>
             </div>
 
-            {/* Progress Steps */}
+            {/* Progress Steps - 2 steps only */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
               {steps.map((step, index) => (
                 <div key={step.number} className="flex items-center flex-1">
@@ -634,76 +594,6 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
                   </div>
                 </div>
               )}
-
-              {/* Step 3: Files */}
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  {/* Connect Google Drive */}
-                  {!isGoogleConnected && (
-                    <button
-                      onClick={handleConnectGoogle}
-                      className="w-full p-8 bg-white/10 border-2 border-dashed border-white/10 rounded-xl text-center hover:bg-white/15 hover:border-white/20 transition-colors"
-                    >
-                      <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                      <p className="text-white font-medium">Connect Google Drive</p>
-                      <p className="text-slate-500 text-sm mt-1">
-                        We'll monitor edits, contributions, and changes in real-time
-                      </p>
-                    </button>
-                  )}
-
-                  {/* Manual File Links */}
-                  <div>
-                    <Label className="text-slate-400 text-sm">Or paste Google file links directly:</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        value={fileUrl}
-                        onChange={(e) => setFileUrl(e.target.value)}
-                        placeholder="Paste Google Docs/Sheets/Slides URL..."
-                        className="flex-1 bg-white/10 border-white/10 text-white placeholder:text-slate-500"
-                      />
-                      <Button onClick={handleAddFileUrl} className="bg-blue-500 hover:bg-blue-600">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Selected Files List */}
-                  <div>
-                    <Label className="text-white text-sm font-medium">Selected Files ({selectedFiles.length})</Label>
-                    {selectedFiles.length === 0 ? (
-                      <div className="mt-3 p-6 bg-white/5 rounded-xl border border-white/10 text-center">
-                        <FileText className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                        <p className="text-slate-400 text-sm">No files tracked yet</p>
-                      </div>
-                    ) : (
-                      <div className="mt-3 space-y-2">
-                        {selectedFiles.map((file) => (
-                          <div
-                            key={file.id}
-                            className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10"
-                          >
-                            <FileText className="w-5 h-5 text-blue-400" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm truncate">{file.name}</p>
-                              <p className="text-slate-500 text-xs">Tracking will begin when project starts</p>
-                            </div>
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
-                              {file.type.toUpperCase()}
-                            </span>
-                            <button
-                              onClick={() => handleRemoveFile(file.id)}
-                              className="p-1 hover:bg-red-500/20 rounded text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Footer */}
@@ -718,10 +608,10 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
                     Back
                   </Button>
                 )}
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <Button
                     onClick={() => setCurrentStep(currentStep + 1)}
-                    disabled={currentStep === 1 && !canProceedStep1}
+                    disabled={!canProceedStep1}
                     className="bg-blue-500 hover:bg-blue-600"
                   >
                     Next Step

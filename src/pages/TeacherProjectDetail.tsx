@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
   Edit,
@@ -10,41 +10,24 @@ import {
   AlertCircle,
   Clock,
   Users,
-  LayoutDashboard,
-  FolderOpen,
-  BarChart3,
-  Activity,
-  FileText,
-  Settings,
-  LogOut,
   Mail,
   Play,
   ExternalLink,
-  Plus,
-  X,
-  Info,
-  Table,
-  Presentation,
+  FolderOpen,
+  FileText,
+  Activity,
   Loader2,
+  Bell,
+  ArrowLeft,
 } from "lucide-react";
+import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
-// TODO: Connect to GET http://localhost:8000/api/projects/{project_id}
-// TODO: Connect to GET http://localhost:8000/api/projects/{project_id}/students
-// TODO: Connect to GET http://localhost:8000/api/projects/{project_id}/files
-
-// Sidebar navigation items
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: FolderOpen, label: "All Projects", path: "/teacher/projects" },
-  { icon: Users, label: "Students", path: "/teacher/students" },
-  { icon: BarChart3, label: "Analytics", path: "/teacher/analytics" },
-  { icon: Activity, label: "Live Activity", path: "/teacher/live-monitor" },
-  { icon: FileText, label: "Reports", path: "/teacher/reports" },
-  { icon: Settings, label: "Settings", path: "/settings" },
-];
+// TODO: GET http://localhost:8000/api/projects/{project_id}
+// TODO: GET http://localhost:8000/api/projects/{project_id}/students
+// TODO: GET http://localhost:8000/api/projects/{project_id}/files — returns all files submitted by students
+// TODO: POST http://localhost:8000/api/projects/{project_id}/remind-files — send reminder to students
 
 interface Project {
   id: string;
@@ -75,54 +58,75 @@ interface Student {
   peerRating: number;
   isFreeRider: boolean;
   flags: { type: string; message: string }[];
+  hasSubmittedFiles: boolean;
 }
 
-interface TrackedFile {
+interface StudentFile {
   id: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar: string;
+  studentColor: string;
   name: string;
-  type: string;
-  lastModified: string;
-  contributors: string[];
+  type: "google_doc" | "google_sheet" | "google_slides";
+  googleFileUrl: string;
+  submittedAt: string;
+  trackingStatus: "active" | "pending";
+}
+
+interface ActivityItem {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  userColor: string;
+  action: string;
+  fileName: string;
+  timestamp: string;
+}
+
+interface Alert {
+  id: string;
+  severity: "critical" | "warning" | "info";
+  title: string;
+  description: string;
+  timestamp: string;
 }
 
 export default function TeacherProjectDetail() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("students");
-  const [showAddFile, setShowAddFile] = useState(false);
 
   // Data states
   const [project, setProject] = useState<Project | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [files, setFiles] = useState<TrackedFile[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [files, setFiles] = useState<StudentFile[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
 
   useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/projects/{project_id}
-    // fetch(`http://localhost:8000/api/projects/${id}`)
-    //   .then(res => res.json())
-    //   .then(data => { setProject(data); setIsLoading(false); })
-    //   .catch(err => { setIsLoading(false); })
-    setIsLoading(false);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // TODO: GET http://localhost:8000/api/projects/{project_id}
+        // TODO: GET http://localhost:8000/api/projects/{project_id}/students
+        // TODO: GET http://localhost:8000/api/projects/{project_id}/files
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setProject(null);
+        setStudents([]);
+        setFiles([]);
+        setActivities([]);
+        setAlerts([]);
+      } catch (error) {
+        console.error("Failed to fetch project:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
   }, [id]);
-
-  useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/projects/{project_id}/students
-  }, [id]);
-
-  useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/projects/{project_id}/files
-  }, [id]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
-  const isActive = (path: string) => location.pathname === path;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -146,105 +150,86 @@ export default function TeacherProjectDetail() {
     switch (type) {
       case "google_doc": return "📄";
       case "google_sheet": return "📊";
-      case "google_slide": return "📽";
+      case "google_slides": return "📽";
       default: return "📄";
+    }
+  };
+
+  // Group files by student
+  const filesByStudent = files.reduce((acc, file) => {
+    if (!acc[file.studentId]) {
+      acc[file.studentId] = {
+        studentId: file.studentId,
+        studentName: file.studentName,
+        studentAvatar: file.studentAvatar,
+        studentColor: file.studentColor,
+        files: [],
+      };
+    }
+    acc[file.studentId].files.push(file);
+    return acc;
+  }, {} as Record<string, { studentId: string; studentName: string; studentAvatar: string; studentColor: string; files: StudentFile[] }>);
+
+  // Students who haven't submitted files
+  const studentsWithoutFiles = students.filter(s => !s.hasSubmittedFiles);
+
+  const handleSendReminder = async () => {
+    setIsSendingReminder(true);
+    try {
+      // TODO: POST http://localhost:8000/api/projects/{project_id}/remind-files
+      // await fetch(`http://localhost:8000/api/projects/${id}/remind-files`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ student_ids: studentsWithoutFiles.map(s => s.id) })
+      // });
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast({
+        title: "✅ Reminder sent",
+        description: `Notified ${studentsWithoutFiles.length} students to submit their documents`,
+      });
+    } catch (error) {
+      console.error("Failed to send reminder:", error);
+      toast({ title: "Failed to send reminder", variant: "destructive" });
+    } finally {
+      setIsSendingReminder(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex">
-        <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm">
-          <div className="p-6 border-b border-slate-200">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-9 h-11">
-                <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                  <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold">
-                <span className="text-slate-900">Fair</span>
-                <span className="text-blue-500">Grade</span>
-              </span>
-            </Link>
-          </div>
-          <nav className="flex-1 p-4 space-y-1">
-            {sidebarItems.map((item) => (
-              <Link key={item.label} to={item.path} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path) ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600" : "text-slate-600 hover:bg-slate-50"}`}>
-                <item.icon className={`h-5 w-5 ${isActive(item.path) ? "text-blue-600" : ""}`} />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </aside>
-        <div className="flex-1 ml-64 p-8 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <TeacherLayout>
+        <div className="p-8 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
         </div>
-      </div>
+      </TeacherLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm">
-        <div className="p-6 border-b border-slate-200">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-11">
-              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold">
-              <span className="text-slate-900">Fair</span>
-              <span className="text-blue-500">Grade</span>
-            </span>
-          </Link>
-          <div className="mt-2">
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Teacher</span>
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarItems.map((item) => (
-            <Link key={item.label} to={item.path} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path) ? "bg-blue-50 border-r-4 border-blue-500 text-blue-600" : "text-slate-600 hover:bg-slate-50"}`}>
-              <item.icon className={`h-5 w-5 ${isActive(item.path) ? "text-blue-600" : ""}`} />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-slate-200">
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors w-full">
-            <LogOut className="h-5 w-5" />
-            <span className="font-medium">Log Out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 ml-64 p-8">
+    <TeacherLayout>
+      <div className="p-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-slate-600 mb-4">
-          <Link to="/teacher/projects" className="hover:text-blue-600">All Projects</Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-slate-900 font-medium">{project?.name || "Project"}</span>
-        </div>
+        <button
+          onClick={() => navigate("/teacher/projects")}
+          className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back to All Projects</span>
+        </button>
 
         {project ? (
           <>
             {/* Header Section */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 mb-8">
+            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 mb-8">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-slate-900">{project.name}</h1>
+                    <h1 className="text-2xl font-bold text-white">{project.name}</h1>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
-                      project.status === "healthy" ? "bg-green-500 text-white" :
-                      project.status === "needs_attention" ? "bg-yellow-500 text-white" :
-                      "bg-red-500 text-white"
+                      project.status === "healthy" ? "bg-green-500/20 text-green-400" :
+                      project.status === "needs_attention" ? "bg-yellow-500/20 text-yellow-400" :
+                      "bg-red-500/20 text-red-400"
                     }`}>
                       {project.status === "healthy" && <CheckCircle className="w-4 h-4" />}
                       {project.status === "needs_attention" && <Clock className="w-4 h-4" />}
@@ -252,11 +237,11 @@ export default function TeacherProjectDetail() {
                       {project.status.replace("_", " ")}
                     </span>
                   </div>
-                  <p className="text-slate-600">{project.course} • Due {formatDate(project.deadline)}</p>
+                  <p className="text-slate-400">{project.course} • Due {formatDate(project.deadline)}</p>
                   <p className="text-sm text-slate-500 mt-2">{project.description}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="border-slate-300">
+                  <Button variant="outline" className="bg-white/10 border-white/10 text-white">
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Project
                   </Button>
@@ -268,50 +253,56 @@ export default function TeacherProjectDetail() {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-5 gap-4 pt-4 border-t border-slate-200">
+              <div className="grid grid-cols-5 gap-4 pt-4 border-t border-white/10">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-slate-900">{project.studentCount}</p>
+                  <p className="text-2xl font-bold text-white">{project.studentCount}</p>
                   <p className="text-xs text-slate-500">Students</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-slate-900">{project.progress}%</p>
+                  <p className="text-2xl font-bold text-white">{project.progress}%</p>
                   <p className="text-xs text-slate-500">Progress</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-2xl font-bold ${project.riskScore > 70 ? "text-red-600" : project.riskScore > 40 ? "text-yellow-600" : "text-green-600"}`}>
+                  <p className={`text-2xl font-bold ${project.riskScore > 70 ? "text-red-400" : project.riskScore > 40 ? "text-yellow-400" : "text-green-400"}`}>
                     {project.riskScore}
                   </p>
                   <p className="text-xs text-slate-500">Risk Score</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-slate-900">{project.daysRemaining}</p>
+                  <p className="text-2xl font-bold text-white">{project.daysRemaining}</p>
                   <p className="text-xs text-slate-500">Days Left</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-red-600">{project.flaggedIssues}</p>
+                  <p className="text-2xl font-bold text-red-400">{project.flaggedIssues}</p>
                   <p className="text-xs text-slate-500">Flagged Issues</p>
                 </div>
               </div>
             </div>
 
             {/* Tabs Navigation */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-2 mb-8 inline-flex gap-2">
+            <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 mb-8 inline-flex gap-2">
               {["students", "files", "activity", "alerts"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors capitalize ${activeTab === tab ? "bg-blue-500 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors capitalize ${
+                    activeTab === tab 
+                      ? "bg-blue-500 text-white" 
+                      : "text-slate-400 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
-                  {tab === "alerts" ? `Alerts (${alerts.length})` : tab === "files" ? "Tracked Files" : tab === "activity" ? "Activity Feed" : tab}
+                  {tab === "alerts" ? `Alerts (${alerts.length})` : 
+                   tab === "files" ? "Student Documents" : 
+                   tab === "activity" ? "Activity Feed" : tab}
                 </button>
               ))}
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-16 text-center">
-            <FolderOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">Project not found</h2>
-            <p className="text-slate-500 mb-6">This project may have been deleted or you don't have access</p>
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-16 text-center">
+            <FolderOpen className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">Project not found</h2>
+            <p className="text-slate-400 mb-6">This project may have been deleted or you don't have access</p>
             <Button onClick={() => navigate("/teacher/projects")} className="bg-blue-500 hover:bg-blue-600">
               Back to Projects
             </Button>
@@ -319,21 +310,28 @@ export default function TeacherProjectDetail() {
         )}
 
         {/* Students Tab */}
-        {activeTab === "students" && (
+        {activeTab === "students" && project && (
           students.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {students.map((student) => (
-                <motion.div key={student.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <motion.div 
+                  key={student.id} 
+                  initial={{ opacity: 0, y: 20 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  className="bg-white/[0.04] border border-white/10 rounded-2xl p-6"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 ${student.avatarColor} rounded-full flex items-center justify-center text-white font-bold text-lg`}>{student.avatar}</div>
+                      <div className={`w-12 h-12 ${student.avatarColor} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                        {student.avatar}
+                      </div>
                       <div>
-                        <h3 className="font-bold text-slate-900">{student.name}</h3>
+                        <h3 className="font-bold text-white">{student.name}</h3>
                         <p className="text-xs text-slate-500">{student.email}</p>
                       </div>
                     </div>
                     {student.isFreeRider && (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium flex items-center gap-1">
+                      <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-medium flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         Free-rider
                       </span>
@@ -342,37 +340,49 @@ export default function TeacherProjectDetail() {
 
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-slate-600">Contribution Score</span>
-                      <span className={`text-2xl font-bold ${student.score >= 80 ? "text-green-600" : student.score >= 60 ? "text-yellow-600" : "text-red-600"}`}>{student.score}</span>
+                      <span className="text-sm text-slate-400">Contribution Score</span>
+                      <span className={`text-2xl font-bold ${student.score >= 80 ? "text-green-400" : student.score >= 60 ? "text-yellow-400" : "text-red-400"}`}>
+                        {student.score}
+                      </span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div className={`h-2 rounded-full ${student.score >= 80 ? "bg-green-500" : student.score >= 60 ? "bg-yellow-500" : "bg-red-500"}`} style={{ width: `${student.score}%` }} />
+                    <div className="w-full bg-white/10 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${student.score >= 80 ? "bg-green-500" : student.score >= 60 ? "bg-yellow-500" : "bg-red-500"}`} 
+                        style={{ width: `${student.score}%` }} 
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-slate-50 rounded-lg p-3">
+                    <div className="bg-white/5 rounded-lg p-3">
                       <p className="text-xs text-slate-500 mb-1">Words</p>
-                      <p className="text-lg font-bold text-slate-900">{student.wordsWritten.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-white">{student.wordsWritten.toLocaleString()}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-3">
+                    <div className="bg-white/5 rounded-lg p-3">
                       <p className="text-xs text-slate-500 mb-1">Tasks</p>
-                      <p className="text-lg font-bold text-slate-900">{student.tasksCompleted}/{student.tasksTotal}</p>
+                      <p className="text-lg font-bold text-white">{student.tasksCompleted}/{student.tasksTotal}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-3">
+                    <div className="bg-white/5 rounded-lg p-3">
                       <p className="text-xs text-slate-500 mb-1">Meetings</p>
-                      <p className="text-lg font-bold text-slate-900">{student.meetingsAttended}/{student.meetingsTotal}</p>
+                      <p className="text-lg font-bold text-white">{student.meetingsAttended}/{student.meetingsTotal}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-3">
+                    <div className="bg-white/5 rounded-lg p-3">
                       <p className="text-xs text-slate-500 mb-1">Peer Rating</p>
-                      <p className="text-lg font-bold text-slate-900">{student.peerRating}/5</p>
+                      <p className="text-lg font-bold text-white">{student.peerRating}/5</p>
                     </div>
                   </div>
 
                   {student.flags.length > 0 && (
                     <div className="space-y-2 mb-4">
                       {student.flags.map((flag, idx) => (
-                        <div key={idx} className={`p-2 rounded-lg text-xs flex items-center gap-2 ${flag.type === "ai" ? "bg-yellow-50 text-yellow-700" : flag.type === "plagiarism" ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"}`}>
+                        <div 
+                          key={idx} 
+                          className={`p-2 rounded-lg text-xs flex items-center gap-2 ${
+                            flag.type === "ai" ? "bg-yellow-500/10 text-yellow-400" : 
+                            flag.type === "plagiarism" ? "bg-orange-500/10 text-orange-400" : 
+                            "bg-red-500/10 text-red-400"
+                          }`}
+                        >
                           <AlertCircle className="w-3 h-3" />
                           <span>{flag.message}</span>
                         </div>
@@ -381,7 +391,7 @@ export default function TeacherProjectDetail() {
                   )}
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 border-slate-300">
+                    <Button variant="outline" size="sm" className="flex-1 bg-white/10 border-white/10 text-white hover:bg-white/15">
                       <Mail className="w-4 h-4 mr-1" />
                       Contact
                     </Button>
@@ -393,84 +403,159 @@ export default function TeacherProjectDetail() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-16 text-center">
-              <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">No students in this project yet</p>
-              <p className="text-slate-400 text-sm mt-1">Students will appear here once they join</p>
+            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-16 text-center">
+              <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400">No students in this project yet</p>
+              <p className="text-slate-500 text-sm mt-1">Students will appear here once they join</p>
             </div>
           )
         )}
 
-        {/* Files Tab */}
-        {activeTab === "files" && (
+        {/* Student Documents Tab (renamed from Files) */}
+        {activeTab === "files" && project && (
           <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white text-lg font-semibold">Tracked Files</h2>
-              <Button onClick={() => setShowAddFile(true)} className="bg-blue-500 hover:bg-blue-600" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add File
-              </Button>
+            <div className="mb-6">
+              <h2 className="text-white text-lg font-semibold">Student Documents</h2>
+              <p className="text-slate-400 text-sm mt-1">Files submitted by students for this project</p>
             </div>
 
+            {/* Summary Stats */}
+            {files.length > 0 && (
+              <div className="flex gap-3 mb-6">
+                <span className="bg-white/10 text-slate-300 text-xs px-3 py-1 rounded-full">
+                  {files.length} files submitted
+                </span>
+                <span className="bg-white/10 text-slate-300 text-xs px-3 py-1 rounded-full">
+                  {Object.keys(filesByStudent).length} students submitted
+                </span>
+                {studentsWithoutFiles.length > 0 && (
+                  <span className="bg-red-500/15 text-red-400 text-xs px-3 py-1 rounded-full">
+                    {studentsWithoutFiles.length} students haven't submitted
+                  </span>
+                )}
+              </div>
+            )}
+
             {files.length > 0 ? (
-              <div className="space-y-3">
-                {files.map((file) => (
-                  <div key={file.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 hover:bg-white/[0.05] transition flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getFileIcon(file.type)}</span>
+              <div className="space-y-6">
+                {/* Files grouped by student */}
+                {Object.values(filesByStudent).map((studentGroup) => (
+                  <div key={studentGroup.studentId}>
+                    {/* Student Header */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-8 h-8 ${studentGroup.studentColor} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
+                        {studentGroup.studentAvatar}
+                      </div>
                       <div>
-                        <p className="text-white font-medium">{file.name}</p>
-                        <p className="text-slate-500 text-xs">Last edited {formatRelativeTime(file.lastModified)}</p>
+                        <span className="text-white font-medium">{studentGroup.studentName}</span>
+                        <span className="text-slate-500 text-xs ml-2">Submitted {studentGroup.files.length} files</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="flex -space-x-2">
-                        {file.contributors.slice(0, 4).map((initial, idx) => (
-                          <div key={idx} className="w-8 h-8 rounded-full bg-blue-500 border-2 border-slate-900 flex items-center justify-center text-white text-xs font-bold">
-                            {initial}
+                    {/* Student's Files */}
+                    <div className="space-y-2 ml-11">
+                      {studentGroup.files.map((file) => (
+                        <div
+                          key={file.id}
+                          className="bg-white/[0.04] border border-white/10 rounded-xl p-4 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{getFileIcon(file.type)}</span>
+                            <div>
+                              <p className="text-white font-medium">{file.name}</p>
+                              <p className="text-slate-500 text-xs">Submitted {formatDate(file.submittedAt)}</p>
+                            </div>
                           </div>
-                        ))}
-                      </div>
 
-                      <Button
-                        onClick={() => navigate(`/teacher/live-replay/${file.id}`)}
-                        className="bg-blue-500/15 text-blue-400 hover:bg-blue-500/25"
-                        size="sm"
-                      >
-                        <Play className="w-4 h-4 mr-1" />
-                        View Replay
-                      </Button>
+                          <div className="flex items-center gap-4">
+                            {/* Tracking Status */}
+                            {file.trackingStatus === "active" ? (
+                              <span className="text-emerald-400 text-xs flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Tracking active
+                              </span>
+                            ) : (
+                              <span className="text-yellow-400 text-xs flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Pending access
+                              </span>
+                            )}
+
+                            {/* Action Buttons */}
+                            <Button
+                              onClick={() => window.open(file.googleFileUrl, "_blank")}
+                              className="bg-blue-500/15 text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-500/25"
+                            >
+                              Open
+                              <ExternalLink className="w-3 h-3 ml-2" />
+                            </Button>
+                            <Button
+                              onClick={() => navigate(`/teacher/live-replay/${file.id}`)}
+                              className="bg-white/10 text-slate-300 px-3 py-2 rounded-lg text-sm hover:bg-white/15"
+                            >
+                              <Play className="w-3 h-3 mr-1" />
+                              View Replay
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
+
+                {/* Students who haven't submitted */}
+                {studentsWithoutFiles.length > 0 && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mt-6">
+                    <p className="text-white font-medium flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                      {studentsWithoutFiles.length} students haven't submitted their documents yet
+                    </p>
+                    <p className="text-slate-300 text-sm mt-2">
+                      {studentsWithoutFiles.map(s => s.name).join(", ")}
+                    </p>
+                    <Button
+                      onClick={handleSendReminder}
+                      disabled={isSendingReminder}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm mt-4"
+                    >
+                      {isSendingReminder ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Bell className="w-4 h-4 mr-2" />
+                      )}
+                      Send Reminder
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">No tracked files yet</p>
-                <p className="text-slate-500 text-sm mt-1">Connect Google Drive to start monitoring</p>
+                <p className="text-slate-400">No documents submitted yet</p>
+                <p className="text-slate-500 text-sm mt-1">
+                  Students will submit their Google Docs from their dashboard once they join the project
+                </p>
               </div>
             )}
           </div>
         )}
 
         {/* Activity Tab */}
-        {activeTab === "activity" && (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-            <h2 className="text-xl font-bold text-slate-900 mb-6">Activity Feed</h2>
+        {activeTab === "activity" && project && (
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6">
+            <h2 className="text-white text-lg font-semibold mb-6">Activity Feed</h2>
 
             {activities.length > 0 ? (
               <div className="space-y-4">
                 {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                  <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-lg transition-colors">
                     <div className={`w-10 h-10 ${activity.userColor} rounded-full flex items-center justify-center text-white font-bold`}>
                       {activity.userAvatar}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm">
-                        <span className="font-semibold text-slate-900">{activity.userName}</span>
-                        <span className="text-slate-600"> {activity.action}</span>
+                        <span className="font-semibold text-white">{activity.userName}</span>
+                        <span className="text-slate-400"> {activity.action}</span>
                       </p>
                       <p className="text-xs text-slate-500 mt-1">{activity.fileName} • {formatRelativeTime(activity.timestamp)}</p>
                     </div>
@@ -479,36 +564,39 @@ export default function TeacherProjectDetail() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Activity className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">No activity yet</p>
-                <p className="text-slate-400 text-sm mt-1">Activity will appear here as students work</p>
+                <Activity className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">No activity yet</p>
+                <p className="text-slate-500 text-sm mt-1">Activity will appear here as students work</p>
               </div>
             )}
           </div>
         )}
 
         {/* Alerts Tab */}
-        {activeTab === "alerts" && (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-            <h2 className="text-xl font-bold text-slate-900 mb-6">Alerts</h2>
+        {activeTab === "alerts" && project && (
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6">
+            <h2 className="text-white text-lg font-semibold mb-6">Alerts</h2>
 
             {alerts.length > 0 ? (
               <div className="space-y-4">
                 {alerts.map((alert) => (
-                  <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${
-                    alert.severity === "critical" ? "bg-red-50 border-red-500" :
-                    alert.severity === "warning" ? "bg-yellow-50 border-yellow-500" :
-                    "bg-blue-50 border-blue-500"
-                  }`}>
+                  <div 
+                    key={alert.id} 
+                    className={`p-4 rounded-lg border-l-4 ${
+                      alert.severity === "critical" ? "bg-red-500/10 border-red-500" :
+                      alert.severity === "warning" ? "bg-yellow-500/10 border-yellow-500" :
+                      "bg-blue-500/10 border-blue-500"
+                    }`}
+                  >
                     <div className="flex items-start gap-3">
                       <AlertTriangle className={`w-5 h-5 ${
-                        alert.severity === "critical" ? "text-red-500" :
-                        alert.severity === "warning" ? "text-yellow-500" :
-                        "text-blue-500"
+                        alert.severity === "critical" ? "text-red-400" :
+                        alert.severity === "warning" ? "text-yellow-400" :
+                        "text-blue-400"
                       }`} />
                       <div className="flex-1">
-                        <p className="font-semibold text-slate-900">{alert.title}</p>
-                        <p className="text-sm text-slate-600 mt-1">{alert.description}</p>
+                        <p className="font-semibold text-white">{alert.title}</p>
+                        <p className="text-sm text-slate-400 mt-1">{alert.description}</p>
                         <p className="text-xs text-slate-500 mt-2">{formatRelativeTime(alert.timestamp)}</p>
                       </div>
                     </div>
@@ -517,14 +605,14 @@ export default function TeacherProjectDetail() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <CheckCircle className="w-12 h-12 text-green-300 mx-auto mb-4" />
-                <p className="text-slate-500">No alerts</p>
-                <p className="text-slate-400 text-sm mt-1">Everything looks good!</p>
+                <CheckCircle className="w-12 h-12 text-green-500/50 mx-auto mb-4" />
+                <p className="text-slate-400">No alerts</p>
+                <p className="text-slate-500 text-sm mt-1">Everything looks good!</p>
               </div>
             )}
           </div>
         )}
       </div>
-    </div>
+    </TeacherLayout>
   );
 }
