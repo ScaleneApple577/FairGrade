@@ -110,11 +110,17 @@ export default function StudentCalendar() {
     const loadProjects = async () => {
       setIsLoadingProjects(true);
       try {
-        // TODO: api.get('/api/student/projects')
-        const data = await api.get<Project[]>('/api/student/projects');
-        setProjects(data || []);
-        if (data && data.length > 0) {
-          setSelectedProjectId(data[0].id);
+        // Backend returns: [{ id, name, description, created_at }]
+        const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>('/api/projects/projects');
+        // Transform to expected format
+        const projects: Project[] = (data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          courseName: '—', // Not returned by backend
+        }));
+        setProjects(projects);
+        if (projects.length > 0) {
+          setSelectedProjectId(projects[0].id);
         }
       } catch (error) {
         console.error("Failed to load projects:", error);
@@ -133,8 +139,8 @@ export default function StudentCalendar() {
     const loadAvailability = async () => {
       setIsLoadingAvailability(true);
       try {
-        // TODO: api.get('/api/projects/{project_id}/availability')
-        const data = await api.get(`/api/projects/${selectedProjectId}/availability`);
+        // TODO: api.get('/api/projects/projects/{project_id}/availability') - endpoint may not exist
+        const data = await api.get(`/api/projects/projects/${selectedProjectId}/availability`);
         
         // Transform API response to our format
         if (data?.teamMembers) {
@@ -168,11 +174,11 @@ export default function StudentCalendar() {
     const loadSidebarData = async () => {
       setIsLoadingSidebar(true);
       try {
-        // TODO: Parallel API calls for sidebar data
+        // TODO: Parallel API calls for sidebar data - endpoints may not exist yet
         const [recsData, meetingsData, statusData] = await Promise.all([
-          api.get(`/api/projects/${selectedProjectId}/availability/recommendations`).catch(() => ({ recommendations: [] })),
-          api.get(`/api/projects/${selectedProjectId}/meetings`).catch(() => ({ meetings: [] })),
-          api.get(`/api/projects/${selectedProjectId}/availability/status`).catch(() => ({ members: [] })),
+          api.get(`/api/projects/projects/${selectedProjectId}/availability/recommendations`).catch(() => ({ recommendations: [] })),
+          api.get(`/api/projects/projects/${selectedProjectId}/meetings`).catch(() => ({ meetings: [] })),
+          api.get(`/api/projects/projects/${selectedProjectId}/availability/status`).catch(() => ({ members: [] })),
         ]);
         
         setRecommendations(recsData?.recommendations || []);
@@ -200,8 +206,8 @@ export default function StudentCalendar() {
     }));
 
     try {
-      // TODO: api.post('/api/projects/{project_id}/availability')
-      await api.post(`/api/projects/${selectedProjectId}/availability`, {
+      // TODO: api.post('/api/projects/projects/{project_id}/availability') - endpoint may not exist
+      await api.post(`/api/projects/projects/${selectedProjectId}/availability`, {
         slots: [{ date, hour, available: newValue }]
       });
     } catch (error) {
@@ -225,8 +231,8 @@ export default function StudentCalendar() {
     
     setIsSettingPreset(true);
     try {
-      // TODO: api.post('/api/projects/{project_id}/availability/bulk')
-      await api.post(`/api/projects/${selectedProjectId}/availability/bulk`, { preset });
+      // TODO: api.post('/api/projects/projects/{project_id}/availability/bulk') - endpoint may not exist
+      await api.post(`/api/projects/projects/${selectedProjectId}/availability/bulk`, { preset });
       
       toast({
         title: "Availability Updated",
@@ -234,7 +240,7 @@ export default function StudentCalendar() {
       });
       
       // Reload availability data
-      const data = await api.get(`/api/projects/${selectedProjectId}/availability`);
+      const data = await api.get(`/api/projects/projects/${selectedProjectId}/availability`);
       // Update state with new data
     } catch (error) {
       console.error("Failed to set preset:", error);
@@ -277,8 +283,8 @@ export default function StudentCalendar() {
     if (!selectedProjectId) return;
     
     try {
-      // TODO: api.post('/api/projects/{project_id}/meetings')
-      await api.post(`/api/projects/${selectedProjectId}/meetings`, meeting);
+      // TODO: api.post('/api/projects/projects/{project_id}/meetings') - endpoint may not exist
+      await api.post(`/api/projects/projects/${selectedProjectId}/meetings`, meeting);
       
       toast({
         title: "Meeting Scheduled",
@@ -286,7 +292,7 @@ export default function StudentCalendar() {
       });
       
       // Reload meetings
-      const data = await api.get(`/api/projects/${selectedProjectId}/meetings`);
+      const data = await api.get(`/api/projects/projects/${selectedProjectId}/meetings`);
       setMeetings(data?.meetings || []);
     } catch (error) {
       console.error("Failed to schedule meeting:", error);

@@ -30,20 +30,31 @@ import { api } from "@/lib/api";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveIndicator } from "@/components/live/LiveIndicator";
 
+// Backend API response format - simplified
+interface ApiProject {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+// Frontend display format with optional fields
 interface Project {
   id: string;
   name: string;
-  course: string;
   description: string;
-  deadline: string;
-  student_count: number;
-  status: "healthy" | "needs_attention" | "at_risk";
-  risk_score: number;
-  progress: number;
-  issues_count: number;
-  flagged_students: number;
-  last_activity: string;
   created_at: string;
+  // These fields are not returned by the current backend API
+  // Will show defaults until backend supports them
+  course?: string;
+  deadline?: string;
+  student_count?: number;
+  status?: "healthy" | "needs_attention" | "at_risk";
+  risk_score?: number;
+  progress?: number;
+  issues_count?: number;
+  flagged_students?: number;
+  last_activity?: string;
 }
 
 const courses = ["CS 101", "Business 201", "Biology 150", "English 102"];
@@ -73,9 +84,26 @@ export default function TeacherProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // Fetch projects from API
-        // const data = await api.get('/api/teacher/projects');
-        // setProjects(data);
+        // Backend returns: [{ id, name, description, created_at }]
+        const data = await api.get<ApiProject[]>('/api/projects/projects');
+        // Transform API response to frontend format with defaults for missing fields
+        const transformedProjects: Project[] = (data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          created_at: p.created_at,
+          // Defaults for fields not supported by backend yet
+          course: '—',
+          deadline: undefined,
+          student_count: 0,
+          status: 'healthy' as const,
+          risk_score: 0,
+          progress: 0,
+          issues_count: 0,
+          flagged_students: 0,
+          last_activity: p.created_at,
+        }));
+        setProjects(transformedProjects);
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast.error("Failed to load projects");

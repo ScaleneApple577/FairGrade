@@ -29,19 +29,40 @@ import { ScoreBadge } from "@/components/score/ScoreBadge";
 import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveIndicator, StatusDot, EditingLabel } from "@/components/live/LiveIndicator";
+import { getGoogleFileUrl, getFileIcon } from "@/lib/fileUtils";
 
+// Backend API response format
+interface ApiProject {
+  id: string;
+  name: string;
+  description: string | null;
+  files: ApiFile[];
+  created_at: string;
+}
+
+interface ApiFile {
+  id: string;
+  name: string;
+  drive_file_id: string;
+  mime_type: string;
+  created_at: string;
+}
+
+// Frontend display format
 interface Project {
   id: string;
   name: string;
-  course: string;
   description: string;
-  deadline: string;
-  status: "healthy" | "needs_attention" | "at_risk";
-  studentCount: number;
-  progress: number;
-  riskScore: number;
-  daysRemaining: number;
-  flaggedIssues: number;
+  created_at: string;
+  // Optional fields not from backend
+  course?: string;
+  deadline?: string;
+  status?: "healthy" | "needs_attention" | "at_risk";
+  studentCount?: number;
+  progress?: number;
+  riskScore?: number;
+  daysRemaining?: number;
+  flaggedIssues?: number;
 }
 
 interface Student {
@@ -64,15 +85,16 @@ interface Student {
 
 interface StudentFile {
   id: string;
-  studentId: string;
-  studentName: string;
-  studentAvatar: string;
-  studentColor: string;
   name: string;
-  type: "google_doc" | "google_sheet" | "google_slides";
-  googleFileUrl: string;
-  submittedAt: string;
-  trackingStatus: "active" | "pending";
+  drive_file_id: string;
+  mime_type: string;
+  created_at: string;
+  // Optional student info
+  studentId?: string;
+  studentName?: string;
+  studentAvatar?: string;
+  studentColor?: string;
+  trackingStatus?: "active" | "pending";
 }
 
 interface ActivityItem {
@@ -123,16 +145,30 @@ export default function TeacherProjectDetail() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch project details from API
-        // const projectData = await api.get(`/api/projects/${id}`);
-        // const studentsData = await api.get(`/api/projects/${id}/students`);
-        // const filesData = await api.get(`/api/projects/${id}/files`);
-        // setProject(projectData);
-        // setStudents(studentsData);
-        // setFiles(filesData);
-        setProject(null);
+        // Backend returns: { id, name, description, files: [...], created_at }
+        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
+        
+        // Transform to frontend format
+        setProject({
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          created_at: data.created_at,
+          course: '—', // Not returned by backend
+          deadline: undefined,
+          status: 'healthy',
+          studentCount: 0,
+          progress: 0,
+          riskScore: 0,
+          daysRemaining: undefined,
+          flaggedIssues: 0,
+        });
+        
+        // Files come directly from project response
+        setFiles(data.files || []);
+        
+        // TODO: Need GET /api/projects/projects/{project_id}/students endpoint
         setStudents([]);
-        setFiles([]);
         setActivities([]);
         setAlerts([]);
       } catch (error) {
@@ -142,6 +178,7 @@ export default function TeacherProjectDetail() {
           title: "Error",
           description: "Failed to load project data",
         });
+        setProject(null);
       } finally {
         setIsLoading(false);
       }
@@ -167,13 +204,8 @@ export default function TeacherProjectDetail() {
     return `${diffDays} days ago`;
   };
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case "google_doc": return "📄";
-      case "google_sheet": return "📊";
-      case "google_slides": return "📽";
-      default: return "📄";
-    }
+  const getFileIconForType = (mimeType: string) => {
+    return getFileIcon(mimeType);
   };
 
   // Group files by student
@@ -197,13 +229,9 @@ export default function TeacherProjectDetail() {
   const handleSendReminder = async () => {
     setIsSendingReminder(true);
     try {
-      // TODO: POST http://localhost:8000/api/projects/{project_id}/remind-files
-      // await fetch(`http://localhost:8000/api/projects/${id}/remind-files`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ student_ids: studentsWithoutFiles.map(s => s.id) })
-      // });
-
+      // TODO: POST /api/projects/projects/{project_id}/remind-files - endpoint may not exist
+      console.warn("TODO: Need POST /api/projects/projects/{project_id}/remind-files endpoint");
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "✅ Reminder sent",
@@ -507,7 +535,7 @@ export default function TeacherProjectDetail() {
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-2xl">{getFileIcon(file.type)}</span>
+                              <span className="text-2xl">{getFileIconForType(file.mime_type)}</span>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <p className="text-white font-medium">{file.name}</p>
@@ -516,7 +544,7 @@ export default function TeacherProjectDetail() {
                                 {fileLive && editors.length > 0 ? (
                                   <p className="text-red-400 text-xs">{editors[0]} is editing now</p>
                                 ) : (
-                                  <p className="text-slate-500 text-xs">Submitted {formatDate(file.submittedAt)}</p>
+                                  <p className="text-slate-500 text-xs">Submitted {formatDate(file.created_at)}</p>
                                 )}
                               </div>
                             </div>
@@ -537,7 +565,7 @@ export default function TeacherProjectDetail() {
 
                               {/* Action Buttons */}
                               <Button
-                                onClick={() => window.open(file.googleFileUrl, "_blank")}
+                                onClick={() => window.open(getGoogleFileUrl(file.drive_file_id, file.mime_type), "_blank")}
                                 className={`bg-blue-500/15 text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-500/25 ${
                                   fileLive ? "border border-red-500/30" : ""
                                 }`}

@@ -16,22 +16,33 @@ import { StudentLayout } from "@/components/student/StudentLayout";
 import { JoinProjectModal } from "@/components/student/JoinProjectModal";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+// Backend API response format
+interface ApiProject {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+// Frontend display format with optional fields
 interface Project {
   id: string;
   name: string;
-  course: string;
   description: string;
-  deadline: string;
-  daysUntilDeadline: number;
-  health: "green" | "yellow" | "red";
-  progress: number;
-  myContributionScore: number;
-  teamMembers: Array<{ id: string; name: string; avatar: string; role: string }>;
-  tasksCompleted: number;
-  totalTasks: number;
-  lastActivity: string;
+  created_at: string;
+  // Fields not returned by current backend - show defaults
+  course?: string;
+  deadline?: string;
+  daysUntilDeadline?: number;
+  health?: "green" | "yellow" | "red";
+  progress?: number;
+  myContributionScore?: number;
+  teamMembers?: Array<{ id: string; name: string; avatar: string; role: string }>;
+  tasksCompleted?: number;
+  totalTasks?: number;
+  lastActivity?: string;
   isNew?: boolean;
-  filesSubmitted: number; // Number of documents student has submitted
+  filesSubmitted?: number;
 }
 
 // Health indicator styling
@@ -59,10 +70,29 @@ export default function StudentProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // Fetch student projects from API
-        // const data = await api.get('/api/student/projects');
-        // setProjects(data);
-        setProjects([]);
+        // Backend returns: [{ id, name, description, created_at }]
+        const data = await api.get<ApiProject[]>('/api/projects/projects');
+        // Transform API response to frontend format with defaults
+        const transformedProjects: Project[] = (data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          created_at: p.created_at,
+          // Defaults for fields not supported by backend yet
+          course: '—',
+          deadline: undefined,
+          daysUntilDeadline: undefined,
+          health: 'green' as const,
+          progress: 0,
+          myContributionScore: 0,
+          teamMembers: [],
+          tasksCompleted: 0,
+          totalTasks: 0,
+          lastActivity: p.created_at,
+          isNew: false,
+          filesSubmitted: 0,
+        }));
+        setProjects(transformedProjects);
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast.error("Failed to load projects");
@@ -76,8 +106,23 @@ export default function StudentProjects() {
   const handleJoinSuccess = async () => {
     // Refresh projects list
     try {
-      // const data = await api.get('/api/student/projects');
-      // setProjects(data);
+      const data = await api.get<ApiProject[]>('/api/projects/projects');
+      const transformedProjects: Project[] = (data || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        created_at: p.created_at,
+        course: '—',
+        health: 'green' as const,
+        progress: 0,
+        myContributionScore: 0,
+        teamMembers: [],
+        tasksCompleted: 0,
+        totalTasks: 0,
+        lastActivity: p.created_at,
+        filesSubmitted: 0,
+      }));
+      setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to refresh projects:", error);
     }

@@ -164,9 +164,10 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     setShowClassroomRoster(true);
     setIsLoadingRoster(true);
     try {
-      // TODO: GET /api/teacher/students?status=active
-      const data = await api.get("/api/teacher/students?status=active");
-      setClassroomStudents(data || []);
+      // TODO: This should come from selected classroom, not a teacher/students endpoint
+      // For now, keep as placeholder - roster loading should use classroom selection
+      console.warn("TODO: Need to select classroom first to load roster");
+      setClassroomStudents([]);
     } catch (error) {
       console.error("Failed to load classroom roster:", error);
       setClassroomStudents([]);
@@ -231,39 +232,29 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // TODO: POST http://localhost:8000/api/projects
-      // const response = await fetch('http://localhost:8000/api/projects', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     name: projectName,
-      //     course_id: selectedCourse,
-      //     description,
-      //     deadline,
-      //     team_size: parseInt(teamSize),
-      //     weights: {
-      //       work: weights.work,
-      //       collaboration: weights.collaboration,
-      //       consistency: weights.consistency,
-      //       peer_rating: weights.peerRating,
-      //       integrity: weights.integrity,
-      //     },
-      //     lms: lmsType !== 'none' ? { type: lmsType, course_id: lmsCourseId } : null,
-      //     students: addedStudents.map(s => ({ email: s.email, role: s.role })),
-      //   })
-      // });
-      // const newProject = await response.json();
+      // Backend only accepts: { name, description }
+      // Other fields (course_id, deadline, team_size, weights, lms, students) are not supported yet
+      const response = await api.post<{ id: string; name: string; description: string | null; created_at: string }>('/api/projects/projects', {
+        name: projectName,
+        description: description || null,
+      });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // TODO: Backend doesn't support these yet, save locally or ignore:
+      // - deadline
+      // - team_size
+      // - weights (work, collaboration, consistency, peerRating, integrity)
+      // - course_id / classroom_id
+      // - lms integration
+      // - students array
       
       toast({
         title: "✅ Project created successfully!",
-        description: "Students will be notified.",
+        description: "Additional settings like students and deadlines will be configurable when backend supports them.",
         className: "bg-green-500/15 border border-green-500/30 text-green-400",
       });
       
       onClose();
-      // navigate(`/teacher/projects/${newProject.id}`);
+      navigate(`/teacher/projects/${response.id}`);
     } catch (error) {
       console.error("Failed to create project:", error);
       toast({ title: "Failed to create project", variant: "destructive" });

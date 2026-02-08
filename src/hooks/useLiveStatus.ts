@@ -47,9 +47,10 @@ export function useLiveStatus(options: UseLiveStatusOptions = {}) {
     if (!enabled || !isVisible) return;
 
     try {
+      // TODO: These endpoints may not exist yet in the backend
       const endpoint = projectId
-        ? `/api/projects/${projectId}/live-status`
-        : "/api/teacher/live-status";
+        ? `/api/projects/projects/${projectId}/live-status`
+        : "/api/projects/projects/live-status";
 
       const data = await api.get<LiveStatusResponse>(endpoint);
       setLiveEdits(data?.activeEdits || []);
@@ -57,8 +58,9 @@ export function useLiveStatus(options: UseLiveStatusOptions = {}) {
       setError(null);
     } catch (err) {
       // Don't clear existing data on error — keep showing last known state
-      console.warn("Live status poll failed:", err);
-      setError("Failed to fetch live status");
+      // This is expected until backend implements these endpoints
+      setLiveEdits([]);
+      setTotalActive(0);
     }
     setLoading(false);
   }, [projectId, enabled, isVisible]);
