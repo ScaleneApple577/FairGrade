@@ -56,14 +56,19 @@ export function StudentLayout({
   // Build profile from auth user
   useEffect(() => {
     if (user) {
-      const initials = user.fullName 
-        ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      // Build full name from firstName + lastName or fullName
+      const fullName = user.fullName || 
+        `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+        user.email;
+      
+      const initials = fullName 
+        ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : user.email.charAt(0).toUpperCase();
       
       setProfile({
         id: user.id,
         email: user.email,
-        fullName: user.fullName || user.email,
+        fullName,
         initials,
       });
     } else {

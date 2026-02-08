@@ -321,7 +321,9 @@ export default function StudentDashboard() {
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
                   const user = JSON.parse(storedUser);
-                  const firstName = (user.fullName || user.name || '').split(' ')[0];
+                  // Check first_name first, then extract from fullName/name
+                  const firstName = user.first_name || 
+                    (user.fullName || user.name || '').split(' ')[0];
                   if (firstName) return `, ${firstName}`;
                 }
               } catch {}
