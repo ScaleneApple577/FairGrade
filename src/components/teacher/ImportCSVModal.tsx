@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 interface ImportCSVModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  classroomId?: number;
   onSuccess: () => void;
 }
 
@@ -20,12 +21,14 @@ interface CSVPreview {
   fileName: string;
   fileSize: string;
   emailCount: number;
+  emails: string[];
   previewEmails: string[];
 }
 
 export function ImportCSVModal({
   open,
   onOpenChange,
+  classroomId,
   onSuccess,
 }: ImportCSVModalProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -88,6 +91,7 @@ export function ImportCSVModal({
         fileName: selectedFile.name,
         fileSize: formatFileSize(selectedFile.size),
         emailCount: emails.length,
+        emails: emails,
         previewEmails: emails.slice(0, 5),
       });
     } catch (error) {
@@ -118,24 +122,27 @@ export function ImportCSVModal({
   };
 
   const handleImport = async () => {
-    if (!file) return;
+    if (!file || !preview) return;
+
+    if (!classroomId) {
+      toast.error("Please select a classroom first");
+      return;
+    }
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      // Parse CSV client-side and call the regular invite endpoint
+      // POST /api/classrooms/{classroom_id}/invite with emails from CSV
+      const result = await api.post(`/api/classrooms/${classroomId}/invite`, {
+        emails: preview.emails,
+      });
 
-      // TODO: Upload CSV file
-      const result = await api.upload("/api/teacher/students/import-csv", formData);
-
-      // Expected response: { total: number, sent: number, failed: number, already_registered: number }
-      const { total, sent, failed, already_registered } = result;
-
-      toast.success(
-        `✅ Imported ${sent} students${
-          already_registered > 0 ? ` (${already_registered} already registered)` : ""
-        }${failed > 0 ? `. ${failed} failed.` : "."}`
-      );
+      const msg =
+        `✅ ${result.invited || preview.emails.length} invitation(s) sent` +
+        (result.skipped > 0
+          ? `, ${result.skipped} skipped (already invited or registered)`
+          : "");
+      toast.success(msg);
 
       onSuccess();
       onOpenChange(false);

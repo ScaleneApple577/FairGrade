@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MoreVertical, User, Send, FolderPlus, Trash2, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,6 +33,8 @@ interface StudentActionsMenuProps {
   studentName: string;
   studentEmail: string;
   status: "active" | "pending" | "inactive";
+  classroomId?: number;
+  invitationId?: number;
   onRefresh: () => void;
 }
 
@@ -41,6 +43,8 @@ export function StudentActionsMenu({
   studentName,
   studentEmail,
   status,
+  classroomId,
+  invitationId,
   onRefresh,
 }: StudentActionsMenuProps) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -53,7 +57,7 @@ export function StudentActionsMenu({
     if (projects.length > 0) return;
     setIsLoadingProjects(true);
     try {
-      // TODO: GET /api/teacher/projects
+      // TODO: GET /api/classrooms/{classroom_id}/projects or /api/teacher/projects
       const data = await api.get("/api/teacher/projects");
       setProjects(data || []);
     } catch (error) {
@@ -64,10 +68,18 @@ export function StudentActionsMenu({
   };
 
   const handleResendInvite = async () => {
+    if (!classroomId) {
+      toast.error("No classroom selected");
+      return;
+    }
+
     setIsResending(true);
     try {
-      // TODO: POST /api/teacher/students/{student_id}/resend-invite
-      await api.post(`/api/teacher/students/${studentId}/resend-invite`);
+      // Resend by calling invite endpoint with the same email
+      // POST /api/classrooms/{classroom_id}/invite
+      await api.post(`/api/classrooms/${classroomId}/invite`, {
+        emails: [studentEmail],
+      });
       toast.success(`Invitation resent to ${studentEmail}`);
     } catch (error) {
       console.error("Failed to resend invite:", error);
@@ -90,16 +102,30 @@ export function StudentActionsMenu({
   };
 
   const handleRemove = async () => {
+    if (!classroomId) {
+      toast.error("No classroom selected");
+      return;
+    }
+
     setIsRemoving(true);
     try {
-      // TODO: DELETE /api/teacher/students/{student_id}
-      await api.delete(`/api/teacher/students/${studentId}`);
-      toast.success(`${studentName || studentEmail} removed from classroom`);
+      if (status === "pending" && invitationId) {
+        // DELETE /api/classrooms/{classroom_id}/invitations/{invitation_id}
+        await api.delete(`/api/classrooms/${classroomId}/invitations/${invitationId}`);
+        toast.success("Invitation revoked");
+      } else {
+        // TODO: Need backend endpoint to remove a student from classroom
+        // e.g., DELETE /api/classrooms/{classroom_id}/students/{student_id}
+        console.warn(
+          "TODO: Need backend endpoint to remove student from classroom (DELETE /api/classrooms/{id}/students/{student_id})"
+        );
+        toast.info("Removing active students is not yet supported");
+      }
       setShowRemoveDialog(false);
       onRefresh();
     } catch (error) {
-      console.error("Failed to remove student:", error);
-      toast.error("Failed to remove student");
+      console.error("Failed to remove:", error);
+      toast.error("Failed to remove");
     } finally {
       setIsRemoving(false);
     }
@@ -176,7 +202,7 @@ export function StudentActionsMenu({
             className="flex items-center gap-2 cursor-pointer text-red-400 hover:bg-red-500/15 hover:text-red-400"
           >
             <Trash2 className="w-4 h-4" />
-            Remove from Classroom
+            {status === "pending" ? "Revoke Invitation" : "Remove from Classroom"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -185,14 +211,23 @@ export function StudentActionsMenu({
         <AlertDialogContent className="bg-[#1e293b] border-white/10">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">
-              Remove Student?
+              {status === "pending" ? "Revoke Invitation?" : "Remove Student?"}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              Are you sure you want to remove{" "}
-              <span className="text-white font-medium">
-                {studentName || studentEmail}
-              </span>{" "}
-              from your classroom? They will be removed from all projects.
+              {status === "pending" ? (
+                <>
+                  Are you sure you want to revoke the invitation for{" "}
+                  <span className="text-white font-medium">{studentEmail}</span>?
+                </>
+              ) : (
+                <>
+                  Are you sure you want to remove{" "}
+                  <span className="text-white font-medium">
+                    {studentName || studentEmail}
+                  </span>{" "}
+                  from your classroom? They will be removed from all projects.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -207,10 +242,10 @@ export function StudentActionsMenu({
               {isRemoving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Removing...
+                  {status === "pending" ? "Revoking..." : "Removing..."}
                 </>
               ) : (
-                "Remove"
+                status === "pending" ? "Revoke" : "Remove"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

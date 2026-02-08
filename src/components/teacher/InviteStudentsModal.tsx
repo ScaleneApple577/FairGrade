@@ -21,6 +21,7 @@ interface InviteStudentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   teacherName: string;
+  classroomId?: number;
   onSuccess: () => void;
 }
 
@@ -28,13 +29,12 @@ export function InviteStudentsModal({
   open,
   onOpenChange,
   teacherName,
+  classroomId,
   onSuccess,
 }: InviteStudentsModalProps) {
   const [emailInput, setEmailInput] = useState("");
   const [emails, setEmails] = useState<string[]>([]);
   const [bulkInput, setBulkInput] = useState("");
-  const [customMessage, setCustomMessage] = useState("");
-  const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -104,30 +104,26 @@ export function InviteStudentsModal({
   const handleSendInvitations = async () => {
     if (emails.length === 0) return;
 
+    if (!classroomId) {
+      toast.error("Please select a classroom first");
+      return;
+    }
+
     setIsSending(true);
     try {
-      // TODO: POST /api/teacher/students/invite
-      const result = await api.post("/api/teacher/students/invite", {
+      // POST /api/classrooms/{classroom_id}/invite
+      // Body: { emails: [...] }
+      // Response: { invited: number, skipped: number, details: [...] }
+      const result = await api.post(`/api/classrooms/${classroomId}/invite`, {
         emails,
-        message: customMessage || undefined,
       });
 
-      // Expected response: { sent: number, failed: number, already_registered: number, new_invites: number }
-      const { sent, failed, already_registered, new_invites } = result;
-
-      if (failed > 0) {
-        toast.warning(
-          `${sent} of ${emails.length} invitations sent. ${failed} failed.`
-        );
-      } else {
-        toast.success(
-          `✅ Invitations sent! ${new_invites} new invitations sent${
-            already_registered > 0
-              ? `, ${already_registered} students already registered and added to your classroom.`
-              : "."
-          }`
-        );
-      }
+      const msg =
+        `✅ ${result.invited || emails.length} invitation(s) sent` +
+        (result.skipped > 0
+          ? `, ${result.skipped} skipped (already invited or registered)`
+          : "");
+      toast.success(msg);
 
       onSuccess();
       onOpenChange(false);
@@ -144,9 +140,7 @@ export function InviteStudentsModal({
     setEmails([]);
     setEmailInput("");
     setBulkInput("");
-    setCustomMessage("");
     setEmailError("");
-    setIsMessageOpen(false);
     setIsPreviewOpen(false);
   };
 
@@ -232,31 +226,6 @@ export function InviteStudentsModal({
             </Button>
           </div>
 
-          {/* Custom message */}
-          <Collapsible open={isMessageOpen} onOpenChange={setIsMessageOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 text-slate-400 text-sm cursor-pointer hover:text-slate-300">
-              {isMessageOpen ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-              Add a personal message (optional)
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <Textarea
-                placeholder="Add a message that will be included in the invitation email..."
-                value={customMessage}
-                onChange={(e) =>
-                  setCustomMessage(e.target.value.slice(0, 300))
-                }
-                className="bg-white/10 border-white/10 text-white rounded-xl px-4 py-3 w-full text-sm min-h-[60px] placeholder:text-slate-500"
-              />
-              <p className="text-slate-500 text-xs text-right mt-1">
-                {customMessage.length} / 300
-              </p>
-            </CollapsibleContent>
-          </Collapsible>
-
           {/* Email preview */}
           <Collapsible open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
             <CollapsibleTrigger className="flex items-center gap-2 text-slate-400 text-xs cursor-pointer hover:text-slate-300">
@@ -281,11 +250,6 @@ export function InviteStudentsModal({
                     FairGrade — a platform that tracks and evaluates individual
                     contributions in group projects.
                   </p>
-                  {customMessage && (
-                    <p className="text-slate-300 text-xs italic">
-                      "{customMessage}"
-                    </p>
-                  )}
                   <p className="text-slate-400 text-xs">
                     Click the button below to accept the invitation and get
                     started.
