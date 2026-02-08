@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import pako from 'pako';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -142,5 +143,16 @@ export const api = {
     return JSON.parse(text);
   },
 };
+
+// Compression helpers using pako
+export function compressData(data: any): Uint8Array {
+  const jsonString = JSON.stringify(data);
+  return pako.deflate(jsonString);
+}
+
+export function decompressData(compressed: Uint8Array): any {
+  const decompressed = pako.inflate(compressed, { to: 'string' });
+  return JSON.parse(decompressed);
+}
 
 export default api;
