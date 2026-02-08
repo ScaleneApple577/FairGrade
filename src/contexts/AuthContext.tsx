@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { toFrontendRole, normalizeUser, NormalizedUser } from "@/lib/api";
 
 export type UserRole = "teacher" | "student" | null;
 
@@ -9,6 +10,8 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName: string | null;
+  firstName: string | null;
+  lastName: string | null;
   role: UserRole;
 }
 
@@ -19,7 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   role: UserRole;
   login: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<{ error: Error | null }>;
+  signup: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<{ error: Error | null }>;
   loginWithGoogle: () => Promise<{ error: Error | null }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -47,7 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
       
-      return data?.role as UserRole || null;
+      // Convert API role to frontend role (handles "instructor" → "teacher")
+      return toFrontendRole(data?.role) as UserRole || null;
     } catch (error) {
       console.error("Error fetching user role:", error);
       return null;
@@ -56,10 +60,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Build AuthUser from Supabase user and role
   const buildAuthUser = useCallback((supabaseUser: User, userRole: UserRole): AuthUser => {
+    const fullName = supabaseUser.user_metadata?.full_name || null;
+    const firstName = supabaseUser.user_metadata?.first_name || (fullName ? fullName.split(' ')[0] : null);
+    const lastName = supabaseUser.user_metadata?.last_name || (fullName ? fullName.split(' ').slice(1).join(' ') : null);
+    
     return {
       id: supabaseUser.id,
       email: supabaseUser.email || "",
-      fullName: supabaseUser.user_metadata?.full_name || null,
+      fullName: fullName || `${firstName || ''} ${lastName || ''}`.trim() || null,
+      firstName,
+      lastName,
       role: userRole,
     };
   }, []);
@@ -146,7 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = useCallback(async (
     email: string, 
     password: string, 
-    fullName: string, 
+    firstName: string,
+    lastName: string, 
     userRole: UserRole
   ): Promise<{ error: Error | null }> => {
     try {
@@ -158,7 +169,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
+            full_name: `${firstName} ${lastName}`.trim(),
+            first_name: firstName,
+            last_name: lastName,
           },
         },
       });
@@ -170,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error(error.message) };
       }
 
-      // Set user role
+      // Set user role (store frontend role value in database)
       if (data.user && userRole) {
         const { error: roleError } = await supabase
           .from("user_roles")
@@ -204,9 +217,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Logout
+  // Logout - clear all auth data
   const logout = useCallback(async () => {
+    // Clear localStorage
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('user_role');
+    sessionStorage.clear();
+    
+    // Sign out from Supabase
     await supabase.auth.signOut();
+    
+    // Clear state
     setUser(null);
     setSession(null);
     setRole(null);

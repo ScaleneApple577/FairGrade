@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { api } from "@/lib/api";
+import { api, toApiRole, toFrontendRole, normalizeUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,13 +21,14 @@ type AuthMode = "signin" | "signup";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [role, setRole] = useState<RoleType>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [existingUser, setExistingUser] = useState<{ id: string; email: string; role?: string } | null>(null);
+  const [existingUser, setExistingUser] = useState<{ id: string; email: string; role?: string; name?: string } | null>(null);
   const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
   const navigate = useNavigate();
@@ -119,7 +120,6 @@ const Auth = () => {
   const handleSwitchAccount = () => {
     // Clear all auth data - instant, no API calls needed
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     localStorage.removeItem('user_role');
     sessionStorage.clear();
@@ -139,11 +139,10 @@ const Auth = () => {
 
     setSavingRole(true);
     try {
-      // Try backend profile update first (non-blocking).
-      // TODO: PUT /api/auth/profile — Body: { role: 'student' | 'teacher' }
-      // Backend should persist the role in the public.user_roles table.
+      // Try backend profile update first with correct API role value
+      const apiRole = toApiRole(selectedRole); // "teacher" → "instructor"
       try {
-        await api.put("/api/auth/profile", { role: selectedRole });
+        await api.put("/api/auth/me", { role: apiRole });
       } catch {
         // Intentionally ignore: we still persist role securely via the database.
       }
@@ -163,9 +162,18 @@ const Auth = () => {
             .single();
 
           if (!existingRoleError && existingRole?.role) {
-            setExistingUser((prev) => (prev ? { ...prev, role: existingRole.role } : null));
+            const frontendRole = toFrontendRole(existingRole.role);
+            setExistingUser((prev) => (prev ? { ...prev, role: frontendRole } : null));
+            // Update localStorage with converted role
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              const user = JSON.parse(storedUser);
+              user.role = frontendRole;
+              localStorage.setItem('user', JSON.stringify(user));
+            }
+            localStorage.setItem('user_role', frontendRole || '');
             setNeedsRoleSelection(false);
-            redirectBasedOnRole(existingRole.role);
+            redirectBasedOnRole(frontendRole);
             return;
           }
         }
@@ -173,12 +181,20 @@ const Auth = () => {
         throw roleError;
       }
 
+      // Store the frontend role value for routing
       setExistingUser((prev) => (prev ? { ...prev, role: selectedRole } : null));
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        user.role = selectedRole;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      localStorage.setItem('user_role', selectedRole);
       setNeedsRoleSelection(false);
 
       toast({
         title: "Welcome to FairGrade!",
-        description: `You're all set as a ${selectedRole}.`,
+        description: `You're all set as a ${selectedRole === 'teacher' ? 'Teacher' : 'Student'}.`,
       });
 
       redirectBasedOnRole(selectedRole);
@@ -198,8 +214,8 @@ const Auth = () => {
     try {
       emailSchema.parse(email);
       passwordSchema.parse(password);
-      if (isSignUp && !fullName.trim()) {
-        throw new Error("Full name is required");
+      if (isSignUp && !firstName.trim()) {
+        throw new Error("First name is required");
       }
       return true;
     } catch (error) {
@@ -259,45 +275,38 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { data, error } = await supabase.auth.signUp({
+      // Use the correct backend endpoint: POST /api/auth/register
+      // Send first_name, last_name, and role as "instructor" or "student"
+      const response = await api.post('/api/auth/register', {
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-          },
-        },
+        first_name: firstName,
+        last_name: lastName || '',
+        role: toApiRole(role), // "teacher" → "instructor"
       });
-
-      if (error) {
-        if (error.message.includes("User already registered")) {
-          throw new Error("An account with this email already exists. Please sign in instead.");
-        }
-        throw error;
-      }
-
-      if (data.user) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: data.user.id, role });
-
-        if (roleError) {
-          console.error("Error setting role:", roleError);
-        }
-      }
+      
+      // Backend returns: { access_token, token_type, user }
+      localStorage.setItem('access_token', response.access_token);
+      const normalizedUserData = normalizeUser(response.user);
+      localStorage.setItem('user', JSON.stringify(normalizedUserData));
+      localStorage.setItem('user_role', normalizedUserData.role || '');
 
       toast({
         title: "Account Created!",
-        description: "Please check your email to verify your account.",
+        description: "Welcome to FairGrade!",
       });
+
+      // Navigate based on role
+      if (normalizedUserData.role === 'student') {
+        navigate('/student/dashboard');
+      } else if (normalizedUserData.role === 'teacher') {
+        navigate('/teacher/dashboard');
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
-        description: error.message,
+        description: error.message || "Registration failed. This email may already be registered.",
       });
     } finally {
       setLoading(false);
@@ -663,19 +672,34 @@ const Auth = () => {
 
               <form onSubmit={authMode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
                 {authMode === "signup" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-slate-300 text-sm font-medium">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input
-                        id="fullName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                        required
-                      />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName" className="text-slate-300 text-sm font-medium">First Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                        <Input
+                          id="firstName"
+                          type="text"
+                          placeholder="John"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName" className="text-slate-300 text-sm font-medium">Last Name</Label>
+                      <div className="relative">
+                        <Input
+                          id="lastName"
+                          type="text"
+                          placeholder="Doe"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

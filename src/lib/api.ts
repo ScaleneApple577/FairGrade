@@ -3,30 +3,79 @@ import pako from 'pako';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-// Helper to get the auth token from Supabase session
+// ============ Role Mapping ============
+// Backend uses "instructor" but frontend uses "teacher" for routing and display
+
+export const ROLE_MAP: Record<string, string> = {
+  // API value → Frontend display
+  'instructor': 'teacher',
+  'student': 'student',
+};
+
+export const API_ROLE_MAP: Record<string, string> = {
+  // Frontend value → API value
+  'teacher': 'instructor',
+  'student': 'student',
+};
+
+export function toFrontendRole(apiRole: string | null | undefined): string | null {
+  if (!apiRole) return null;
+  return ROLE_MAP[apiRole] || apiRole;
+}
+
+export function toApiRole(frontendRole: string | null | undefined): string | null {
+  if (!frontendRole) return null;
+  return API_ROLE_MAP[frontendRole] || frontendRole;
+}
+
+// ============ User Normalization ============
+// Backend returns: { id, email, first_name, last_name, role, created_at }
+// Frontend expects: { id, email, name, role, first_name, last_name }
+
+export interface NormalizedUser {
+  id: string;
+  email: string;
+  name: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string | null;
+  created_at?: string;
+}
+
+export function normalizeUser(apiUser: any): NormalizedUser {
+  const firstName = apiUser?.first_name || '';
+  const lastName = apiUser?.last_name || '';
+  const fullName = `${firstName} ${lastName}`.trim();
+  
+  return {
+    id: apiUser?.id || '',
+    email: apiUser?.email || '',
+    name: fullName || apiUser?.email || '',
+    first_name: firstName || null,
+    last_name: lastName || null,
+    role: toFrontendRole(apiUser?.role),
+    created_at: apiUser?.created_at,
+  };
+}
+
+// ============ Auth Token Helpers ============
+
+// Helper to get the auth token - prefer localStorage, then Supabase session
 async function getAuthToken(): Promise<string | null> {
+  // First check localStorage (backend JWT)
+  const storedToken = localStorage.getItem('access_token');
+  if (storedToken) return storedToken;
+  
+  // Fallback to Supabase session
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || null;
 }
 
-// Synchronous version for cases where we already have the token
-function getStoredToken(): string | null {
-  // Check localStorage first (for JWT token from login)
-  const token = localStorage.getItem('supabase.auth.token');
-  if (token) {
-    try {
-      const parsed = JSON.parse(token);
-      return parsed?.currentSession?.access_token || null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-// Handle authentication failure
+// Handle authentication failure - redirect to login immediately
 function handleAuthFailure() {
-  // Redirect to auth page
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('user_role');
   window.location.href = '/auth';
 }
 
@@ -52,37 +101,10 @@ export async function apiRequest<T = any>(
     headers,
   });
   
-  // Handle 401 — token expired or invalid
+  // Handle 401 — token expired or invalid — redirect immediately (no refresh token)
   if (response.status === 401) {
-    // Try to refresh the session
-    const { data: { session }, error } = await supabase.auth.refreshSession();
-    
-    if (session && !error) {
-      // Retry the original request with new token
-      headers['Authorization'] = `Bearer ${session.access_token}`;
-      const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
-      
-      if (!retryResponse.ok) {
-        if (retryResponse.status === 401) {
-          handleAuthFailure();
-          throw new Error('Authentication failed');
-        }
-        const errorData = await retryResponse.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Request failed with status ${retryResponse.status}`);
-      }
-      
-      // Handle empty responses
-      const text = await retryResponse.text();
-      if (!text) return undefined as T;
-      return JSON.parse(text);
-    } else {
-      // Refresh failed, redirect to login
-      handleAuthFailure();
-      throw new Error('Authentication failed');
-    }
+    handleAuthFailure();
+    throw new Error('Authentication failed');
   }
   
   if (!response.ok) {
