@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, X, Loader2 } from "lucide-react";
+import { GraduationCap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 interface ClassroomInvitation {
-  id: string;
-  teacherName: string;
-  teacherEmail: string;
-  message?: string;
-  createdAt: string;
+  id: number;
+  classroom_name: string;
+  teacher_name: string;
+  token: string;
+  created_at: string;
 }
 
 interface ClassroomInvitationBannerProps {
@@ -20,16 +20,16 @@ interface ClassroomInvitationBannerProps {
 export function ClassroomInvitationBanner({ onAccept }: ClassroomInvitationBannerProps) {
   const [invitations, setInvitations] = useState<ClassroomInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchInvitations = async () => {
       try {
-        // TODO: GET /api/student/classrooms/invitations
-        const data = await api.get("/api/student/classrooms/invitations");
+        // GET /api/classrooms/invitations/mine
+        const data = await api.get<ClassroomInvitation[]>("/api/classrooms/invitations/mine");
         setInvitations(data || []);
       } catch (error) {
-        console.error("Failed to fetch classroom invitations:", error);
+        console.warn("Failed to fetch classroom invitations:", error);
         setInvitations([]);
       } finally {
         setIsLoading(false);
@@ -39,13 +39,16 @@ export function ClassroomInvitationBanner({ onAccept }: ClassroomInvitationBanne
     fetchInvitations();
   }, []);
 
-  const handleAccept = async (inviteId: string, teacherName: string) => {
-    setProcessingId(inviteId);
+  const handleAccept = async (invitation: ClassroomInvitation) => {
+    setProcessingId(invitation.id);
     try {
-      // TODO: POST /api/student/classrooms/{invite_id}/accept
-      await api.post(`/api/student/classrooms/${inviteId}/accept`);
-      toast.success(`You've joined ${teacherName}'s classroom!`);
-      setInvitations((prev) => prev.filter((inv) => inv.id !== inviteId));
+      // POST /api/classrooms/invitations/accept with { token }
+      const response = await api.post<{ classroom_id: number; classroom_name: string }>(
+        "/api/classrooms/invitations/accept",
+        { token: invitation.token }
+      );
+      toast.success(`✅ Joined ${response.classroom_name || invitation.classroom_name}!`);
+      setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
       onAccept?.();
     } catch (error) {
       console.error("Failed to accept invitation:", error);
@@ -55,19 +58,11 @@ export function ClassroomInvitationBanner({ onAccept }: ClassroomInvitationBanne
     }
   };
 
-  const handleDecline = async (inviteId: string) => {
-    setProcessingId(inviteId);
-    try {
-      // TODO: POST /api/student/classrooms/{invite_id}/decline
-      await api.post(`/api/student/classrooms/${inviteId}/decline`);
-      toast.success("Invitation declined");
-      setInvitations((prev) => prev.filter((inv) => inv.id !== inviteId));
-    } catch (error) {
-      console.error("Failed to decline invitation:", error);
-      toast.error("Failed to decline invitation");
-    } finally {
-      setProcessingId(null);
-    }
+  const handleDecline = async (invitation: ClassroomInvitation) => {
+    // TODO: api.post('/api/classrooms/invitations/decline', { token: invitation.token })
+    // For now, just hide locally
+    setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
+    toast.success("Invitation dismissed.");
   };
 
   if (isLoading || invitations.length === 0) {
@@ -91,21 +86,16 @@ export function ClassroomInvitationBanner({ onAccept }: ClassroomInvitationBanne
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">
-                  {invitation.teacherName} has invited you to join their classroom
+                  {invitation.teacher_name} has invited you to join {invitation.classroom_name}
                 </p>
                 <p className="text-slate-400 text-xs mt-0.5">
-                  {invitation.teacherEmail}
+                  Invitation received
                 </p>
-                {invitation.message && (
-                  <p className="text-slate-300 text-sm italic mt-2">
-                    "{invitation.message}"
-                  </p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
-                onClick={() => handleAccept(invitation.id, invitation.teacherName)}
+                onClick={() => handleAccept(invitation)}
                 disabled={processingId === invitation.id}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
               >
@@ -116,7 +106,7 @@ export function ClassroomInvitationBanner({ onAccept }: ClassroomInvitationBanne
                 )}
               </Button>
               <button
-                onClick={() => handleDecline(invitation.id)}
+                onClick={() => handleDecline(invitation)}
                 disabled={processingId === invitation.id}
                 className="text-slate-400 hover:text-white text-sm px-2"
               >
