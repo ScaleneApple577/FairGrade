@@ -57,9 +57,14 @@ export function StudentActionsMenu({
     if (projects.length > 0) return;
     setIsLoadingProjects(true);
     try {
-      // TODO: GET /api/classrooms/{classroom_id}/projects or /api/teacher/projects
-      const data = await api.get("/api/teacher/projects");
-      setProjects(data || []);
+      // Backend returns: [{ id, name, description, created_at }]
+      const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>("/api/projects/projects");
+      // Transform to expected format
+      const projects: Project[] = (data || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+      }));
+      setProjects(projects);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     } finally {
@@ -91,8 +96,8 @@ export function StudentActionsMenu({
 
   const handleAssignToProject = async (projectId: string, projectName: string) => {
     try {
-      // TODO: POST /api/projects/{project_id}/students
-      await api.post(`/api/projects/${projectId}/students`, { student_id: studentId });
+      // TODO: POST /api/projects/projects/{project_id}/students - endpoint may not exist yet
+      await api.post(`/api/projects/projects/${projectId}/students`, { student_id: studentId });
       toast.success(`${studentName || studentEmail} assigned to ${projectName}`);
       onRefresh();
     } catch (error) {

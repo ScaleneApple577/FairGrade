@@ -21,25 +21,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { 
+  extractDriveFileId, 
+  getMimeTypeFromUrl, 
+  getGoogleFileUrl, 
+  getFileIcon,
+  isValidGoogleUrl 
+} from "@/lib/fileUtils";
 
+// Backend API response format
+interface ApiProject {
+  id: string;
+  name: string;
+  description: string | null;
+  files: ApiFile[];
+  created_at: string;
+}
+
+interface ApiFile {
+  id: string;
+  name: string;
+  drive_file_id: string;
+  mime_type: string;
+  created_at: string;
+}
+
+// Frontend display format
 interface Project {
   id: string;
   name: string;
-  courseName: string;
   description: string;
-  deadline: string;
-  teamSize: number;
-  teammateCount: number;
-  progress: number;
+  created_at: string;
+  // Optional fields not from backend
+  courseName?: string;
+  deadline?: string;
+  teamSize?: number;
+  teammateCount?: number;
+  progress?: number;
 }
 
 interface SubmittedFile {
   id: string;
   name: string;
-  type: "google_doc" | "google_sheet" | "google_slides";
-  googleFileUrl: string;
-  submittedAt: string;
-  isTracking: boolean;
+  drive_file_id: string;
+  mime_type: string;
+  created_at: string;
 }
 
 export default function StudentProjectDetail() {
@@ -72,15 +98,28 @@ export default function StudentProjectDetail() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch project details and files from API
-        // const projectData = await api.get(`/api/student/projects/${id}`);
-        // const filesData = await api.get(`/api/student/projects/${id}/my-files`);
-        // setProject(projectData);
-        // setFiles(filesData);
-        setProject(null);
-        setFiles([]);
+        // Backend returns: { id, name, description, files: [...], created_at }
+        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
+        
+        // Transform to frontend format
+        setProject({
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          created_at: data.created_at,
+          courseName: '—', // Not returned by backend
+          deadline: undefined,
+          teamSize: undefined,
+          teammateCount: undefined,
+          progress: 0,
+        });
+        
+        // Files come directly from project response
+        setFiles(data.files || []);
       } catch (error) {
         console.error("Failed to fetch project:", error);
+        setProject(null);
+        setFiles([]);
       } finally {
         setIsLoading(false);
       }
@@ -89,37 +128,23 @@ export default function StudentProjectDetail() {
   }, [id]);
 
   const validateGoogleUrl = (url: string): boolean => {
-    const patterns = [
-      /docs\.google\.com\/document/,
-      /docs\.google\.com\/spreadsheets/,
-      /docs\.google\.com\/presentation/,
-    ];
-    return patterns.some(pattern => pattern.test(url));
+    return isValidGoogleUrl(url);
   };
 
   const handleCreateDocument = async () => {
     if (!newDocName.trim()) return;
     setIsCreating(true);
     try {
-      // TODO: POST http://localhost:8000/api/student/projects/{project_id}/files/create
-      // const response = await fetch(`http://localhost:8000/api/student/projects/${id}/files/create`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name: newDocName, type: newDocType })
-      // });
-      // const newFile = await response.json();
-      // setFiles([...files, newFile]);
-      // window.open(newFile.google_file_url, '_blank');
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // TODO: Creating new Google files requires Google Drive API integration
+      // For now, show message to create in Drive and link
       toast({
-        title: "✅ Document created and submitted",
-        description: "Your document is now being tracked by FairGrade",
-        className: "bg-green-500/15 border border-green-500/30 text-green-400",
+        title: "Create in Google Drive",
+        description: "Please create your document in Google Drive, then paste the link to link it here.",
+        className: "bg-blue-500/15 border border-blue-500/30 text-blue-400",
       });
       
       setShowCreateModal(false);
+      setShowLinkModal(true);
       setNewDocName("");
       setNewDocType("google_doc");
     } catch (error) {
@@ -138,19 +163,28 @@ export default function StudentProjectDetail() {
       return;
     }
     
+    // Extract drive_file_id from URL
+    const driveFileId = extractDriveFileId(linkUrl);
+    if (!driveFileId) {
+      setLinkUrlError("Could not extract file ID from URL");
+      return;
+    }
+    
+    const mimeType = getMimeTypeFromUrl(linkUrl);
+    const fileName = newDocName.trim() || 'Untitled Document';
+    
     setIsLinking(true);
     setLinkUrlError("");
     try {
-      // TODO: POST http://localhost:8000/api/student/projects/{project_id}/files/link
-      // const response = await fetch(`http://localhost:8000/api/student/projects/${id}/files/link`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ file_url: linkUrl })
-      // });
-      // const newFile = await response.json();
-      // setFiles([...files, newFile]);
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // POST /api/projects/projects/{project_id}/files
+      const response = await api.post<ApiFile>(`/api/projects/projects/${id}/files`, {
+        name: fileName,
+        drive_file_id: driveFileId,
+        mime_type: mimeType,
+      });
+      
+      // Add to local files list
+      setFiles([...files, response]);
       
       toast({
         title: "✅ Document submitted",
@@ -160,6 +194,7 @@ export default function StudentProjectDetail() {
       
       setShowLinkModal(false);
       setLinkUrl("");
+      setNewDocName("");
     } catch (error) {
       console.error("Failed to link document:", error);
       toast({ title: "Failed to link document", variant: "destructive" });
@@ -171,11 +206,9 @@ export default function StudentProjectDetail() {
   const handleDeleteFile = async (fileId: string) => {
     setIsDeleting(true);
     try {
-      // TODO: DELETE http://localhost:8000/api/student/projects/{project_id}/files/{file_id}
-      // await fetch(`http://localhost:8000/api/student/projects/${id}/files/${fileId}`, { method: 'DELETE' });
-      // setFiles(files.filter(f => f.id !== fileId));
-
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // TODO: DELETE /api/projects/projects/{project_id}/files/{file_id} - endpoint may not exist
+      // For now, just remove locally with a warning
+      console.warn("TODO: Need DELETE /api/projects/projects/{project_id}/files/{file_id} endpoint");
       setFiles(files.filter(f => f.id !== fileId));
       
       toast({ title: "Document removed" });
@@ -188,13 +221,9 @@ export default function StudentProjectDetail() {
     }
   };
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case "google_doc": return "📄";
-      case "google_sheet": return "📊";
-      case "google_slides": return "📽";
-      default: return "📄";
-    }
+  // Use the imported getFileIcon helper
+  const getFileIconForType = (mimeType: string) => {
+    return getFileIcon(mimeType);
   };
 
   const formatDate = (dateStr: string) => {
@@ -289,10 +318,10 @@ export default function StudentProjectDetail() {
                       className="bg-white/[0.04] border border-white/10 rounded-xl p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getFileIcon(file.type)}</span>
+                        <span className="text-2xl">{getFileIconForType(file.mime_type)}</span>
                         <div>
                           <p className="text-white font-medium">{file.name}</p>
-                          <p className="text-slate-500 text-xs">Submitted {formatDate(file.submittedAt)}</p>
+                          <p className="text-slate-500 text-xs">Submitted {formatDate(file.created_at)}</p>
                         </div>
                       </div>
 
@@ -302,7 +331,7 @@ export default function StudentProjectDetail() {
                           Being tracked by FairGrade
                         </span>
                         <Button
-                          onClick={() => window.open(file.googleFileUrl, "_blank")}
+                          onClick={() => window.open(getGoogleFileUrl(file.drive_file_id, file.mime_type), "_blank")}
                           className="bg-blue-500/15 text-blue-400 px-4 py-2 rounded-lg text-sm hover:bg-blue-500/25"
                         >
                           Open in Google Docs
