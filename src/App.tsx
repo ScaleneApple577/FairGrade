@@ -130,7 +130,7 @@ const AppRoutes = () => (
       } 
     />
     <Route 
-      path="/teacher/live-replay/:fileId" 
+      path="/teacher/live-replay/:projectId/:fileId" 
       element={
         <TeacherRoute>
           <TeacherLiveReplay />
