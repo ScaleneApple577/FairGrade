@@ -112,10 +112,17 @@ export async function apiRequest<T = any>(
     throw new Error(errorData.detail || `Request failed with status ${response.status}`);
   }
   
-  // Handle empty responses
+  // Handle empty responses and string responses
   const text = await response.text();
   if (!text) return undefined as T;
-  return JSON.parse(text);
+  
+  // Try to parse as JSON, fall back to returning as string
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Return as-is if not valid JSON (some endpoints return plain strings)
+    return text as T;
+  }
 }
 
 // Convenience methods
