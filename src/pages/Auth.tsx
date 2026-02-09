@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { api, toApiRole, toFrontendRole, normalizeUser } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,42 +32,32 @@ const Auth = () => {
   const [savingRole, setSavingRole] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { loginWithGoogle } = useAuth();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setExistingUser(null);
-        }
-        setCheckingSession(false);
-      }
-    );
-
-    // Check for existing session but DON'T auto-redirect
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        // Fetch user role
-        const { data: userRole } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-
-        setExistingUser({
-          id: session.user.id,
-          email: session.user.email || "",
-          role: userRole?.role
-        });
-
-        // If user signed in via OAuth but has no role, they need to select one
-        if (!userRole?.role) {
-          setNeedsRoleSelection(true);
+    // Check for existing token/user in localStorage
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const u = JSON.parse(storedUser);
+          const frontendRole = toFrontendRole(u.role);
+          setExistingUser({
+            id: u.id || '',
+            email: u.email || '',
+            role: frontendRole || undefined,
+            name: u.name || u.fullName || undefined,
+          });
+          if (!frontendRole) {
+            setNeedsRoleSelection(true);
+          }
+        } catch {
+          // invalid stored user
         }
       }
-      setCheckingSession(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setCheckingSession(false);
   }, []);
 
   const redirectBasedOnRole = (userRole?: string) => {
@@ -80,108 +69,53 @@ const Auth = () => {
   };
 
   const handleContinueAsUser = () => {
-    // Get role from multiple sources (in order of priority)
-    let role: string | null = null;
+    let userRole: string | null = null;
 
-    // 1. Check existingUser state first
     if (existingUser?.role) {
-      role = existingUser.role;
+      userRole = existingUser.role;
     }
 
-    // 2. Check user object in localStorage
-    if (!role) {
+    if (!userRole) {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
           const user = JSON.parse(storedUser);
-          role = user.role;
-        } catch (e) {
-          // Invalid JSON, ignore
-        }
+          userRole = user.role;
+        } catch { /* ignore */ }
       }
     }
 
-    // 3. Fallback to stored role
-    if (!role) {
-      role = localStorage.getItem('user_role');
+    if (!userRole) {
+      userRole = localStorage.getItem('user_role');
     }
 
-    // 4. Navigate based on role - instant, no API calls
-    if (role === 'teacher') {
+    if (userRole === 'teacher') {
       navigate('/teacher/dashboard');
-    } else if (role === 'student') {
+    } else if (userRole === 'student') {
       navigate('/student/dashboard');
     } else {
-      // No role found — go to role selection
       setNeedsRoleSelection(true);
     }
   };
 
   const handleSwitchAccount = () => {
-    // Clear all auth data - instant, no API calls needed
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     localStorage.removeItem('user_role');
     sessionStorage.clear();
-    
-    // Sign out from Supabase (fire and forget)
-    supabase.auth.signOut();
-    
-    // Reset state
     setExistingUser(null);
     setNeedsRoleSelection(false);
     setSavingRole(false);
   };
 
-  // Save role for users who signed in without a role (Google OAuth or password auth)
   const handleSaveOAuthRole = async (selectedRole: RoleType) => {
     if (!existingUser || !selectedRole) return;
 
     setSavingRole(true);
     try {
-      // Try backend profile update first with correct API role value
-      const apiRole = toApiRole(selectedRole); // "teacher" → "instructor"
-      try {
-        await api.put("/api/auth/me", { role: apiRole });
-      } catch {
-        // Intentionally ignore: we still persist role securely via the database.
-      }
+      const apiRole = toApiRole(selectedRole);
+      await api.put("/api/auth/me", { role: apiRole });
 
-      // Secure persistence (source of truth) — roles stay in user_roles table.
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: existingUser.id, role: selectedRole });
-
-      if (roleError) {
-        // Unique constraint violation — role already exists.
-        if (roleError.code === "23505") {
-          const { data: existingRole, error: existingRoleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", existingUser.id)
-            .single();
-
-          if (!existingRoleError && existingRole?.role) {
-            const frontendRole = toFrontendRole(existingRole.role);
-            setExistingUser((prev) => (prev ? { ...prev, role: frontendRole } : null));
-            // Update localStorage with converted role
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-              const user = JSON.parse(storedUser);
-              user.role = frontendRole;
-              localStorage.setItem('user', JSON.stringify(user));
-            }
-            localStorage.setItem('user_role', frontendRole || '');
-            setNeedsRoleSelection(false);
-            redirectBasedOnRole(frontendRole);
-            return;
-          }
-        }
-
-        throw roleError;
-      }
-
-      // Store the frontend role value for routing
       setExistingUser((prev) => (prev ? { ...prev, role: selectedRole } : null));
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -199,7 +133,6 @@ const Auth = () => {
 
       redirectBasedOnRole(selectedRole);
     } catch {
-      // Non-blocking: keep user on this screen so they can retry.
       toast({
         variant: "destructive",
         title: "Couldn't finish setup",
@@ -242,27 +175,29 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Invalid email or password. Please try again.");
-        }
-        throw error;
-      }
+      const response = await api.post('/api/auth/login', { email, password });
+      
+      localStorage.setItem('access_token', response.access_token);
+      const normalized = normalizeUser(response.user);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      localStorage.setItem('user_role', normalized.role || '');
 
       toast({
         title: "Welcome back!",
         description: "Successfully signed in.",
       });
+
+      // Navigate based on role
+      if (normalized.role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else if (normalized.role === 'student') {
+        navigate('/student/dashboard');
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Sign In Failed",
-        description: error.message,
+        description: error.message || "Invalid email or password.",
       });
     } finally {
       setLoading(false);
@@ -275,17 +210,14 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Use the correct backend endpoint: POST /api/auth/register
-      // Send first_name, last_name, and role as "instructor" or "student"
       const response = await api.post('/api/auth/register', {
         email,
         password,
         first_name: firstName,
         last_name: lastName || '',
-        role: toApiRole(role), // "teacher" → "instructor"
+        role: toApiRole(role),
       });
       
-      // Backend returns: { access_token, token_type, user }
       localStorage.setItem('access_token', response.access_token);
       const normalizedUserData = normalizeUser(response.user);
       localStorage.setItem('user', JSON.stringify(normalizedUserData));
@@ -296,7 +228,6 @@ const Auth = () => {
         description: "Welcome to FairGrade!",
       });
 
-      // Navigate based on role
       if (normalizedUserData.role === 'student') {
         navigate('/student/dashboard');
       } else if (normalizedUserData.role === 'teacher') {
@@ -313,27 +244,11 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error.message,
-      });
-      setLoading(false);
-    }
+  const handleGoogleSignIn = () => {
+    loginWithGoogle();
   };
 
-  // Loading state - dark theme
+  // Loading state
   if (checkingSession) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center flex-col gap-4">
@@ -356,27 +271,9 @@ const Auth = () => {
           <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
             <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path 
-                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 10 L10 42 Q10 44 8 43.5" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </Link>
@@ -459,27 +356,9 @@ const Auth = () => {
           <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
             <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path 
-                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 10 L10 42 Q10 44 8 43.5" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </Link>
@@ -532,27 +411,9 @@ const Auth = () => {
           <Link to="/" className="inline-flex flex-col items-center gap-4 mb-4">
             <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path 
-                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 10 L10 42 Q10 44 8 43.5" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </Link>

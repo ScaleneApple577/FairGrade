@@ -26,6 +26,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import FeatureDetailPage from "./pages/FeatureDetailPage";
 import LiveReplay from "./pages/LiveReplay";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
 import TeacherProjects from "./pages/TeacherProjects";
 import TeacherProjectDetail from "./pages/TeacherProjectDetail";
 import TeacherStudents from "./pages/TeacherStudents";
@@ -68,6 +69,7 @@ const AppRoutes = () => (
         </AuthRedirect>
       } 
     />
+    <Route path="/auth/callback" element={<AuthCallback />} />
     <Route path="/pricing" element={<PricingPage />} />
     <Route path="/features" element={<FeaturesPage />} />
     <Route path="/features/:featureId" element={<FeatureDetailPage />} />
