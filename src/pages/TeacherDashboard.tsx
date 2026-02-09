@@ -144,7 +144,21 @@ export default function TeacherDashboard() {
         {/* Welcome Header with Quick Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Welcome back!</h1>
+            <h1 className="text-3xl font-bold text-white">
+              Welcome back{(() => {
+                try {
+                  const storedUser = localStorage.getItem('user');
+                  if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    // Check first_name first, then extract from fullName/name
+                    const firstName = user.first_name || 
+                      (user.fullName || user.name || '').split(' ')[0];
+                    if (firstName) return `, ${firstName}`;
+                  }
+                } catch {}
+                return '';
+              })()}!
+            </h1>
             <p className="text-slate-400 mt-1">Here's what's happening with your courses</p>
           </div>
 
