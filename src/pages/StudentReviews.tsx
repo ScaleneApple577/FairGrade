@@ -6,9 +6,13 @@ import { PendingReviewCard } from "@/components/reviews/PendingReviewCard";
 import { SubmittedReviewCard } from "@/components/reviews/SubmittedReviewCard";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
 
-// TODO: Connect to GET http://localhost:8000/api/peer-reviews/pending
-// TODO: Connect to GET http://localhost:8000/api/peer-reviews/submitted
-// TODO: Connect to POST http://localhost:8000/api/peer-reviews
+// TODO: Connect to GET /api/peer-reviews/pending — peer reviews API
+// TODO: Connect to GET /api/peer-reviews/submitted — peer reviews API
+// TODO: Connect to POST /api/peer-reviews — submit peer review
+// 
+// TODO: When teams API is available, use GET /api/teams/{team_id}/members
+// to get the list of teammates for peer review instead of project students.
+// This enables proper team-based review workflows.
 
 interface PendingReview {
   id: string;

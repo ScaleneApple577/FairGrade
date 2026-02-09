@@ -21,6 +21,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
+// TODO: When teams API is available, scoring context should come from team membership
+// via GET /api/teams/{team_id}/members to calculate team-based comparisons.
+// Currently uses project-level comparisons.
+
 interface WorkOutputFactor {
   score: number | null;
   weight: 0.25;

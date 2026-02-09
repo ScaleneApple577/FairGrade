@@ -387,8 +387,8 @@ export default function StudentCalendar() {
     }));
   }, [meetings]);
 
-  // Loading state
-  if (isLoadingProjects) {
+  // Loading state - only show for initial load, always show calendar after
+  if (isLoadingProjects && isLoadingAssignments) {
     return (
       <StudentLayout pageTitle="Calendar">
         <div className="flex items-center justify-center h-64">
@@ -401,186 +401,181 @@ export default function StudentCalendar() {
     );
   }
 
+  // Always show the calendar, even with no projects
+  // Assignments are user-level (not project-level), so they show regardless
   return (
     <StudentLayout pageTitle="Calendar">
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-white text-2xl font-bold">Calendar</h1>
-        <p className="text-slate-400 text-sm">Manage your availability and find the best meeting times</p>
+        <p className="text-slate-400 text-sm">
+          View your assignments and manage your schedule
+          {/* TODO: When teams API is available, add team context for availability coordination */}
+        </p>
       </div>
 
-      {/* Project Selector */}
-      {projects.length === 0 ? (
-        <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-12 text-center">
-          <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-white text-lg font-semibold mb-2">No Projects Yet</h3>
-          <p className="text-slate-400 text-sm">
-            Join a project to access the calendar.
-          </p>
+      {/* Project Selector - optional, only shows if user has projects for availability */}
+      {projects.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {projects.map((project) => (
+            <button
+              key={project.id}
+              onClick={() => setSelectedProjectId(project.id)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                selectedProjectId === project.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-white/10 text-slate-400 hover:bg-white/15 hover:text-white"
+              }`}
+            >
+              {project.name}
+            </button>
+          ))}
         </div>
-      ) : (
-        <>
-          {/* Project Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {projects.map((project) => (
-              <button
-                key={project.id}
-                onClick={() => setSelectedProjectId(project.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                  selectedProjectId === project.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-white/10 text-slate-400 hover:bg-white/15 hover:text-white"
-                }`}
+      )}
+
+      {/* Main Content - Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        {/* Left Column - Calendar */}
+        <div className="space-y-4">
+          {/* Mini Month Calendar */}
+          <CalendarMiniMonth 
+            currentDate={currentDate} 
+            onSelectDate={handleSelectDate} 
+          />
+
+          {/* Calendar Navigation Bar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousWeek}
+                className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3"
               >
-                {project.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Main Content - Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-            {/* Left Column - Calendar */}
-            <div className="space-y-4">
-              {/* Mini Month Calendar */}
-              <CalendarMiniMonth 
-                currentDate={currentDate} 
-                onSelectDate={handleSelectDate} 
-              />
-
-              {/* Calendar Navigation Bar */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPreviousWeek}
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToToday}
-                    disabled={isCurrentWeek}
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3 py-1.5 text-sm disabled:opacity-50"
-                  >
-                    Today
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextWeek}
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="text-white font-medium min-w-[220px] text-center">
-                  {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setViewMode("week")}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition ${
-                      viewMode === "week"
-                        ? "bg-blue-500 text-white"
-                        : "bg-white/10 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    Week
-                  </button>
-                  <button
-                    onClick={() => setViewMode("month")}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition ${
-                      viewMode === "month"
-                        ? "bg-blue-500 text-white"
-                        : "bg-white/10 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    Month
-                  </button>
-                </div>
-              </div>
-
-              {/* Saving Indicator */}
-              {isSaving && (
-                <div className="text-slate-500 text-xs flex items-center gap-2">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Saving...
-                </div>
-              )}
-
-              {/* Calendar View */}
-              {viewMode === "week" ? (
-                <CalendarWeekView
-                  weekStart={weekStart}
-                  weekEnd={weekEnd}
-                  availabilityData={availabilityData}
-                  myAvailability={myAvailability}
-                  meetings={weekViewMeetings}
-                  isLoading={isLoadingAvailability}
-                  onToggleAvailability={handleToggleAvailability}
-                  onSavingChange={setIsSaving}
-                />
-              ) : (
-                <CalendarMonthView
-                  currentDate={currentDate}
-                  availabilityData={availabilityData}
-                  isLoading={isLoadingAvailability}
-                  onSelectDate={handleSelectDate}
-                />
-              )}
-
-              {/* Legend */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-wrap items-center gap-4 md:gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-emerald-500/25 border border-emerald-500/20" />
-                  <span className="text-slate-300 text-xs">All Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/15" />
-                  <span className="text-slate-300 text-xs">Most Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-orange-500/15 border border-orange-500/10" />
-                  <span className="text-slate-300 text-xs">Some Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-red-500/10 border border-red-500/10" />
-                  <span className="text-slate-300 text-xs">None Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-blue-500/30 border border-blue-500/25" />
-                  <span className="text-slate-300 text-xs">AI Recommended</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-white/[0.02] border border-white/5" />
-                  <span className="text-slate-300 text-xs">No Data</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-slate-300 text-xs">Your Availability</span>
-                </div>
-              </div>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToToday}
+                disabled={isCurrentWeek}
+                className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3 py-1.5 text-sm disabled:opacity-50"
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextWeek}
+                className="bg-white/10 border-white/10 text-white hover:bg-white/15 px-3"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
 
-            {/* Right Column - AI Sidebar */}
-            <CalendarAISidebar
-              recommendations={recommendations}
-              meetings={meetings}
-              teamStatus={teamStatus}
-              isLoading={isLoadingSidebar}
-              onSelectRecommendation={handleSelectRecommendation}
-              onScheduleMeeting={handleScheduleMeeting}
-              onQuickSet={handleQuickSet}
-              isSettingPreset={isSettingPreset}
-            />
+            <div className="text-white font-medium min-w-[220px] text-center">
+              {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setViewMode("week")}
+                className={`px-3 py-1.5 rounded-lg text-sm transition ${
+                  viewMode === "week"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white/10 text-slate-400 hover:text-white"
+                }`}
+              >
+                Week
+              </button>
+              <button
+                onClick={() => setViewMode("month")}
+                className={`px-3 py-1.5 rounded-lg text-sm transition ${
+                  viewMode === "month"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white/10 text-slate-400 hover:text-white"
+                }`}
+              >
+                Month
+              </button>
+            </div>
           </div>
-        </>
-      )}
+
+          {/* Saving Indicator */}
+          {isSaving && (
+            <div className="text-slate-500 text-xs flex items-center gap-2">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Saving...
+            </div>
+          )}
+
+          {/* Calendar View */}
+          {viewMode === "week" ? (
+            <CalendarWeekView
+              weekStart={weekStart}
+              weekEnd={weekEnd}
+              availabilityData={availabilityData}
+              myAvailability={myAvailability}
+              meetings={weekViewMeetings}
+              isLoading={isLoadingAvailability}
+              onToggleAvailability={handleToggleAvailability}
+              onSavingChange={setIsSaving}
+            />
+          ) : (
+            <CalendarMonthView
+              currentDate={currentDate}
+              availabilityData={availabilityData}
+              isLoading={isLoadingAvailability}
+              onSelectDate={handleSelectDate}
+            />
+          )}
+
+          {/* Legend */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3 flex flex-wrap items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-emerald-500/25 border border-emerald-500/20" />
+              <span className="text-slate-300 text-xs">All Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/15" />
+              <span className="text-slate-300 text-xs">Most Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-orange-500/15 border border-orange-500/10" />
+              <span className="text-slate-300 text-xs">Some Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-red-500/10 border border-red-500/10" />
+              <span className="text-slate-300 text-xs">None Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-blue-500/30 border border-blue-500/25" />
+              <span className="text-slate-300 text-xs">AI Recommended</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-white/[0.02] border border-white/5" />
+              <span className="text-slate-300 text-xs">No Data</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400" />
+              <span className="text-slate-300 text-xs">Your Availability</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - AI Sidebar */}
+        {/* TODO: When teams API is available, use team context from /api/teams for availability recommendations */}
+        <CalendarAISidebar
+          recommendations={recommendations}
+          meetings={meetings}
+          teamStatus={teamStatus}
+          isLoading={isLoadingSidebar}
+          onSelectRecommendation={handleSelectRecommendation}
+          onScheduleMeeting={handleScheduleMeeting}
+          onQuickSet={handleQuickSet}
+          isSettingPreset={isSettingPreset}
+        />
+      </div>
 
       {/* Schedule Meeting Modal */}
       <ScheduleMeetingModal
