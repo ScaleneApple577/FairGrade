@@ -34,6 +34,14 @@ import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentB
 import { ClassroomInvitationBanner } from "@/components/student/ClassroomInvitationBanner";
 import { api } from "@/lib/api";
 import { fetchMyTasks, getStatusDisplay, Task } from "@/lib/taskUtils";
+import { 
+  getUpcomingAssignments, 
+  getOverdueAssignments, 
+  formatDueDate, 
+  getAssignmentUrgency, 
+  getUrgencyStyles,
+  type Assignment 
+} from "@/lib/assignmentUtils";
 interface ProjectAssignment {
   id: string;
   notificationId: string;
@@ -140,8 +148,8 @@ interface DashboardData {
   student: { firstName: string };
   stats: {
     activeProjects: number;
-    tasksDueSoon: number;
-    tasksOverdue: number;
+    assignmentsDueSoon: number; // Changed from tasksDueSoon
+    assignmentsOverdue: number; // Changed from tasksOverdue
     contributionScore: number | null;
     contributionChange: number;
     nextMeeting: { title: string; date: string; time: string } | null;
@@ -152,6 +160,8 @@ interface DashboardData {
   upcomingTasks: Array<{ id: number; title: string; project: string; status: string; dueDate?: string | null; priority?: string | null }>;
   thisWeekEvents: Array<{ id: string; title: string; date: string; day: string; startTime: string; endTime: string; type: string }>;
   projects: Array<{ id: string; name: string; course: string; deadline: string; health: string; myContributionScore: number }>;
+  // Assignments from backend
+  upcomingAssignments: Assignment[];
 }
 
 export default function StudentDashboard() {
@@ -191,26 +201,27 @@ export default function StudentDashboard() {
     const fetchDashboard = async () => {
       setIsLoading(true);
       try {
-        // Fetch tasks using the task utility
-        // TODO: Backend needs GET /api/tasks/mine endpoint
-        // const myTasks = await fetchMyTasks();
+        // Fetch assignments using the new assignment utility
+        // GET /api/assignments/mine with date range
+        const upcomingAssignments = await getUpcomingAssignments(7);
+        const overdueAssignments = await getOverdueAssignments();
         
-        // Fetch all dashboard data from API
-        // const statsData = await api.get('/api/student/dashboard/stats');
-        // const activityData = await api.get('/api/student/activity');
-        // const calendarData = await api.get('/api/student/calendar/week');
-        // const projectsData = await api.get('/api/student/projects');
-        // const scoreData = await api.get('/api/student/stats/score');
-        // const meetingData = await api.get('/api/student/meetings/next');
-        // const achievementsData = await api.get('/api/student/achievements');
+        // Fetch projects
+        let projectCount = 0;
+        try {
+          const projectsData = await api.get<Array<{ id: string; name: string }>>('/api/projects/projects');
+          projectCount = (projectsData || []).length;
+        } catch {
+          projectCount = 0;
+        }
         
-        // Initialize with empty data - replace with actual API calls
+        // Initialize with real assignment data
         setDashboardData({
           student: { firstName: "Student" },
           stats: {
-            activeProjects: 0,
-            tasksDueSoon: 0,
-            tasksOverdue: 0,
+            activeProjects: projectCount,
+            assignmentsDueSoon: upcomingAssignments.length,
+            assignmentsOverdue: overdueAssignments.length,
             contributionScore: null,
             contributionChange: 0,
             nextMeeting: null,
@@ -220,10 +231,29 @@ export default function StudentDashboard() {
           upcomingTasks: [],
           thisWeekEvents: [],
           projects: [],
+          upcomingAssignments: upcomingAssignments,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard:", error);
         toast.error("Failed to load dashboard data");
+        // Set empty state on error
+        setDashboardData({
+          student: { firstName: "Student" },
+          stats: {
+            activeProjects: 0,
+            assignmentsDueSoon: 0,
+            assignmentsOverdue: 0,
+            contributionScore: null,
+            contributionChange: 0,
+            nextMeeting: null,
+            achievementsUnlocked: 0,
+          },
+          recentActivity: [],
+          upcomingTasks: [],
+          thisWeekEvents: [],
+          projects: [],
+          upcomingAssignments: [],
+        });
       } finally {
         setIsLoading(false);
       }
@@ -384,19 +414,19 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Tasks Due */}
+        {/* Due Soon (Assignments) */}
         <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/15 hover:scale-[1.02] transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="w-9 h-9 rounded-lg bg-yellow-500/15 flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-yellow-400" />
             </div>
-            {data.stats.tasksOverdue > 0 && (
-              <span className="text-red-400 text-xs">{data.stats.tasksOverdue} overdue</span>
+            {data.stats.assignmentsOverdue > 0 && (
+              <span className="text-red-400 text-xs">{data.stats.assignmentsOverdue} overdue</span>
             )}
           </div>
           <div className="mt-3">
-            <p className="text-2xl font-bold text-white">{data.stats.tasksDueSoon}</p>
-            <p className="text-slate-400 text-xs mt-0.5">Tasks Due</p>
+            <p className="text-2xl font-bold text-white">{data.stats.assignmentsDueSoon}</p>
+            <p className="text-slate-400 text-xs mt-0.5">Due Soon</p>
           </div>
         </div>
 
@@ -490,7 +520,7 @@ export default function StudentDashboard() {
             )}
           </motion.div>
 
-          {/* Upcoming Tasks */}
+          {/* Upcoming Assignments - powered by GET /api/assignments/mine */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -498,7 +528,58 @@ export default function StudentDashboard() {
             className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Upcoming Tasks</h3>
+              <h3 className="text-lg font-semibold text-white">Upcoming Assignments</h3>
+              <Link to="/student/calendar" className="text-blue-400 text-xs hover:text-blue-300">View all →</Link>
+            </div>
+            {data.upcomingAssignments.length > 0 ? (
+              <div className="space-y-3">
+                {data.upcomingAssignments.map((assignment, index) => {
+                  const urgency = getAssignmentUrgency(assignment);
+                  const urgencyStyles = getUrgencyStyles(urgency);
+                  return (
+                    <motion.div
+                      key={assignment.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + index * 0.05 }}
+                      className={`p-3 rounded-xl border-l-2 ${urgencyStyles.border} ${urgencyStyles.bg} hover:bg-white/[0.06] transition-all duration-200 cursor-pointer`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{assignment.title}</p>
+                          <p className="text-slate-500 text-xs mt-0.5">
+                            {assignment.classroom_name || 'Classroom'}
+                          </p>
+                        </div>
+                        <span className={`text-xs ${urgencyStyles.text} flex-shrink-0 ml-2`}>
+                          {formatDueDate(assignment.due_date)}
+                        </span>
+                      </div>
+                      {assignment.description && (
+                        <p className="text-slate-400 text-xs mt-2 line-clamp-2">{assignment.description}</p>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400 text-sm">No upcoming assignments.</p>
+                <p className="text-slate-500 text-xs mt-1">Assignments will appear here when created by your teacher.</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Upcoming Tasks (project-level tasks, separate from assignments) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Project Tasks</h3>
             </div>
             {data.upcomingTasks.length > 0 ? (
               <div className="space-y-3">
@@ -511,7 +592,7 @@ export default function StudentDashboard() {
                       key={task.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6 + index * 0.05 }}
+                      transition={{ delay: 0.7 + index * 0.05 }}
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.03] transition-all duration-200 cursor-pointer"
                     >
                       <div className="w-5 h-5 rounded-full border-2 border-slate-600 flex-shrink-0" />
@@ -539,9 +620,9 @@ export default function StudentDashboard() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <CheckCircle className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 text-sm">No upcoming tasks.</p>
+              <div className="text-center py-8">
+                <CheckCircle className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-400 text-sm">No project tasks yet.</p>
                 <p className="text-slate-500 text-xs mt-1">Tasks will appear here when assigned by your team.</p>
               </div>
             )}

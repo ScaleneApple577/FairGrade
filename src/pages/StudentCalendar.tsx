@@ -6,6 +6,8 @@ import {
   addWeeks, 
   subWeeks, 
   isSameWeek,
+  startOfMonth,
+  endOfMonth,
   parseISO
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2, Calendar } from "lucide-react";
@@ -18,6 +20,11 @@ import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
 import { CalendarMonthView } from "@/components/calendar/CalendarMonthView";
 import { CalendarAISidebar } from "@/components/calendar/CalendarAISidebar";
 import { ScheduleMeetingModal } from "@/components/calendar/ScheduleMeetingModal";
+import { 
+  getMyAssignments, 
+  mapAssignmentToCalendarEvent,
+  type Assignment 
+} from "@/lib/assignmentUtils";
 
 // Types
 interface Project {
@@ -69,6 +76,17 @@ interface TeamMemberStatus {
   lastUpdated?: string;
 }
 
+// Calendar event type for unified display
+interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: Date;
+  classroomName?: string;
+  type: "assignment" | "meeting" | "availability";
+  color: string;
+}
+
 type ViewMode = "week" | "month";
 
 export default function StudentCalendar() {
@@ -95,6 +113,11 @@ export default function StudentCalendar() {
   const [teamStatus, setTeamStatus] = useState<TeamMemberStatus[]>([]);
   const [isLoadingSidebar, setIsLoadingSidebar] = useState(false);
   const [isSettingPreset, setIsSettingPreset] = useState(false);
+  
+  // Assignments state — powered by GET /api/assignments/mine
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   
   // Modal state
   const [showMeetingModal, setShowMeetingModal] = useState(false);
@@ -131,6 +154,44 @@ export default function StudentCalendar() {
     };
     loadProjects();
   }, []);
+
+  // Load assignments when date range changes — GET /api/assignments/mine
+  useEffect(() => {
+    const loadAssignments = async () => {
+      setIsLoadingAssignments(true);
+      try {
+        // Calculate date range based on view mode
+        let startDate: string;
+        let endDate: string;
+        
+        if (viewMode === "week") {
+          startDate = format(weekStart, "yyyy-MM-dd");
+          endDate = format(weekEnd, "yyyy-MM-dd");
+        } else {
+          const monthStart = startOfMonth(currentDate);
+          const monthEnd = endOfMonth(currentDate);
+          startDate = format(monthStart, "yyyy-MM-dd");
+          endDate = format(monthEnd, "yyyy-MM-dd");
+        }
+        
+        // Fetch assignments from backend
+        const assignmentsData = await getMyAssignments(startDate, endDate);
+        setAssignments(assignmentsData);
+        
+        // Convert assignments to calendar events
+        const events: CalendarEvent[] = assignmentsData.map(mapAssignmentToCalendarEvent);
+        setCalendarEvents(events);
+      } catch (error) {
+        console.error("Failed to load assignments:", error);
+        setAssignments([]);
+        setCalendarEvents([]);
+      } finally {
+        setIsLoadingAssignments(false);
+      }
+    };
+    
+    loadAssignments();
+  }, [currentDate, viewMode, weekStart, weekEnd]);
 
   // Load availability data when project or date changes
   useEffect(() => {
