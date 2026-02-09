@@ -22,17 +22,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { getContributionReport, exportReport } from "@/lib/reportUtils";
+import { getAnalysisFlags } from "@/lib/analysisUtils";
 
 interface ReportGeneratorProps {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
+  projectId?: string;
 }
 
-export function ReportGenerator({ isOpen, onClose, projectName }: ReportGeneratorProps) {
+export function ReportGenerator({ isOpen, onClose, projectName, projectId }: ReportGeneratorProps) {
   const [reportType, setReportType] = useState("full");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [reportData, setReportData] = useState<any>(null);
   const [options, setOptions] = useState({
     includeContributions: true,
     includeTimeline: true,
@@ -42,16 +47,59 @@ export function ReportGenerator({ isOpen, onClose, projectName }: ReportGenerato
   });
 
   const handleGenerate = async () => {
+    if (!projectId) {
+      toast.error("Project ID is required to generate report");
+      return;
+    }
+    
     setIsGenerating(true);
-    // Simulate report generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsGenerating(false);
-    setIsComplete(true);
+    try {
+      // Fetch contribution report: GET /api/reports/contribution/{projectId}
+      const contributionData = await getContributionReport(projectId);
+      
+      let flagsData: any[] = [];
+      if (options.includeFlags) {
+        // Fetch analysis flags: GET /api/analysis/flags/{projectId}
+        flagsData = await getAnalysisFlags(projectId);
+      }
+      
+      setReportData({
+        contribution: contributionData,
+        flags: flagsData,
+        generatedAt: new Date().toISOString(),
+      });
+      
+      setIsComplete(true);
+      toast.success("Report generated successfully!");
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      toast.error("Failed to generate report");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+  const handleDownload = async () => {
+    if (!projectId) return;
+    try {
+      // Export report: POST /api/reports/export?report_type=contribution&project_id={id}
+      const result = await exportReport("contribution", projectId);
+      // Handle download - the result might be a URL or blob
+      if (typeof result === 'string' && result.startsWith('http')) {
+        window.open(result, '_blank');
+      } else {
+        toast.success("Report export initiated");
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error("Failed to export report");
+    }
   };
 
   const handleClose = () => {
     setIsComplete(false);
     setIsGenerating(false);
+    setReportData(null);
     onClose();
   };
 
@@ -110,13 +158,13 @@ export function ReportGenerator({ isOpen, onClose, projectName }: ReportGenerato
                     Your report has been generated and is ready for download.
                   </p>
                   <div className="flex items-center justify-center gap-3">
-                    <Button>
+                    <Button onClick={handleDownload}>
                       <Download className="h-4 w-4 mr-2" />
                       Download PDF
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" disabled>
                       <Mail className="h-4 w-4 mr-2" />
-                      Email Report
+                      Email Report (Coming Soon)
                     </Button>
                   </div>
                 </motion.div>
