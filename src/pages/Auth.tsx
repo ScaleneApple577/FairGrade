@@ -75,10 +75,10 @@ const Auth = () => {
         const user = JSON.parse(storedUser);
         const role = toFrontendRole(user.role);
         if (role === 'teacher') {
-          navigate('/teacher/dashboard');
+          window.location.href = '/teacher/dashboard';
           return;
         } else if (role === 'student') {
-          navigate('/student/dashboard');
+          window.location.href = '/student/dashboard';
           return;
         }
       } catch { /* ignore */ }
@@ -86,11 +86,11 @@ const Auth = () => {
     // Fallback
     const userRole = localStorage.getItem('user_role');
     if (userRole === 'teacher') {
-      navigate('/teacher/dashboard');
+      window.location.href = '/teacher/dashboard';
     } else if (userRole === 'student') {
-      navigate('/student/dashboard');
+      window.location.href = '/student/dashboard';
     } else {
-      navigate('/auth');
+      window.location.href = '/auth';
     }
   };
 
@@ -256,16 +256,6 @@ const Auth = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md text-center"
         >
-          <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
-            <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
-              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </Link>
-
           <h1 className="text-2xl font-bold text-white mb-2">One More Step!</h1>
           <p className="text-slate-400 text-sm mb-2">Welcome, {existingUser.email}</p>
           <p className="text-slate-500 text-sm mb-8">Please tell us who you are to complete your account setup.</p>
@@ -341,16 +331,6 @@ const Auth = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md text-center"
         >
-          <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
-            <div className="w-16 h-20 group-hover:scale-105 transition-transform duration-300">
-              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </Link>
-
           <h1 className="text-2xl font-bold text-white mb-2">Welcome Back!</h1>
           <p className="text-slate-400 text-sm mb-8">You're already signed in</p>
 
@@ -523,6 +503,7 @@ const Auth = () => {
                           placeholder="John"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
+                          autoComplete="off"
                           className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                           required
                         />
@@ -537,6 +518,7 @@ const Auth = () => {
                           placeholder="Doe"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
+                          autoComplete="off"
                           className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                         />
                       </div>
@@ -554,6 +536,7 @@ const Auth = () => {
                       placeholder="you@school.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="off"
                       className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                       required
                     />
@@ -570,6 +553,7 @@ const Auth = () => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="off"
                       className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                       required
                     />
