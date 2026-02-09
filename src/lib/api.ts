@@ -1,8 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
 import pako from 'pako';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fairgrade.onrender.com';
-
 // ============ Role Mapping ============
 // Backend uses "instructor" but frontend uses "teacher" for routing and display
 
@@ -60,15 +58,9 @@ export function normalizeUser(apiUser: any): NormalizedUser {
 
 // ============ Auth Token Helpers ============
 
-// Helper to get the auth token - prefer localStorage, then Supabase session
+// Helper to get the auth token from localStorage
 async function getAuthToken(): Promise<string | null> {
-  // First check localStorage (backend JWT)
-  const storedToken = localStorage.getItem('access_token');
-  if (storedToken) return storedToken;
-  
-  // Fallback to Supabase session
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
+  return localStorage.getItem('access_token');
 }
 
 // Handle authentication failure - redirect to login immediately

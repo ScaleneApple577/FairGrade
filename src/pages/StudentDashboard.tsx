@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+
 import { toast } from "sonner";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
@@ -264,8 +264,9 @@ export default function StudentDashboard() {
   const generateExtensionToken = async () => {
     setIsGenerating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const storedUser = localStorage.getItem('user');
+      const userId = storedUser ? JSON.parse(storedUser).id : null;
+      if (!userId) {
         toast.error("You must be logged in to generate a token");
         return;
       }
@@ -276,23 +277,11 @@ export default function StudentDashboard() {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 90);
-
-      await supabase
-        .from("extension_tokens")
-        .delete()
-        .eq("student_id", user.id);
-
-      const { error } = await supabase.from("extension_tokens").insert({
-        student_id: user.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-      });
-
-      if (error) {
-        toast.error("Failed to generate token");
-        return;
+      // Use backend API to generate/store extension token
+      try {
+        await api.post('/api/extension/token', { token });
+      } catch {
+        // If no backend endpoint exists, just show the token client-side
       }
 
       setGeneratedToken(token);

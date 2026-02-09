@@ -8,7 +8,7 @@ import {
   HelpCircle, FastForward, Rewind, Eye, EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+
 import { toast } from "sonner";
 
 // Helper component for keyboard shortcut rows
@@ -250,7 +250,10 @@ const ShortcutRow = ({ keys, description }: { keys: string[], description: strin
     const isActive = (path: string) => location.pathname === path || location.pathname.startsWith("/teacher/live");
 
     const handleLogout = async () => {
-      await supabase.auth.signOut();
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('user_role');
+      sessionStorage.clear();
       navigate("/auth");
     };
 

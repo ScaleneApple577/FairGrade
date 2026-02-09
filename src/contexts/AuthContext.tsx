@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import { toFrontendRole, normalizeUser, NormalizedUser } from "@/lib/api";
+import { api, toFrontendRole, normalizeUser, NormalizedUser } from "@/lib/api";
 
 export type UserRole = "teacher" | "student" | null;
 
@@ -17,227 +14,189 @@ export interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  session: Session | null;
+  session: null; // kept for interface compat, always null
   isAuthenticated: boolean;
   isLoading: boolean;
   role: UserRole;
   login: (email: string, password: string) => Promise<{ error: Error | null }>;
   signup: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<{ error: Error | null }>;
-  loginWithGoogle: () => Promise<{ error: Error | null }>;
+  loginWithGoogle: () => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fairgrade.onrender.com';
+
+function buildAuthUserFromStored(): AuthUser | null {
+  const storedUser = localStorage.getItem('user');
+  if (!storedUser) return null;
+  try {
+    const u = JSON.parse(storedUser);
+    return {
+      id: u.id || '',
+      email: u.email || '',
+      fullName: u.name || u.fullName || null,
+      firstName: u.first_name || u.firstName || null,
+      lastName: u.last_name || u.lastName || null,
+      role: (toFrontendRole(u.role) as UserRole) || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [role, setRole] = useState<UserRole>(null);
 
-  // Fetch user role from database
-  const fetchUserRole = useCallback(async (userId: string): Promise<UserRole> => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching user role:", error);
-        return null;
-      }
-      
-      // Convert API role to frontend role (handles "instructor" → "teacher")
-      return toFrontendRole(data?.role) as UserRole || null;
-    } catch (error) {
-      console.error("Error fetching user role:", error);
-      return null;
-    }
-  }, []);
-
-  // Build AuthUser from Supabase user and role
-  const buildAuthUser = useCallback((supabaseUser: User, userRole: UserRole): AuthUser => {
-    const fullName = supabaseUser.user_metadata?.full_name || null;
-    const firstName = supabaseUser.user_metadata?.first_name || (fullName ? fullName.split(' ')[0] : null);
-    const lastName = supabaseUser.user_metadata?.last_name || (fullName ? fullName.split(' ').slice(1).join(' ') : null);
-    
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || "",
-      fullName: fullName || `${firstName || ''} ${lastName || ''}`.trim() || null,
-      firstName,
-      lastName,
-      role: userRole,
-    };
-  }, []);
-
-  // Refresh user data
-  const refreshUser = useCallback(async () => {
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
-    
-    if (currentSession?.user) {
-      const userRole = await fetchUserRole(currentSession.user.id);
-      const authUser = buildAuthUser(currentSession.user, userRole);
-      setUser(authUser);
-      setRole(userRole);
-      setSession(currentSession);
-    } else {
-      setUser(null);
-      setRole(null);
-      setSession(null);
-    }
-  }, [fetchUserRole, buildAuthUser]);
-
-  // Initialize auth state
+  // On mount, check for existing token and load user
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          // Defer role fetching to prevent deadlock
-          setTimeout(async () => {
-            const userRole = await fetchUserRole(currentSession.user.id);
-            const authUser = buildAuthUser(currentSession.user, userRole);
-            setUser(authUser);
-            setRole(userRole);
-            setIsLoading(false);
-          }, 0);
-        } else {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      // Try to load cached user immediately
+      const cached = buildAuthUserFromStored();
+      if (cached) {
+        setUser(cached);
+        setRole(cached.role);
+      }
+      // Verify token is still valid by fetching /api/auth/me
+      api.get('/api/auth/me')
+        .then((data) => {
+          const normalized = normalizeUser(data);
+          const authUser: AuthUser = {
+            id: normalized.id,
+            email: normalized.email,
+            fullName: normalized.name,
+            firstName: normalized.first_name,
+            lastName: normalized.last_name,
+            role: (normalized.role as UserRole) || null,
+          };
+          setUser(authUser);
+          setRole(authUser.role);
+          localStorage.setItem('user', JSON.stringify(normalized));
+          localStorage.setItem('user_role', normalized.role || '');
+        })
+        .catch(() => {
+          // Token invalid, clear everything
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('user_role');
           setUser(null);
           setRole(null);
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      
-      if (existingSession?.user) {
-        const userRole = await fetchUserRole(existingSession.user.id);
-        const authUser = buildAuthUser(existingSession.user, userRole);
-        setUser(authUser);
-        setRole(userRole);
-      }
+        })
+        .finally(() => setIsLoading(false));
+    } else {
       setIsLoading(false);
-    });
+    }
+  }, []);
 
-    return () => subscription.unsubscribe();
-  }, [fetchUserRole, buildAuthUser]);
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setUser(null);
+      setRole(null);
+      return;
+    }
+    try {
+      const data = await api.get('/api/auth/me');
+      const normalized = normalizeUser(data);
+      const authUser: AuthUser = {
+        id: normalized.id,
+        email: normalized.email,
+        fullName: normalized.name,
+        firstName: normalized.first_name,
+        lastName: normalized.last_name,
+        role: (normalized.role as UserRole) || null,
+      };
+      setUser(authUser);
+      setRole(authUser.role);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      localStorage.setItem('user_role', normalized.role || '');
+    } catch {
+      setUser(null);
+      setRole(null);
+    }
+  }, []);
 
-  // Login with email/password
   const login = useCallback(async (email: string, password: string): Promise<{ error: Error | null }> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          return { error: new Error("Invalid email or password. Please try again.") };
-        }
-        return { error: new Error(error.message) };
-      }
-
+      const response = await api.post('/api/auth/login', { email, password });
+      localStorage.setItem('access_token', response.access_token);
+      const normalized = normalizeUser(response.user);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      localStorage.setItem('user_role', normalized.role || '');
+      const authUser: AuthUser = {
+        id: normalized.id,
+        email: normalized.email,
+        fullName: normalized.name,
+        firstName: normalized.first_name,
+        lastName: normalized.last_name,
+        role: (normalized.role as UserRole) || null,
+      };
+      setUser(authUser);
+      setRole(authUser.role);
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
   }, []);
 
-  // Signup with email/password
   const signup = useCallback(async (
-    email: string, 
-    password: string, 
+    email: string,
+    password: string,
     firstName: string,
-    lastName: string, 
+    lastName: string,
     userRole: UserRole
   ): Promise<{ error: Error | null }> => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { data, error } = await supabase.auth.signUp({
+      const { toApiRole } = await import("@/lib/api");
+      const response = await api.post('/api/auth/register', {
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: `${firstName} ${lastName}`.trim(),
-            first_name: firstName,
-            last_name: lastName,
-          },
-        },
+        first_name: firstName,
+        last_name: lastName || '',
+        role: toApiRole(userRole),
       });
-
-      if (error) {
-        if (error.message.includes("User already registered")) {
-          return { error: new Error("An account with this email already exists. Please sign in instead.") };
-        }
-        return { error: new Error(error.message) };
-      }
-
-      // Set user role (store frontend role value in database)
-      if (data.user && userRole) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: data.user.id, role: userRole });
-
-        if (roleError) {
-          console.error("Error setting role:", roleError);
-        }
-      }
-
+      localStorage.setItem('access_token', response.access_token);
+      const normalized = normalizeUser(response.user);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      localStorage.setItem('user_role', normalized.role || '');
+      const authUser: AuthUser = {
+        id: normalized.id,
+        email: normalized.email,
+        fullName: normalized.name,
+        firstName: normalized.first_name,
+        lastName: normalized.last_name,
+        role: (normalized.role as UserRole) || null,
+      };
+      setUser(authUser);
+      setRole(authUser.role);
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
   }, []);
 
-  // Login with Google
-  const loginWithGoogle = useCallback(async (): Promise<{ error: Error | null }> => {
-    try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-
-      if (error) {
-        return { error: new Error(error.message) };
-      }
-
-      return { error: null };
-    } catch (error) {
-      return { error: error as Error };
-    }
+  const loginWithGoogle = useCallback(() => {
+    window.location.href = `${API_BASE_URL}/api/auth/google/authorize`;
   }, []);
 
-  // Logout - clear all auth data
   const logout = useCallback(async () => {
-    // Clear localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     localStorage.removeItem('user_role');
     sessionStorage.clear();
-    
-    // Sign out from Supabase
-    await supabase.auth.signOut();
-    
-    // Clear state
     setUser(null);
-    setSession(null);
     setRole(null);
   }, []);
 
   const value: AuthContextType = {
     user,
-    session,
-    isAuthenticated: !!user && !!session,
+    session: null,
+    isAuthenticated: !!user,
     isLoading,
     role,
     login,
