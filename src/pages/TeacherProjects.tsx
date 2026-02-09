@@ -85,7 +85,7 @@ export default function TeacherProjects() {
       setIsLoading(true);
       try {
         // Backend returns: [{ id, name, description, created_at }]
-        const data = await api.get<ApiProject[]>('/api/projects/projects');
+        const data = await api.get<ApiProject[]>('/api/projects');
         // Transform API response to frontend format with defaults for missing fields
         const transformedProjects: Project[] = (data || []).map((p) => ({
           id: p.id,

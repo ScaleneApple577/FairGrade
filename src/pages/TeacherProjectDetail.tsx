@@ -148,7 +148,7 @@ export default function TeacherProjectDetail() {
       setIsLoading(true);
       try {
         // Backend returns: { id, name, description, files: [...], created_at }
-        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
+        const data = await api.get<ApiProject>(`/api/projects/${id}`);
         
         // Transform to frontend format
         setProject({
@@ -169,7 +169,7 @@ export default function TeacherProjectDetail() {
         // Files come directly from project response
         setFiles(data.files || []);
         
-        // TODO: Need GET /api/projects/projects/{project_id}/students endpoint
+        // TODO: Need GET /api/projects/{project_id}/students endpoint
         setStudents([]);
         setActivities([]);
         setAlerts([]);
@@ -231,8 +231,8 @@ export default function TeacherProjectDetail() {
   const handleSendReminder = async () => {
     setIsSendingReminder(true);
     try {
-      // TODO: POST /api/projects/projects/{project_id}/remind-files - endpoint may not exist
-      console.warn("TODO: Need POST /api/projects/projects/{project_id}/remind-files endpoint");
+      // TODO: POST /api/projects/{project_id}/remind-files - endpoint may not exist
+      console.warn("TODO: Need POST /api/projects/{project_id}/remind-files endpoint");
       
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({

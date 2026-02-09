@@ -41,7 +41,7 @@ interface UseLiveStatusOptions {
  * 
  * API Endpoints:
  * - GET /api/events/project/{project_id} — returns events for a specific project
- * - GET /api/projects/projects — returns all projects (used to aggregate events)
+ * - GET /api/projects — returns all projects (used to aggregate events)
  */
 export function useLiveStatus(options: UseLiveStatusOptions = {}) {
   const { projectId, enabled = true, pollingInterval = 5000 } = options;
@@ -71,7 +71,7 @@ export function useLiveStatus(options: UseLiveStatusOptions = {}) {
       } else {
         // Fetch projects and then events for each (limit to 10 projects for performance)
         try {
-          const projects = await api.get<Array<{ id: string; name: string }>>('/api/projects/projects');
+          const projects = await api.get<Array<{ id: string; name: string }>>('/api/projects');
           const projectList = Array.isArray(projects) ? projects.slice(0, 10) : [];
           
           for (const project of projectList) {

@@ -139,13 +139,13 @@ export async function reassignTask(task: Task, newAssigneeId: number | null): Pr
 // ============ Fetch Tasks ============
 // TODO: Backend needs a list tasks endpoint, either:
 // GET /api/tasks?project_id=X — list tasks for a project
-// OR GET /api/projects/projects/{project_id}/tasks
+// OR GET /api/projects/{project_id}/tasks
 // For now, tasks may come from the project detail response if the backend includes them there
 
 export async function fetchTasksForProject(projectId: string): Promise<Task[]> {
   try {
     // Try fetching from project detail first
-    const project = await api.get<{ id: string; tasks?: ApiTask[] }>(`/api/projects/projects/${projectId}`);
+    const project = await api.get<{ id: string; tasks?: ApiTask[] }>(`/api/projects/${projectId}`);
     if (project.tasks && Array.isArray(project.tasks)) {
       return mapApiTasksToTasks(project.tasks);
     }

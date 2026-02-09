@@ -104,39 +104,28 @@ const Auth = () => {
     setSavingRole(false);
   };
 
-  const handleSaveOAuthRole = async (selectedRole: RoleType) => {
+  const handleSaveOAuthRole = (selectedRole: RoleType) => {
     if (!existingUser || !selectedRole) return;
 
-    setSavingRole(true);
-    try {
-      const apiRole = toApiRole(selectedRole);
-      await api.put("/api/auth/me", { role: apiRole });
-
-      setExistingUser((prev) => (prev ? { ...prev, role: selectedRole } : null));
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
+    // Save role to localStorage only — backend doesn't have PUT /api/auth/me
+    setExistingUser((prev) => (prev ? { ...prev, role: selectedRole } : null));
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
         const user = JSON.parse(storedUser);
         user.role = selectedRole;
         localStorage.setItem('user', JSON.stringify(user));
-      }
-      localStorage.setItem('user_role', selectedRole);
-      setNeedsRoleSelection(false);
-
-      toast({
-        title: "Welcome to FairGrade!",
-        description: `You're all set as a ${selectedRole === 'teacher' ? 'Teacher' : 'Student'}.`,
-      });
-
-      redirectBasedOnRole(selectedRole);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Couldn't finish setup",
-        description: "We couldn't save your role yet. Please try again.",
-      });
-    } finally {
-      setSavingRole(false);
+      } catch { /* ignore */ }
     }
+    localStorage.setItem('user_role', selectedRole);
+    setNeedsRoleSelection(false);
+
+    toast({
+      title: "Welcome to FairGrade!",
+      description: `You're all set as a ${selectedRole === 'teacher' ? 'Teacher' : 'Student'}.`,
+    });
+
+    redirectBasedOnRole(selectedRole);
   };
 
   const validateInputs = (isSignUp: boolean) => {

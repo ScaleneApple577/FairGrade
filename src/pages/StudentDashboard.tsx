@@ -209,7 +209,7 @@ export default function StudentDashboard() {
         // Fetch projects
         let projectCount = 0;
         try {
-          const projectsData = await api.get<Array<{ id: string; name: string }>>('/api/projects/projects');
+          const projectsData = await api.get<Array<{ id: string; name: string }>>('/api/projects');
           projectCount = (projectsData || []).length;
         } catch {
           projectCount = 0;

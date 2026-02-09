@@ -38,7 +38,7 @@ interface TeamsSectionProps {
 
 export function TeamsSection({ projectId }: TeamsSectionProps) {
   // TODO: Need endpoint to get teams for a project
-  // e.g., GET /api/projects/projects/{project_id}/teams
+  // e.g., GET /api/projects/{project_id}/teams
   // For now, store teams locally after creation
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -88,7 +88,7 @@ export function TeamsSection({ projectId }: TeamsSectionProps) {
       });
       
       // TODO: Need endpoint to associate team with project
-      // e.g., POST /api/projects/projects/{project_id}/teams with { team_id }
+      // e.g., POST /api/projects/{project_id}/teams with { team_id }
       // For now, store locally
       const updatedTeams = [...teams, response];
       persistTeams(updatedTeams);
