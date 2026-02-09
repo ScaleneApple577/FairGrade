@@ -89,7 +89,7 @@ export default function TeacherReports() {
       setIsLoading(true);
       try {
         // Fetch projects for dropdowns
-        const projectsData = await api.get<Project[]>("/api/projects/projects");
+        const projectsData = await api.get<Project[]>("/api/projects");
         setProjects(projectsData || []);
         
         // TODO: Need endpoint to list all students for the teacher

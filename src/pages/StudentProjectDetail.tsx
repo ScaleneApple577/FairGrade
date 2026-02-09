@@ -100,7 +100,7 @@ export default function StudentProjectDetail() {
       setIsLoading(true);
       try {
         // Backend returns: { id, name, description, files: [...], created_at }
-        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
+        const data = await api.get<ApiProject>(`/api/projects/${id}`);
         
         // Transform to frontend format
         setProject({
@@ -177,8 +177,8 @@ export default function StudentProjectDetail() {
     setIsLinking(true);
     setLinkUrlError("");
     try {
-      // POST /api/projects/projects/{project_id}/files
-      const response = await api.post<ApiFile>(`/api/projects/projects/${id}/files`, {
+      // POST /api/projects/{project_id}/files
+      const response = await api.post<ApiFile>(`/api/projects/${id}/files`, {
         name: fileName,
         drive_file_id: driveFileId,
         mime_type: mimeType,
@@ -207,9 +207,9 @@ export default function StudentProjectDetail() {
   const handleDeleteFile = async (fileId: string) => {
     setIsDeleting(true);
     try {
-      // TODO: DELETE /api/projects/projects/{project_id}/files/{file_id} - endpoint may not exist
+      // TODO: DELETE /api/projects/{project_id}/files/{file_id} - endpoint may not exist
       // For now, just remove locally with a warning
-      console.warn("TODO: Need DELETE /api/projects/projects/{project_id}/files/{file_id} endpoint");
+      console.warn("TODO: Need DELETE /api/projects/{project_id}/files/{file_id} endpoint");
       setFiles(files.filter(f => f.id !== fileId));
       
       toast({ title: "Document removed" });

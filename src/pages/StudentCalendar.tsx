@@ -134,7 +134,7 @@ export default function StudentCalendar() {
       setIsLoadingProjects(true);
       try {
         // Backend returns: [{ id, name, description, created_at }]
-        const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>('/api/projects/projects');
+        const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>('/api/projects');
         // Transform to expected format
         const projects: Project[] = (data || []).map((p) => ({
           id: p.id,
@@ -194,125 +194,47 @@ export default function StudentCalendar() {
   }, [currentDate, viewMode, weekStart, weekEnd]);
 
   // Load availability data when project or date changes
+  // TODO: Availability endpoint does not exist yet on the backend
   useEffect(() => {
     if (!selectedProjectId) return;
-    
-    const loadAvailability = async () => {
-      setIsLoadingAvailability(true);
-      try {
-        // TODO: api.get('/api/projects/projects/{project_id}/availability') - endpoint may not exist
-        const data = await api.get(`/api/projects/projects/${selectedProjectId}/availability`);
-        
-        // Transform API response to our format
-        if (data?.teamMembers) {
-          const transformed: Record<string, Record<number, SlotData>> = {};
-          const mySlots: Record<string, boolean> = {};
-          
-          // Process availability data
-          // This would be transformed from the API response
-          setAvailabilityData(transformed);
-          setMyAvailability(mySlots);
-        } else {
-          setAvailabilityData({});
-          setMyAvailability({});
-        }
-      } catch (error) {
-        console.error("Failed to load availability:", error);
-        setAvailabilityData({});
-        setMyAvailability({});
-      } finally {
-        setIsLoadingAvailability(false);
-      }
-    };
-    
-    loadAvailability();
+    setIsLoadingAvailability(false);
+    setAvailabilityData({});
+    setMyAvailability({});
   }, [selectedProjectId, weekStart]);
 
   // Load sidebar data (recommendations, meetings, team status)
+  // TODO: These endpoints do not exist on the backend yet
   useEffect(() => {
     if (!selectedProjectId) return;
-    
-    const loadSidebarData = async () => {
-      setIsLoadingSidebar(true);
-      try {
-        // TODO: Parallel API calls for sidebar data - endpoints may not exist yet
-        const [recsData, meetingsData, statusData] = await Promise.all([
-          api.get(`/api/projects/projects/${selectedProjectId}/availability/recommendations`).catch(() => ({ recommendations: [] })),
-          api.get(`/api/projects/projects/${selectedProjectId}/meetings`).catch(() => ({ meetings: [] })),
-          api.get(`/api/projects/projects/${selectedProjectId}/availability/status`).catch(() => ({ members: [] })),
-        ]);
-        
-        setRecommendations(recsData?.recommendations || []);
-        setMeetings(meetingsData?.meetings || []);
-        setTeamStatus(statusData?.members || []);
-      } catch (error) {
-        console.error("Failed to load sidebar data:", error);
-      } finally {
-        setIsLoadingSidebar(false);
-      }
-    };
-    
-    loadSidebarData();
+    setIsLoadingSidebar(false);
+    setRecommendations([]);
+    setMeetings([]);
+    setTeamStatus([]);
   }, [selectedProjectId]);
 
   // Toggle availability for a slot
+  // TODO: Availability endpoint does not exist yet on the backend
   const handleToggleAvailability = useCallback(async (date: string, hour: number) => {
     const slotKey = `${date}-${hour}`;
     const newValue = !myAvailability[slotKey];
-    
-    // Optimistic update
     setMyAvailability(prev => ({
       ...prev,
       [slotKey]: newValue
     }));
-
-    try {
-      // TODO: api.post('/api/projects/projects/{project_id}/availability') - endpoint may not exist
-      await api.post(`/api/projects/projects/${selectedProjectId}/availability`, {
-        slots: [{ date, hour, available: newValue }]
-      });
-    } catch (error) {
-      console.error("Failed to save availability:", error);
-      // Revert on error
-      setMyAvailability(prev => ({
-        ...prev,
-        [slotKey]: !newValue
-      }));
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save availability. Please try again.",
-      });
-    }
-  }, [selectedProjectId, myAvailability, toast]);
+    toast({
+      title: "Note",
+      description: "Availability saving is not yet connected to the backend.",
+    });
+  }, [myAvailability, toast]);
 
   // Quick set availability presets
+  // TODO: Availability endpoint does not exist yet on the backend
   const handleQuickSet = async (preset: string) => {
     if (!selectedProjectId) return;
-    
-    setIsSettingPreset(true);
-    try {
-      // TODO: api.post('/api/projects/projects/{project_id}/availability/bulk') - endpoint may not exist
-      await api.post(`/api/projects/projects/${selectedProjectId}/availability/bulk`, { preset });
-      
-      toast({
-        title: "Availability Updated",
-        description: preset === "clear" ? "Your availability has been cleared." : "Your availability has been set.",
-      });
-      
-      // Reload availability data
-      const data = await api.get(`/api/projects/projects/${selectedProjectId}/availability`);
-      // Update state with new data
-    } catch (error) {
-      console.error("Failed to set preset:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update availability. Please try again.",
-      });
-    } finally {
-      setIsSettingPreset(false);
-    }
+    toast({
+      title: "Note",
+      description: "Availability presets are not yet connected to the backend.",
+    });
   };
 
   // Handle AI recommendation selection
@@ -343,27 +265,11 @@ export default function StudentCalendar() {
   }) => {
     if (!selectedProjectId) return;
     
-    try {
-      // TODO: api.post('/api/projects/projects/{project_id}/meetings') - endpoint may not exist
-      await api.post(`/api/projects/projects/${selectedProjectId}/meetings`, meeting);
-      
-      toast({
-        title: "Meeting Scheduled",
-        description: "Your team has been notified.",
-      });
-      
-      // Reload meetings
-      const data = await api.get(`/api/projects/projects/${selectedProjectId}/meetings`);
-      setMeetings(data?.meetings || []);
-    } catch (error) {
-      console.error("Failed to schedule meeting:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to schedule meeting. Please try again.",
-      });
-      throw error;
-    }
+    // TODO: Meetings endpoint does not exist yet on the backend
+    toast({
+      title: "Note",
+      description: "Meeting scheduling is not yet connected to the backend.",
+    });
   };
 
   // Navigation handlers

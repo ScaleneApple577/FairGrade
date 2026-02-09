@@ -74,7 +74,7 @@ export default function StudentProjects() {
       setIsLoading(true);
       try {
         // Backend returns: [{ id, name, description, created_at }]
-        const data = await api.get<ApiProject[]>('/api/projects/projects');
+        const data = await api.get<ApiProject[]>('/api/projects');
         // Transform API response to frontend format with defaults
         const transformedProjects: Project[] = (data || []).map((p) => ({
           id: p.id,
@@ -112,7 +112,7 @@ export default function StudentProjects() {
   const handleJoinSuccess = async () => {
     // Refresh projects list
     try {
-      const data = await api.get<ApiProject[]>('/api/projects/projects');
+      const data = await api.get<ApiProject[]>('/api/projects');
       const transformedProjects: Project[] = (data || []).map((p) => ({
         id: p.id,
         name: p.name,

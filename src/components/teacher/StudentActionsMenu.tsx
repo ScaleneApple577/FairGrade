@@ -58,7 +58,7 @@ export function StudentActionsMenu({
     setIsLoadingProjects(true);
     try {
       // Backend returns: [{ id, name, description, created_at }]
-      const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>("/api/projects/projects");
+      const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>("/api/projects");
       // Transform to expected format
       const projects: Project[] = (data || []).map((p) => ({
         id: p.id,
@@ -96,8 +96,8 @@ export function StudentActionsMenu({
 
   const handleAssignToProject = async (projectId: string, projectName: string) => {
     try {
-      // TODO: POST /api/projects/projects/{project_id}/students - endpoint may not exist yet
-      await api.post(`/api/projects/projects/${projectId}/students`, { student_id: studentId });
+      // TODO: POST /api/projects/{project_id}/students - endpoint may not exist yet
+      await api.post(`/api/projects/${projectId}/students`, { student_id: studentId });
       toast.success(`${studentName || studentEmail} assigned to ${projectName}`);
       onRefresh();
     } catch (error) {

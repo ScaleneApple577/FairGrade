@@ -234,7 +234,7 @@ export function CreateProjectWizard({ isOpen, onClose }: CreateProjectWizardProp
     try {
       // Backend only accepts: { name, description }
       // Other fields (course_id, deadline, team_size, weights, lms, students) are not supported yet
-      const response = await api.post<{ id: string; name: string; description: string | null; created_at: string }>('/api/projects/projects', {
+      const response = await api.post<{ id: string; name: string; description: string | null; created_at: string }>('/api/projects', {
         name: projectName,
         description: description || null,
       });

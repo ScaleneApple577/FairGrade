@@ -17,7 +17,7 @@ interface MyTeamSectionProps {
 
 export function MyTeamSection({ projectId }: MyTeamSectionProps) {
   // TODO: Need endpoint to get student's team for a project
-  // e.g., GET /api/projects/projects/{project_id}/my-team
+  // e.g., GET /api/projects/{project_id}/my-team
   // or include team info in project detail response
   
   const [teamName, setTeamName] = useState<string | null>(null);
