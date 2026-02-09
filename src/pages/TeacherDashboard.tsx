@@ -25,6 +25,7 @@ import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { api } from "@/lib/api";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveEditsNotification } from "@/components/live/LiveEditsNotification";
+import { AssignmentsSection } from "@/components/teacher/AssignmentsSection";
 
 interface DashboardStats {
   activeProjects: number;
@@ -247,6 +248,9 @@ export default function TeacherDashboard() {
             </div>
           </motion.div>
         </div>
+
+        {/* Assignments Section — uses POST/GET/PUT/DELETE /api/assignments */}
+        <AssignmentsSection />
 
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
