@@ -28,6 +28,7 @@ import {
   getFileIcon,
   isValidGoogleUrl 
 } from "@/lib/fileUtils";
+import { MyTeamSection } from "@/components/project/MyTeamSection";
 
 // Backend API response format
 interface ApiProject {
@@ -366,6 +367,9 @@ export default function StudentProjectDetail() {
                 </p>
               </div>
             </div>
+
+            {/* My Team Section */}
+            <MyTeamSection projectId={project.id} />
           </>
         ) : (
           /* Project Not Found */

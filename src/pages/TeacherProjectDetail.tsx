@@ -30,6 +30,7 @@ import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveIndicator, StatusDot, EditingLabel } from "@/components/live/LiveIndicator";
 import { getGoogleFileUrl, getFileIcon } from "@/lib/fileUtils";
+import { TeamsSection } from "@/components/project/TeamsSection";
 
 // Backend API response format
 interface ApiProject {
@@ -328,8 +329,11 @@ export default function TeacherProjectDetail() {
               </div>
             </div>
 
+            {/* Teams Section */}
+            <TeamsSection projectId={project.id} />
+
             {/* Tabs Navigation */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 mb-8 inline-flex gap-2">
+            <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 mb-8 mt-8 inline-flex gap-2">
               {["students", "files", "activity", "alerts"].map((tab) => (
                 <button
                   key={tab}
