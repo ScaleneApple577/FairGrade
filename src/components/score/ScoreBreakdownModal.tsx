@@ -138,16 +138,20 @@ export function ScoreBreakdownModal({
   const fetchBreakdown = async () => {
     setIsLoading(true);
     try {
-      // TODO: GET /api/scores/{student_id}/{project_id} for teachers
-      // TODO: GET /api/student/scores/{project_id}/breakdown for students
-      const endpoint = isTeacher
-        ? `/api/scores/${studentId}/${projectId}`
-        : `/api/student/scores/${projectId}/breakdown`;
-      // const data = await api.get(endpoint);
-      // setBreakdown(data);
-      setBreakdown(null);
+      // Use the student report endpoint which contains contribution data
+      // GET /api/reports/student/{userId}
+      const userId = isTeacher ? studentId : JSON.parse(localStorage.getItem('user') || '{}').id;
+      if (userId) {
+        const data = await api.get(`/api/reports/student/${userId}`);
+        // Map the response to breakdown format if available
+        // For now, set null since the response format differs
+        setBreakdown(null);
+      } else {
+        setBreakdown(null);
+      }
     } catch (error) {
       console.error("Failed to fetch score breakdown:", error);
+      setBreakdown(null);
     } finally {
       setIsLoading(false);
     }
@@ -162,45 +166,16 @@ export function ScoreBreakdownModal({
     }
   };
 
+  // NOTE: Score override functionality is disabled until backend supports it
+  // The following functions are kept but not used:
+  // - POST /api/scores/{student_id}/{project_id}/override — Not implemented
+  // - DELETE /api/scores/{student_id}/{project_id}/override — Not implemented
   const handleApplyOverride = async () => {
-    if (!overrideScore || !overrideJustification) {
-      toast.error("Please provide both a score and justification");
-      return;
-    }
-
-    const score = parseInt(overrideScore);
-    if (isNaN(score) || score < 0 || score > 100) {
-      toast.error("Score must be between 0 and 100");
-      return;
-    }
-
-    setIsSubmittingOverride(true);
-    try {
-      // TODO: POST /api/scores/{student_id}/{project_id}/override
-      await api.post(`/api/scores/${studentId}/${projectId}/override`, {
-        score,
-        justification: overrideJustification,
-      });
-      toast.success("Score override applied");
-      fetchBreakdown();
-      setOverrideScore("");
-      setOverrideJustification("");
-    } catch (error) {
-      toast.error("Failed to apply override");
-    } finally {
-      setIsSubmittingOverride(false);
-    }
+    toast.error("Score override is not yet available");
   };
 
   const handleRemoveOverride = async () => {
-    try {
-      // TODO: DELETE /api/scores/{student_id}/{project_id}/override
-      await api.delete(`/api/scores/${studentId}/${projectId}/override`);
-      toast.success("Override removed");
-      fetchBreakdown();
-    } catch (error) {
-      toast.error("Failed to remove override");
-    }
+    toast.error("Score override is not yet available");
   };
 
   const toggleFactor = (factor: string) => {
@@ -460,63 +435,40 @@ export function ScoreBreakdownModal({
                 </table>
               </div>
 
-              {/* Teacher Override Section */}
+              {/* Teacher Override Section - Disabled until backend supports it */}
               {isTeacher && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-5">
-                  <h3 className="text-white font-semibold mb-2">Teacher Override</h3>
-                  <p className="text-slate-400 text-sm mb-4">
-                    You can override the calculated FairScore with your own assessment. You must provide a justification.
+                <div className="bg-slate-500/10 border border-slate-500/20 rounded-xl p-5 opacity-60">
+                  <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                    Teacher Override
+                    <span className="text-xs bg-slate-500/30 text-slate-400 px-2 py-0.5 rounded">Coming Soon</span>
+                  </h3>
+                  <p className="text-slate-500 text-sm mb-4">
+                    Score override functionality is not yet available. This feature will allow you to manually adjust a student's calculated FairScore with a written justification.
                   </p>
-
-                  {breakdown?.override ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-400 line-through">
-                          Original: {breakdown.overall_score}
-                        </span>
-                        <span className="text-yellow-400 font-bold">
-                          Override: {breakdown.override.score}
-                        </span>
-                      </div>
-                      <p className="text-slate-300 text-sm italic">
-                        "{breakdown.override.justification}"
-                      </p>
-                      <button
-                        onClick={handleRemoveOverride}
-                        className="text-red-400 text-xs hover:text-red-300"
-                      >
-                        Remove Override
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        <Input
-                          type="number"
-                          min={0}
-                          max={100}
-                          placeholder="Score"
-                          value={overrideScore}
-                          onChange={(e) => setOverrideScore(e.target.value)}
-                          className="w-24 bg-white/10 border-white/10 text-white text-center"
-                        />
-                        <span className="text-slate-400 self-center">/100</span>
-                      </div>
-                      <Textarea
-                        placeholder="Explain why you're overriding the calculated score..."
-                        value={overrideJustification}
-                        onChange={(e) => setOverrideJustification(e.target.value)}
-                        className="bg-white/10 border-white/10 text-white min-h-[80px] placeholder:text-slate-500"
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        placeholder="Score"
+                        disabled
+                        className="w-24 bg-white/5 border-white/5 text-slate-500 text-center cursor-not-allowed"
                       />
-                      <Button
-                        onClick={handleApplyOverride}
-                        disabled={!overrideScore || !overrideJustification || isSubmittingOverride}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black"
-                      >
-                        {isSubmittingOverride ? "Applying..." : "Apply Override"}
-                      </Button>
+                      <span className="text-slate-500 self-center">/100</span>
                     </div>
-                  )}
+                    <Textarea
+                      placeholder="Override justification..."
+                      disabled
+                      className="bg-white/5 border-white/5 text-slate-500 min-h-[60px] placeholder:text-slate-600 cursor-not-allowed"
+                    />
+                    <Button
+                      disabled
+                      className="bg-slate-600 text-slate-400 cursor-not-allowed"
+                    >
+                      Apply Override
+                    </Button>
+                  </div>
                 </div>
               )}
             </>

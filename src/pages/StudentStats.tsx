@@ -169,12 +169,24 @@ const StudentStats = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // TODO: GET /api/student/stats
-        // const data = await api.get('/api/student/stats');
-        // setStats(data);
-        setStats(null);
+        // Use the student report endpoint: GET /api/reports/student/{userId}
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.id) {
+          const report = await api.get(`/api/reports/student/${user.id}`);
+          // Map report data to stats format if needed
+          // The response structure: { user_id, name, email, projects: [...], overall_stats: {...} }
+          if (report && typeof report === 'object') {
+            // TODO: Map the actual report fields to stats format when backend response is finalized
+            setStats(null);
+          } else {
+            setStats(null);
+          }
+        } else {
+          setStats(null);
+        }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
+        setStats(null);
       } finally {
         setIsLoading(false);
       }
