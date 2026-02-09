@@ -16,97 +16,82 @@ import {
   Users,
   Undo2,
   Redo2,
-  Bold,
-  Italic,
-  Underline,
   AlignLeft,
   AlignCenter,
   AlignRight,
   Highlighter,
   FileText,
   Loader2,
+  AlertTriangle,
+  RefreshCw,
+  Filter,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-
-// TODO: Connect to GET http://localhost:8000/api/files/{file_id}/timeline
-// TODO: Connect to GET http://localhost:8000/api/files/{file_id}/snapshot/{event_id}
-
-interface Author {
-  id: string;
-  name: string;
-  color: string;
-  borderColor: string;
-  bgColor: string;
-  bgColorLight: string;
-  dotColor: string;
-  cursorColor: string;
-}
-
-interface TimelineEvent {
-  id: number;
-  timestamp: string;
-  authorId: string;
-  actionType: "added" | "deleted" | "edited" | "formatted" | "comment";
-  contentPreview: string;
-  wordCountDelta: number;
-}
-
-interface DocumentSection {
-  id: string;
-  authorId: string;
-  type: "title" | "heading" | "paragraph";
-  content: string;
-  appearsAtEvent: number;
-}
-
-interface ReplayData {
-  fileName: string;
-  projectName: string;
-  authors: Author[];
-  events: TimelineEvent[];
-  sections: DocumentSection[];
-}
+import { useReplayData } from "@/hooks/useReplayData";
+import {
+  getFlagTypeLabel,
+  getFlagHighlightColor,
+  getFlagDotColor,
+  formatSnapshotTimestamp,
+  countWords,
+  generateTimelineMarkers,
+  type ReplaySnapshot,
+  type ReplayFlag,
+} from "@/lib/replayUtils";
 
 export default function TeacherLiveReplay() {
-  const { fileId } = useParams();
+  // Route now includes projectId: /teacher/live-replay/:projectId/:fileId
+  const { projectId, fileId } = useParams();
   const navigate = useNavigate();
 
-  const [replayData, setReplayData] = useState<ReplayData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentEvent, setCurrentEvent] = useState(0);
+  // Use the new hook that fetches from backend
+  const {
+    snapshots,
+    sessions,
+    fileName,
+    loading: isLoading,
+    error,
+    totalSnapshots,
+    fetchReplay,
+  } = useReplayData(projectId, fileId);
+
+  // Playback state
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showCaptions, setShowCaptions] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [showAuthorFilter, setShowAuthorFilter] = useState(false);
-  const [activeAuthors, setActiveAuthors] = useState<string[]>([]);
-  const [hoveredEvent, setHoveredEvent] = useState<TimelineEvent | null>(null);
+  const [showSessionFilter, setShowSessionFilter] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showCursor, setShowCursor] = useState(true);
+  const [selectedFlag, setSelectedFlag] = useState<ReplayFlag | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const documentRef = useRef<HTMLDivElement>(null);
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // TODO: Connect to GET http://localhost:8000/api/files/{file_id}/timeline
-    // fetch(`http://localhost:8000/api/files/${fileId}/timeline`)
-    //   .then(res => res.json())
-    //   .then(data => { setReplayData(data); setActiveAuthors(data.authors.map(a => a.id)); setIsLoading(false); })
-    //   .catch(err => { setIsLoading(false); })
-    setIsLoading(false);
-  }, [fileId]);
+  // Current snapshot
+  const currentSnapshot = snapshots[currentIndex] || null;
+  const totalEvents = snapshots.length;
 
-  const totalEvents = replayData?.events?.length || 0;
-  const currentEventData = replayData?.events?.[currentEvent];
-  const currentAuthor = replayData?.authors?.find((a) => a.id === currentEventData?.authorId);
+  // Word count for current snapshot
+  const currentWordCount = useMemo(() => {
+    if (!currentSnapshot) return 0;
+    return countWords(currentSnapshot.content);
+  }, [currentSnapshot]);
+
+  // Timeline markers
+  const timelineMarkers = useMemo(() => {
+    return generateTimelineMarkers(snapshots);
+  }, [snapshots]);
 
   // Cursor blink effect
   useEffect(() => {
-    if (isPlaying && replayData) {
+    if (isPlaying && snapshots.length > 0) {
       const blinkInterval = setInterval(() => {
         setShowCursor((prev) => !prev);
       }, 530);
@@ -114,42 +99,24 @@ export default function TeacherLiveReplay() {
     } else {
       setShowCursor(true);
     }
-  }, [isPlaying, replayData]);
+  }, [isPlaying, snapshots.length]);
 
-  // Calculate cumulative word counts
-  const wordCounts = useMemo(() => {
-    if (!replayData) return {};
-    const counts: Record<string, number> = {};
-    replayData.authors.forEach((a) => (counts[a.id] = 0));
-
-    for (let i = 0; i <= currentEvent && i < (replayData.events?.length || 0); i++) {
-      const event = replayData.events[i];
-      if (event.wordCountDelta > 0) {
-        counts[event.authorId] = (counts[event.authorId] || 0) + event.wordCountDelta;
-      }
-    }
-
-    return counts;
-  }, [currentEvent, replayData]);
-
-  // Get visible sections
-  const visibleSections = useMemo(() => {
-    if (!replayData) return [];
-    return replayData.sections.filter((s) => s.appearsAtEvent <= currentEvent + 1);
-  }, [currentEvent, replayData]);
-
-  // Playback logic
+  // Playback logic - advance through snapshots
   useEffect(() => {
-    if (isPlaying && replayData) {
+    if (isPlaying && snapshots.length > 0) {
+      // Calculate delay based on playback speed
+      const baseDelay = 300; // Base milliseconds per snapshot
+      const delay = baseDelay / playbackSpeed;
+
       playIntervalRef.current = setInterval(() => {
-        setCurrentEvent((prev) => {
+        setCurrentIndex((prev) => {
           if (prev >= totalEvents - 1) {
             setIsPlaying(false);
             return prev;
           }
           return prev + 1;
         });
-      }, 400 / playbackSpeed);
+      }, delay);
     } else {
       if (playIntervalRef.current) {
         clearInterval(playIntervalRef.current);
@@ -161,12 +128,12 @@ export default function TeacherLiveReplay() {
         clearInterval(playIntervalRef.current);
       }
     };
-  }, [isPlaying, playbackSpeed, totalEvents, replayData]);
+  }, [isPlaying, playbackSpeed, totalEvents, snapshots.length]);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || !replayData) return;
+      if (e.target instanceof HTMLInputElement || snapshots.length === 0) return;
 
       switch (e.key.toLowerCase()) {
         case " ":
@@ -176,19 +143,19 @@ export default function TeacherLiveReplay() {
           break;
         case "arrowleft":
           e.preventDefault();
-          setCurrentEvent((prev) => Math.max(0, prev - 5));
+          setCurrentIndex((prev) => Math.max(0, prev - 1));
           break;
         case "arrowright":
           e.preventDefault();
-          setCurrentEvent((prev) => Math.min(totalEvents - 1, prev + 5));
+          setCurrentIndex((prev) => Math.min(totalEvents - 1, prev + 1));
           break;
         case "j":
           e.preventDefault();
-          setCurrentEvent((prev) => Math.max(0, prev - 10));
+          setCurrentIndex((prev) => Math.max(0, prev - 3));
           break;
         case "l":
           e.preventDefault();
-          setCurrentEvent((prev) => Math.min(totalEvents - 1, prev + 10));
+          setCurrentIndex((prev) => Math.min(totalEvents - 1, prev + 3));
           break;
         case "c":
           e.preventDefault();
@@ -200,11 +167,11 @@ export default function TeacherLiveReplay() {
           break;
         case ",":
           e.preventDefault();
-          if (!isPlaying) setCurrentEvent((prev) => Math.max(0, prev - 1));
+          if (!isPlaying) setCurrentIndex((prev) => Math.max(0, prev - 1));
           break;
         case ".":
           e.preventDefault();
-          if (!isPlaying) setCurrentEvent((prev) => Math.min(totalEvents - 1, prev + 1));
+          if (!isPlaying) setCurrentIndex((prev) => Math.min(totalEvents - 1, prev + 1));
           break;
         case "?":
           e.preventDefault();
@@ -213,25 +180,41 @@ export default function TeacherLiveReplay() {
         case "escape":
           e.preventDefault();
           setShowKeyboardHelp(false);
-          setShowAuthorFilter(false);
+          setShowSessionFilter(false);
+          setSelectedFlag(null);
+          break;
+        case "arrowup":
+          e.preventDefault();
+          cycleSpeed(1);
+          break;
+        case "arrowdown":
+          e.preventDefault();
+          cycleSpeed(-1);
           break;
         default:
           if (/^[0-9]$/.test(e.key)) {
             e.preventDefault();
             const percent = parseInt(e.key) * 10;
-            setCurrentEvent(Math.floor((percent / 100) * (totalEvents - 1)));
+            setCurrentIndex(Math.floor((percent / 100) * Math.max(0, totalEvents - 1)));
           }
           break;
       }
     },
-    [totalEvents, isPlaying, replayData]
+    [totalEvents, isPlaying, snapshots.length]
   );
+
+  const cycleSpeed = (direction: number) => {
+    const speeds = [0.5, 1, 2, 4];
+    const currentIdx = speeds.indexOf(playbackSpeed);
+    const nextIdx = Math.max(0, Math.min(speeds.length - 1, currentIdx + direction));
+    setPlaybackSpeed(speeds[nextIdx]);
+  };
 
   const toggleSpeedCycle = () => {
     const speeds = [0.5, 1, 2, 4];
-    const currentIndex = speeds.indexOf(playbackSpeed);
-    const nextIndex = (currentIndex + 1) % speeds.length;
-    setPlaybackSpeed(speeds[nextIndex]);
+    const currentIdx = speeds.indexOf(playbackSpeed);
+    const nextIdx = (currentIdx + 1) % speeds.length;
+    setPlaybackSpeed(speeds[nextIdx]);
   };
 
   useEffect(() => {
@@ -258,43 +241,125 @@ export default function TeacherLiveReplay() {
   }, []);
 
   const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!replayData) return;
+    if (snapshots.length === 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    setCurrentEvent(Math.floor(percent * (totalEvents - 1)));
+    setCurrentIndex(Math.floor(percent * Math.max(0, totalEvents - 1)));
   };
 
   const handleScrubberHover = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!replayData) return;
+    if (snapshots.length === 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    const eventIndex = Math.floor(percent * (totalEvents - 1));
-    setHoveredEvent(replayData.events[eventIndex]);
+    const eventIdx = Math.floor(percent * Math.max(0, totalEvents - 1));
+    setHoveredIndex(eventIdx);
     setHoverPosition(e.clientX - rect.left);
   };
 
-  const progressPercent = replayData ? ((currentEvent + 1) / totalEvents) * 100 : 0;
+  const progressPercent = totalEvents > 0 ? ((currentIndex + 1) / totalEvents) * 100 : 0;
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+  // Handle session selection
+  const handleSessionSelect = (sessionId: string | null) => {
+    setSelectedSessionId(sessionId);
+    setCurrentIndex(0);
+    setIsPlaying(false);
+    if (sessionId) {
+      fetchReplay({ sessionId });
+    } else {
+      fetchReplay();
+    }
   };
 
-  const toggleAuthor = (authorId: string) => {
-    setActiveAuthors((prev) =>
-      prev.includes(authorId) ? prev.filter((id) => id !== authorId) : [...prev, authorId]
+  // Render document content with flag highlighting
+  const renderDocumentContent = (snapshot: ReplaySnapshot) => {
+    const content = snapshot.content;
+    const flags = snapshot.flags;
+
+    if (flags.length === 0) {
+      // No flags, just render plain content
+      return (
+        <div className="whitespace-pre-wrap text-gray-800 text-sm leading-relaxed">
+          {content}
+        </div>
+      );
+    }
+
+    // Sort flags by position
+    const sortedFlags = [...flags].sort((a, b) => a.start_pos - b.start_pos);
+
+    // Build segments with flag highlighting
+    const segments: JSX.Element[] = [];
+    let lastEnd = 0;
+
+    sortedFlags.forEach((flag, idx) => {
+      // Add text before this flag
+      if (flag.start_pos > lastEnd) {
+        segments.push(
+          <span key={`text-${idx}`}>
+            {content.slice(lastEnd, flag.start_pos)}
+          </span>
+        );
+      }
+
+      // Add flagged text with highlight
+      const highlightClass = getFlagHighlightColor(flag.flag_type);
+      segments.push(
+        <span
+          key={`flag-${flag.flag_id}`}
+          className={`${highlightClass} cursor-pointer relative`}
+          onClick={() => setSelectedFlag(flag)}
+          title={`${getFlagTypeLabel(flag.flag_type)} - ${Math.round(flag.confidence * 100)}% confidence`}
+        >
+          {content.slice(flag.start_pos, flag.end_pos)}
+        </span>
+      );
+
+      lastEnd = flag.end_pos;
+    });
+
+    // Add remaining text
+    if (lastEnd < content.length) {
+      segments.push(
+        <span key="text-end">{content.slice(lastEnd)}</span>
+      );
+    }
+
+    return (
+      <div className="whitespace-pre-wrap text-gray-800 text-sm leading-relaxed">
+        {segments}
+      </div>
     );
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-sm">Loading replay data...</p>
+          <p className="text-slate-500 text-xs mt-1">Decompressing snapshots...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <p className="text-red-400 mb-2">Failed to load replay data</p>
+          <p className="text-slate-500 text-sm mb-4">{error}</p>
+          <button
+            onClick={() => fetchReplay()}
+            className="flex items-center gap-2 mx-auto px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-lg transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -312,15 +377,28 @@ export default function TeacherLiveReplay() {
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="text-white font-semibold">{replayData?.fileName || "No file loaded"}</span>
-          {replayData?.projectName && (
-            <span className="bg-white/10 text-slate-400 text-xs px-2.5 py-1 rounded-full">
-              {replayData.projectName}
-            </span>
-          )}
+          <span className="text-white font-semibold">{fileName || "No file loaded"}</span>
+          <span className="bg-white/10 text-slate-400 text-xs px-2.5 py-1 rounded-full">
+            {totalSnapshots} snapshots
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Session Filter */}
+          {sessions.length > 0 && (
+            <select
+              value={selectedSessionId || ""}
+              onChange={(e) => handleSessionSelect(e.target.value || null)}
+              className="bg-white/10 border border-white/10 text-white text-sm rounded-lg px-3 py-1.5"
+            >
+              <option value="">All Sessions</option>
+              {sessions.map((session) => (
+                <option key={session.id} value={session.id}>
+                  Session: {session.id}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={() => setShowKeyboardHelp(true)}
             className="p-2 text-slate-500 hover:text-white transition-colors"
@@ -337,16 +415,24 @@ export default function TeacherLiveReplay() {
         </div>
       </div>
 
-      {/* Author Legend Bar - Now floating */}
-      {replayData && replayData.authors.length > 0 && (
+      {/* Info Bar - Floating */}
+      {currentSnapshot && (
         <div className="fixed top-20 right-6 z-40 bg-white border border-gray-200 shadow-sm rounded-full px-4 py-2 flex items-center gap-4">
-          {replayData.authors.map((author) => (
-            <div key={author.id} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${author.dotColor}`} />
-              <span className="text-gray-600 text-xs">{author.name}</span>
-              <span className="text-gray-400 text-xs">({wordCounts[author.id] || 0} words)</span>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600 text-xs">Words:</span>
+            <span className="text-gray-900 text-sm font-medium">{currentWordCount}</span>
+          </div>
+          {currentSnapshot.flags.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-red-600 text-xs">Flags:</span>
+              <span className="text-red-900 text-sm font-medium">{currentSnapshot.flags.length}</span>
             </div>
-          ))}
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-xs">
+              {formatSnapshotTimestamp(currentSnapshot.timestamp)}
+            </span>
+          </div>
         </div>
       )}
 
@@ -412,81 +498,14 @@ export default function TeacherLiveReplay() {
             className="bg-white shadow-md rounded-sm px-[72px] py-[96px] min-h-[1056px]"
             style={{ fontFamily: "'Arial', sans-serif" }}
           >
-            {replayData && visibleSections.length > 0 ? (
-              <div className="space-y-4">
-                {visibleSections.map((section) => {
-                  const author = replayData.authors.find((a) => a.id === section.authorId);
-                  const isActive = activeSection === section.id;
-
-                  if (section.type === "title") {
-                    return (
-                      <div
-                        key={section.id}
-                        id={`section-${section.id}`}
-                        className={`border-l-[3px] pl-4 -ml-4 transition-all duration-500 ${author?.borderColor || "border-l-gray-300"} ${isActive ? author?.bgColorLight : ""}`}
-                      >
-                        <h1 className="text-2xl font-bold text-gray-900 leading-relaxed relative">
-                          {section.content}
-                          {isActive && isPlaying && author && (
-                            <span className="absolute right-0 top-0 flex items-center gap-1">
-                              {showCursor && <span className="w-0.5 h-6" style={{ backgroundColor: author.cursorColor }} />}
-                              <span className="text-white text-xs px-2 py-0.5 rounded" style={{ backgroundColor: author.cursorColor }}>
-                                {author.name.split(" ")[0]}
-                              </span>
-                            </span>
-                          )}
-                        </h1>
-                      </div>
-                    );
-                  }
-
-                  if (section.type === "heading") {
-                    return (
-                      <div
-                        key={section.id}
-                        id={`section-${section.id}`}
-                        className={`border-l-[3px] pl-4 -ml-4 mt-8 transition-all duration-500 ${author?.borderColor || "border-l-gray-300"} ${isActive ? author?.bgColorLight : ""}`}
-                      >
-                        <h2 className="text-lg font-bold text-gray-900 relative">
-                          {section.content}
-                          {isActive && isPlaying && author && (
-                            <span className="absolute right-0 top-0 flex items-center gap-1">
-                              {showCursor && <span className="w-0.5 h-5" style={{ backgroundColor: author.cursorColor }} />}
-                              <span className="text-white text-xs px-2 py-0.5 rounded" style={{ backgroundColor: author.cursorColor }}>
-                                {author.name.split(" ")[0]}
-                              </span>
-                            </span>
-                          )}
-                        </h2>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div
-                      key={section.id}
-                      id={`section-${section.id}`}
-                      className={`border-l-[3px] pl-4 -ml-4 transition-all duration-500 ${author?.borderColor || "border-l-gray-300"} ${isActive ? author?.bgColorLight : ""}`}
-                    >
-                      <p className="text-[11pt] text-gray-800 leading-relaxed relative">
-                        {section.content}
-                        {isActive && isPlaying && author && (
-                          <span className="absolute right-0 bottom-0 flex items-center gap-1">
-                            {showCursor && <span className="w-0.5 h-4" style={{ backgroundColor: author.cursorColor }} />}
-                            <span className="text-white text-xs px-2 py-0.5 rounded" style={{ backgroundColor: author.cursorColor }}>
-                              {author.name.split(" ")[0]}
-                            </span>
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  );
-                })}
+            {currentSnapshot ? (
+              <div>
+                {renderDocumentContent(currentSnapshot)}
 
                 {/* Captions */}
-                {showCaptions && currentEventData && currentAuthor && (
+                {showCaptions && currentSnapshot.is_keyframe && (
                   <div className="fixed bottom-32 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-lg max-w-md text-center">
-                    {currentAuthor.name} {currentEventData.actionType}: "{currentEventData.contentPreview}"
+                    Keyframe snapshot — {formatSnapshotTimestamp(currentSnapshot.timestamp)}
                   </div>
                 )}
               </div>
@@ -494,14 +513,51 @@ export default function TeacherLiveReplay() {
               <div className="flex items-center justify-center h-[800px]">
                 <div className="text-center">
                   <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-400">No replay data loaded</p>
-                  <p className="text-gray-500 text-sm mt-1">Select a file to view its edit history</p>
+                  <p className="text-gray-400">No replay data available</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Replay data is recorded when students edit the document
+                  </p>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Flag Popover */}
+      <AnimatePresence>
+        {selectedFlag && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                selectedFlag.flag_type === 0 
+                  ? "bg-yellow-100 text-yellow-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {getFlagTypeLabel(selectedFlag.flag_type)}
+              </span>
+              <button
+                onClick={() => setSelectedFlag(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-gray-700 text-sm mb-2">
+              <strong>Confidence:</strong> {Math.round(selectedFlag.confidence * 100)}%
+            </p>
+            <p className="text-gray-600 text-sm border-l-2 border-gray-200 pl-3 italic">
+              "{selectedFlag.flagged_text.slice(0, 100)}{selectedFlag.flagged_text.length > 100 ? '...' : ''}"
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Timeline Controls */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10">
@@ -512,7 +568,7 @@ export default function TeacherLiveReplay() {
             className="h-1.5 bg-white/10 rounded-full w-full relative cursor-pointer group"
             onClick={handleScrubberClick}
             onMouseMove={handleScrubberHover}
-            onMouseLeave={() => setHoveredEvent(null)}
+            onMouseLeave={() => setHoveredIndex(null)}
           >
             <div
               className="h-1.5 bg-blue-500 rounded-full shadow-sm shadow-blue-500/50"
@@ -523,28 +579,31 @@ export default function TeacherLiveReplay() {
               style={{ left: `${progressPercent}%`, marginLeft: "-8px" }}
             />
 
-            {/* Event Markers */}
-            {replayData?.events?.slice(0, 50).map((event, idx) => {
-              const author = replayData.authors.find((a) => a.id === event.authorId);
-              const position = ((idx + 1) / totalEvents) * 100;
-              return (
-                <div
-                  key={event.id}
-                  className={`absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${author?.dotColor || "bg-white/50"}`}
-                  style={{ left: `${position}%` }}
-                />
-              );
-            })}
+            {/* Timeline Markers - Show keyframes and flags */}
+            {timelineMarkers.slice(0, 100).map((marker) => (
+              <div
+                key={marker.index}
+                className={`absolute top-1/2 -translate-y-1/2 rounded-full ${
+                  marker.hasFlags
+                    ? `w-2 h-2 ${getFlagDotColor(marker.flagTypes[0] ?? 0)}`
+                    : marker.isKeyframe
+                    ? "w-1.5 h-1.5 bg-blue-400"
+                    : "w-1 h-1 bg-white/30"
+                }`}
+                style={{ left: `${marker.position}%` }}
+              />
+            ))}
 
             {/* Hover Preview */}
-            {hoveredEvent && (
+            {hoveredIndex !== null && snapshots[hoveredIndex] && (
               <div
                 className="absolute bottom-6 bg-[#1e1e22] border border-white/10 rounded-lg p-2 shadow-xl text-xs transform -translate-x-1/2 whitespace-nowrap"
                 style={{ left: hoverPosition }}
               >
-                <p className="text-white">{formatTimestamp(hoveredEvent.timestamp)}</p>
+                <p className="text-white">{formatSnapshotTimestamp(snapshots[hoveredIndex].timestamp)}</p>
                 <p className="text-slate-400">
-                  {replayData?.authors?.find((a) => a.id === hoveredEvent.authorId)?.name} — {hoveredEvent.actionType}
+                  {snapshots[hoveredIndex].is_keyframe ? "Keyframe" : "Diff"} — 
+                  {snapshots[hoveredIndex].flags.length} flags
                 </p>
               </div>
             )}
@@ -556,7 +615,7 @@ export default function TeacherLiveReplay() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              disabled={!replayData}
+              disabled={snapshots.length === 0}
               className="w-10 h-10 bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition"
             >
               {isPlaying ? (
@@ -567,16 +626,16 @@ export default function TeacherLiveReplay() {
             </button>
 
             <button
-              onClick={() => setCurrentEvent((prev) => Math.max(0, prev - 10))}
-              disabled={!replayData}
+              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 10))}
+              disabled={snapshots.length === 0}
               className="text-slate-500 hover:text-white disabled:opacity-50 transition-colors p-2"
             >
               <SkipBack className="w-4 h-4" />
             </button>
 
             <button
-              onClick={() => setCurrentEvent((prev) => Math.min(totalEvents - 1, prev + 10))}
-              disabled={!replayData}
+              onClick={() => setCurrentIndex((prev) => Math.min(totalEvents - 1, prev + 10))}
+              disabled={snapshots.length === 0}
               className="text-slate-500 hover:text-white disabled:opacity-50 transition-colors p-2"
             >
               <SkipForward className="w-4 h-4" />
@@ -584,7 +643,7 @@ export default function TeacherLiveReplay() {
 
             <button
               onClick={toggleSpeedCycle}
-              disabled={!replayData}
+              disabled={snapshots.length === 0}
               className="bg-white/10 text-slate-300 text-sm px-3 py-1.5 rounded-lg hover:bg-white/15 disabled:opacity-50 transition-colors"
             >
               {playbackSpeed}x
@@ -593,23 +652,14 @@ export default function TeacherLiveReplay() {
             <div className="w-px h-6 bg-white/10 mx-2" />
 
             <span className="text-slate-400 text-sm font-mono">
-              Event {currentEvent + 1} / {totalEvents || 0}
+              Snapshot {currentIndex + 1} / {totalEvents || 0}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowAuthorFilter(!showAuthorFilter)}
-              disabled={!replayData}
-              className="bg-white/10 text-slate-300 text-sm px-3 py-1.5 rounded-lg hover:bg-white/15 disabled:opacity-50 transition-colors flex items-center gap-2"
-            >
-              <Users className="w-4 h-4" />
-              Authors
-            </button>
-
-            <button
               onClick={() => setShowCaptions(!showCaptions)}
-              disabled={!replayData}
+              disabled={snapshots.length === 0}
               className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
                 showCaptions
                   ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
@@ -619,16 +669,23 @@ export default function TeacherLiveReplay() {
               CC
             </button>
 
-            {!isPlaying && replayData && (
+            <button
+              onClick={() => setShowKeyboardHelp(true)}
+              className="bg-white/10 text-slate-400 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            >
+              ?
+            </button>
+
+            {!isPlaying && snapshots.length > 0 && (
               <>
                 <button
-                  onClick={() => setCurrentEvent((prev) => Math.max(0, prev - 1))}
+                  onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
                   className="bg-white/10 text-slate-400 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setCurrentEvent((prev) => Math.min(totalEvents - 1, prev + 1))}
+                  onClick={() => setCurrentIndex((prev) => Math.min(totalEvents - 1, prev + 1))}
                   className="bg-white/10 text-slate-400 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -638,30 +695,6 @@ export default function TeacherLiveReplay() {
           </div>
         </div>
       </div>
-
-      {/* Author Filter Dropdown */}
-      <AnimatePresence>
-        {showAuthorFilter && replayData && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-28 right-6 bg-[#1e1e22] border border-white/10 rounded-lg p-4 shadow-xl z-50"
-          >
-            <p className="text-white text-sm font-semibold mb-3">Filter by Author</p>
-            {replayData.authors.map((author) => (
-              <label key={author.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-white/5 px-2 rounded">
-                <Checkbox
-                  checked={activeAuthors.includes(author.id)}
-                  onCheckedChange={() => toggleAuthor(author.id)}
-                />
-                <div className={`w-3 h-3 rounded-full ${author.dotColor}`} />
-                <span className="text-slate-300 text-sm">{author.name}</span>
-              </label>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Keyboard Shortcuts Modal */}
       <AnimatePresence>
@@ -690,14 +723,15 @@ export default function TeacherLiveReplay() {
               <div className="space-y-3">
                 {[
                   { key: "Space / K", desc: "Play / Pause" },
-                  { key: "← / →", desc: "Skip 5 events" },
-                  { key: "J / L", desc: "Skip 10 events" },
+                  { key: "← / →", desc: "Previous / Next snapshot" },
+                  { key: "J / L", desc: "Skip 3 snapshots" },
                   { key: "0-9", desc: "Jump to 0-90%" },
                   { key: "C", desc: "Toggle captions" },
                   { key: "F", desc: "Toggle fullscreen" },
                   { key: "↑ / ↓", desc: "Change speed" },
                   { key: ", / .", desc: "Step frame (when paused)" },
                   { key: "?", desc: "Show this help" },
+                  { key: "Esc", desc: "Close dialogs" },
                 ].map((shortcut) => (
                   <div key={shortcut.key} className="flex items-center gap-4">
                     <kbd className="bg-white/10 text-white text-xs font-mono px-2 py-1 rounded min-w-[80px] text-center">

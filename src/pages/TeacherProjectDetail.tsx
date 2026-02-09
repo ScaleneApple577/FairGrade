@@ -582,7 +582,7 @@ export default function TeacherProjectDetail() {
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                               <Button
-                                onClick={() => navigate(`/teacher/live-replay/${file.id}`)}
+                                onClick={() => navigate(`/teacher/live-replay/${id}/${file.id}`)}
                                 className="bg-white/10 text-slate-300 px-3 py-2 rounded-lg text-sm hover:bg-white/15"
                               >
                                 <Play className="w-3 h-3 mr-1" />

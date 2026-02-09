@@ -15,6 +15,7 @@ interface ActivityItem {
   action: string;
   fileName: string;
   fileId: string;
+  projectId: string; // Added for replay navigation
   projectName: string;
   timestamp: string;
   detail: string;
@@ -190,7 +191,7 @@ export default function TeacherLiveMonitor() {
                       </button>
                     )}
                     <button
-                      onClick={() => navigate(`/teacher/live-replay/${activity.fileId}`)}
+                      onClick={() => navigate(`/teacher/live-replay/${activity.projectId}/${activity.fileId}`)}
                       className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap"
                     >
                       <span>View Replay</span>
