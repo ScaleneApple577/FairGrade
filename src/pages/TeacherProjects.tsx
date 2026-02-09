@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { CreateProjectWizard } from "@/components/project/CreateProjectWizard";
-import { api } from "@/lib/api";
+import { api, fetchProjectsWithFallback } from "@/lib/api";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveIndicator } from "@/components/live/LiveIndicator";
 
@@ -84,8 +84,8 @@ export default function TeacherProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // Backend returns: [{ id, name, description, created_at }]
-        const data = await api.get<ApiProject[]>('/api/projects');
+        // Fetch projects with fallback endpoint logic
+        const data = await fetchProjectsWithFallback<ApiProject>();
         // Transform API response to frontend format with defaults for missing fields
         const transformedProjects: Project[] = (data || []).map((p) => ({
           id: p.id,

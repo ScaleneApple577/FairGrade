@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { JoinProjectModal } from "@/components/student/JoinProjectModal";
-import { api } from "@/lib/api";
+import { api, fetchProjectsWithFallback } from "@/lib/api";
 import { toast } from "sonner";
 // Backend API response format
 interface ApiProject {
@@ -73,8 +73,8 @@ export default function StudentProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // Backend returns: [{ id, name, description, created_at }]
-        const data = await api.get<ApiProject[]>('/api/projects');
+        // Fetch projects with fallback endpoint logic
+        const data = await fetchProjectsWithFallback<ApiProject>();
         // Transform API response to frontend format with defaults
         const transformedProjects: Project[] = (data || []).map((p) => ({
           id: p.id,
@@ -112,7 +112,7 @@ export default function StudentProjects() {
   const handleJoinSuccess = async () => {
     // Refresh projects list
     try {
-      const data = await api.get<ApiProject[]>('/api/projects');
+      const data = await fetchProjectsWithFallback<ApiProject>();
       const transformedProjects: Project[] = (data || []).map((p) => ({
         id: p.id,
         name: p.name,
