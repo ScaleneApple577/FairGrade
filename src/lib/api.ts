@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import pako from 'pako';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fairgrade.onrender.com';
 
 // ============ Role Mapping ============
 // Backend uses "instructor" but frontend uses "teacher" for routing and display
