@@ -85,7 +85,12 @@ serve(async (req) => {
     );
     const hoursThisWeek = (totalSeconds / 3600).toFixed(1);
 
-    // Get tasks assigned to user
+    // Get tasks assigned to user from Supabase project_tasks table
+    // NOTE: Supabase table uses: { task_name, completed, assigned_to }
+    // Backend API uses: { title, status, assigned_to }
+    // When migrating to backend API: 
+    //   - Replace 'task_name' with 'title'
+    //   - Replace 'completed' boolean with 'status' enum ('open', 'in_progress', 'done')
     const { data: tasks, error: tasksError } = await supabase
       .from("project_tasks")
       .select("*")
@@ -96,6 +101,7 @@ serve(async (req) => {
       console.error("[student-stats] Error fetching tasks:", tasksError);
     }
 
+    // Supabase uses 'completed' boolean; backend API uses status === 'done'
     const completedTasks = (tasks || []).filter((t) => t.completed).length;
     const totalTasks = (tasks || []).length;
 

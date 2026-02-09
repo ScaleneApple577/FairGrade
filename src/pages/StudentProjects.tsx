@@ -38,6 +38,9 @@ interface Project {
   progress?: number;
   myContributionScore?: number;
   teamMembers?: Array<{ id: string; name: string; avatar: string; role: string }>;
+  // Task fields - NOTE: Backend API uses different field names:
+  // Backend: { title, status } vs old Supabase: { task_name, completed }
+  // TODO: Get tasks from backend API when list endpoint available
   tasksCompleted?: number;
   totalTasks?: number;
   lastActivity?: string;
@@ -86,6 +89,9 @@ export default function StudentProjects() {
           progress: 0,
           myContributionScore: 0,
           teamMembers: [],
+          // TODO: Fetch tasks from backend API when list endpoint is available
+          // Backend task uses: { title, description, assigned_to, status: 'open'|'in_progress'|'done' }
+          // Count tasks where status === 'done' for tasksCompleted
           tasksCompleted: 0,
           totalTasks: 0,
           lastActivity: p.created_at,
