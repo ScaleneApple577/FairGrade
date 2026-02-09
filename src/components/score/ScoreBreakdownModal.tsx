@@ -73,6 +73,11 @@ interface IntegrityFactor {
   reasoning: string | null;
 }
 
+// Note: Integrity flags should be fetched from the analysis API:
+// import { getStudentIntegrityFlags } from "@/lib/analysisUtils";
+// const flags = await getStudentIntegrityFlags(projectId, studentId);
+// The flags can then be mapped to the deductions format above
+
 interface ScoreBreakdown {
   overall_score: number | null;
   factors: {

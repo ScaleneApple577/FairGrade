@@ -31,6 +31,7 @@ import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveIndicator, StatusDot, EditingLabel } from "@/components/live/LiveIndicator";
 import { getGoogleFileUrl, getFileIcon } from "@/lib/fileUtils";
 import { TeamsSection } from "@/components/project/TeamsSection";
+import { IntegritySection } from "@/components/project/IntegritySection";
 
 // Backend API response format
 interface ApiProject {
@@ -331,6 +332,9 @@ export default function TeacherProjectDetail() {
 
             {/* Teams Section */}
             <TeamsSection projectId={project.id} />
+
+            {/* Integrity Analysis Section */}
+            <IntegritySection projectId={project.id} />
 
             {/* Tabs Navigation */}
             <div className="bg-white/[0.04] border border-white/10 rounded-xl p-2 mb-8 mt-8 inline-flex gap-2">
