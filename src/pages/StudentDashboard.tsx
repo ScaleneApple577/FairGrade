@@ -33,6 +33,7 @@ import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
 import { ClassroomInvitationBanner } from "@/components/student/ClassroomInvitationBanner";
 import { api } from "@/lib/api";
+import { fetchMyTasks, getStatusDisplay, Task } from "@/lib/taskUtils";
 interface ProjectAssignment {
   id: string;
   notificationId: string;
@@ -65,15 +66,20 @@ const getPriorityStyles = (priority: string) => {
   }
 };
 
-// Status badge styling
+// Status badge styling using task utility
 const getStatusStyles = (status: string) => {
-  switch (status) {
-    case "in_progress": return { bg: "bg-blue-500/15", text: "text-blue-400", label: "In Progress" };
-    case "todo": return { bg: "bg-slate-500/15", text: "text-slate-400", label: "To Do" };
-    case "review": return { bg: "bg-purple-500/15", text: "text-purple-400", label: "Review" };
-    case "done": return { bg: "bg-emerald-500/15", text: "text-emerald-400", label: "Done" };
-    default: return { bg: "bg-white/10", text: "text-slate-300", label: status };
-  }
+  // Map to backend status values
+  const display = getStatusDisplay(status);
+  // For legacy frontend status values, map them
+  const legacyMap: Record<string, string> = {
+    'todo': 'open',
+    'in_progress': 'in_progress',
+    'review': 'in_progress', // Map review to in_progress
+    'done': 'done',
+  };
+  const mappedStatus = legacyMap[status] || status;
+  const mappedDisplay = getStatusDisplay(mappedStatus);
+  return { bg: mappedDisplay.color.split(' ')[0], text: mappedDisplay.color.split(' ')[1], label: mappedDisplay.label };
 };
 
 // Health indicator styling
@@ -142,7 +148,8 @@ interface DashboardData {
     achievementsUnlocked: number;
   };
   recentActivity: Array<{ id: string; type: string; title: string; project: string; timestamp: string }>;
-  upcomingTasks: Array<{ id: string; title: string; project: string; dueDate: string; priority: string; status: string }>;
+  // Using Task type from taskUtils - backend uses 'title' not 'name'
+  upcomingTasks: Array<{ id: number; title: string; project: string; status: string; dueDate?: string | null; priority?: string | null }>;
   thisWeekEvents: Array<{ id: string; title: string; date: string; day: string; startTime: string; endTime: string; type: string }>;
   projects: Array<{ id: string; name: string; course: string; deadline: string; health: string; myContributionScore: number }>;
 }
@@ -184,10 +191,13 @@ export default function StudentDashboard() {
     const fetchDashboard = async () => {
       setIsLoading(true);
       try {
+        // Fetch tasks using the task utility
+        // TODO: Backend needs GET /api/tasks/mine endpoint
+        // const myTasks = await fetchMyTasks();
+        
         // Fetch all dashboard data from API
         // const statsData = await api.get('/api/student/dashboard/stats');
         // const activityData = await api.get('/api/student/activity');
-        // const tasksData = await api.get('/api/student/tasks');
         // const calendarData = await api.get('/api/student/calendar/week');
         // const projectsData = await api.get('/api/student/projects');
         // const scoreData = await api.get('/api/student/stats/score');
@@ -493,7 +503,8 @@ export default function StudentDashboard() {
             {data.upcomingTasks.length > 0 ? (
               <div className="space-y-3">
                 {data.upcomingTasks.map((task, index) => {
-                  const priorityStyles = getPriorityStyles(task.priority);
+                  // TODO: Backend doesn't support priority on tasks yet - show only if available
+                  const priorityStyles = task.priority ? getPriorityStyles(task.priority) : null;
                   const statusStyles = getStatusStyles(task.status);
                   return (
                     <motion.div
@@ -505,16 +516,23 @@ export default function StudentDashboard() {
                     >
                       <div className="w-5 h-5 rounded-full border-2 border-slate-600 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
+                        {/* Backend uses 'title' not 'name' */}
                         <p className="text-slate-200 text-sm font-medium truncate">{task.title}</p>
-                        <p className="text-slate-500 text-xs">{task.project} • Due: {task.dueDate}</p>
+                        {/* TODO: Backend doesn't support due_date on tasks yet */}
+                        <p className="text-slate-500 text-xs">
+                          {task.project}{task.dueDate ? ` • Due: ${task.dueDate}` : ''}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusStyles.bg} ${statusStyles.text}`}>
                           {statusStyles.label}
                         </span>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityStyles.bg} ${priorityStyles.text}`}>
-                          {priorityStyles.label}
-                        </span>
+                        {/* TODO: Backend doesn't support priority on tasks yet */}
+                        {priorityStyles && (
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityStyles.bg} ${priorityStyles.text}`}>
+                            {priorityStyles.label}
+                          </span>
+                        )}
                       </div>
                     </motion.div>
                   );

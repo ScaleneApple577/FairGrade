@@ -43,6 +43,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { api } from "@/lib/api";
+// NOTE: Task field mapping - backend API uses { title, status } not { name, completed }
+// Status values: 'open', 'in_progress', 'done' (backend) vs boolean 'completed' (Supabase table)
 import { CircularScoreRing, getScoreLabel, getScoreColorClass } from "@/components/score/CircularScoreRing";
 import { ScoreBadge } from "@/components/score/ScoreBadge";
 import { ScoreBreakdownModal } from "@/components/score/ScoreBreakdownModal";
@@ -101,6 +103,7 @@ interface Stats {
     words_written: number;
     edit_sessions: number;
     active_time_minutes: number;
+    // Task counts - backend API counts tasks where status === 'done' for completed
     tasks_completed: number;
     tasks_total: number;
     team_average_words: number;
