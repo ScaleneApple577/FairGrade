@@ -1,19 +1,12 @@
-import { useState } from "react";
-import { X, Mail, Plus, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { X, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -22,88 +15,90 @@ interface InviteStudentsModalProps {
   onOpenChange: (open: boolean) => void;
   teacherName: string;
   classroomId?: number;
+  classroomName?: string;
   onSuccess: () => void;
 }
+
+const EMAIL_DOMAINS = [".com", ".edu", ".net", ".org", ".io", ".co", ".dev", ".me", ".us", ".uk", ".ca", ".au"];
 
 export function InviteStudentsModal({
   open,
   onOpenChange,
   teacherName,
   classroomId,
+  classroomName,
   onSuccess,
 }: InviteStudentsModalProps) {
-  const [emailInput, setEmailInput] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [emails, setEmails] = useState<string[]>([]);
-  const [bulkInput, setBulkInput] = useState("");
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email.trim());
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   };
 
-  const addEmail = () => {
-    const trimmedEmail = emailInput.trim().toLowerCase();
-    if (!trimmedEmail) return;
+  const addEmail = useCallback((raw: string) => {
+    const email = raw.trim().toLowerCase().replace(/[,;\s]+$/, "");
+    if (!email) return false;
+    if (!validateEmail(email)) return false;
+    if (emails.includes(email)) return false;
+    setEmails((prev) => [...prev, email]);
+    return true;
+  }, [emails]);
 
-    if (!validateEmail(trimmedEmail)) {
-      setEmailError("Please enter a valid email address");
-      return;
+  const tryConvertToPill = useCallback((value: string) => {
+    // Check if the current input ends with a recognized email domain
+    const trimmed = value.trim().toLowerCase();
+    for (const domain of EMAIL_DOMAINS) {
+      if (trimmed.endsWith(domain)) {
+        if (addEmail(trimmed)) {
+          setInputValue("");
+          return true;
+        }
+      }
     }
+    return false;
+  }, [addEmail]);
 
-    if (emails.includes(trimmedEmail)) {
-      setEmailError("This email has already been added");
-      return;
-    }
-
-    setEmails([...emails, trimmedEmail]);
-    setEmailInput("");
-    setEmailError("");
-  };
-
-  const removeEmail = (emailToRemove: string) => {
-    setEmails(emails.filter((e) => e !== emailToRemove));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    // Auto-detect complete emails
+    tryConvertToPill(val);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "," || e.key === " ") {
       e.preventDefault();
-      addEmail();
+      if (addEmail(inputValue)) {
+        setInputValue("");
+      }
+    }
+    if (e.key === "Backspace" && !inputValue && emails.length > 0) {
+      setEmails((prev) => prev.slice(0, -1));
     }
   };
 
-  const addBulkEmails = () => {
-    const rawEmails = bulkInput
-      .split(/[,\n]+/)
-      .map((e) => e.trim().toLowerCase())
-      .filter((e) => e.length > 0);
-
-    let validCount = 0;
-    let invalidCount = 0;
-
-    rawEmails.forEach((email) => {
-      if (validateEmail(email) && !emails.includes(email)) {
-        setEmails((prev) => [...prev, email]);
-        validCount++;
-      } else if (!validateEmail(email)) {
-        invalidCount++;
-      }
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    const parts = pasted.split(/[,;\n\r\s]+/).filter(Boolean);
+    let added = 0;
+    parts.forEach((part) => {
+      if (addEmail(part)) added++;
     });
+    if (added > 0) {
+      toast.success(`${added} email(s) added`);
+    }
+  };
 
-    setBulkInput("");
-    if (invalidCount > 0) {
-      toast.error(`${invalidCount} invalid email(s) were skipped`);
-    }
-    if (validCount > 0) {
-      toast.success(`${validCount} email(s) added`);
-    }
+  const removeEmail = (email: string) => {
+    setEmails((prev) => prev.filter((e) => e !== email));
   };
 
   const handleSendInvitations = async () => {
     if (emails.length === 0) return;
-
     if (!classroomId) {
       toast.error("Please select a classroom first");
       return;
@@ -111,19 +106,15 @@ export function InviteStudentsModal({
 
     setIsSending(true);
     try {
-      // POST /api/classrooms/{classroom_id}/invite
-      // Body: { emails: [...] }
-      // Response: { invited: number, skipped: number, details: [...] }
       const result = await api.post(`/api/classrooms/${classroomId}/invite`, {
         emails,
       });
 
-      const msg =
-        `✅ ${result.invited || emails.length} invitation(s) sent` +
-        (result.skipped > 0
-          ? `, ${result.skipped} skipped (already invited or registered)`
-          : "");
-      toast.success(msg);
+      const invited = result.invited || emails.length;
+      toast.success(`✅ ${invited} invitation(s) sent!`);
+      if (result.skipped > 0) {
+        toast.info(`${result.skipped} skipped (already invited)`);
+      }
 
       onSuccess();
       onOpenChange(false);
@@ -138,10 +129,7 @@ export function InviteStudentsModal({
 
   const resetForm = () => {
     setEmails([]);
-    setEmailInput("");
-    setBulkInput("");
-    setEmailError("");
-    setIsPreviewOpen(false);
+    setInputValue("");
   };
 
   return (
@@ -149,139 +137,61 @@ export function InviteStudentsModal({
       <DialogContent className="bg-[#1e293b] border border-white/10 rounded-2xl p-6 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-white text-xl font-bold">
-            Invite Students
+            Invite Students{classroomName ? ` to ${classroomName}` : ""}
           </DialogTitle>
           <p className="text-slate-400 text-sm mt-1">
-            Send email invitations to add students to your classroom
+            Type or paste email addresses to invite students
           </p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          {/* Email input section */}
+          {/* Email pill input */}
           <div>
             <label className="text-slate-300 text-sm font-medium mb-2 block">
               Student Email Addresses
             </label>
-            <div className="flex gap-2">
-              <Input
-                type="email"
-                placeholder="Enter email address..."
-                value={emailInput}
-                onChange={(e) => {
-                  setEmailInput(e.target.value);
-                  setEmailError("");
-                }}
-                onKeyDown={handleKeyDown}
-                className="bg-white/10 border-white/10 text-white rounded-xl px-4 py-3 flex-1 text-sm placeholder:text-slate-500"
-              />
-              <Button
-                onClick={addEmail}
-                className="bg-blue-500/15 text-blue-400 px-4 py-3 rounded-xl text-sm font-medium hover:bg-blue-500/25"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {emailError && (
-              <p className="text-red-400 text-xs mt-1">{emailError}</p>
-            )}
-          </div>
-
-          {/* Added emails list */}
-          {emails.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap items-center gap-2 min-h-[48px] p-3 bg-white/10 border border-white/10 rounded-xl cursor-text"
+              onClick={() => inputRef.current?.focus()}
+            >
               {emails.map((email) => (
-                <div
+                <span
                   key={email}
-                  className="bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-white text-sm flex items-center gap-2"
+                  className="inline-flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full px-3 py-1 text-sm"
                 >
-                  <span>{email}</span>
+                  {email}
                   <button
-                    onClick={() => removeEmail(email)}
-                    className="text-slate-400 hover:text-white text-xs cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeEmail(email);
+                    }}
+                    className="text-blue-400 hover:text-white transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
-                </div>
+                </span>
               ))}
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder={emails.length === 0 ? "Enter email addresses..." : ""}
+                className="flex-1 min-w-[150px] bg-transparent border-none outline-none text-white placeholder:text-slate-500 text-sm"
+              />
             </div>
-          )}
-
-          {/* Bulk paste option */}
-          <div>
-            <p className="text-slate-500 text-xs mb-2">
-              Or paste multiple emails (comma or newline separated)
+            <p className="text-slate-500 text-xs mt-2">
+              Press Enter, comma, or space to add. Paste multiple emails separated by commas or newlines.
             </p>
-            <Textarea
-              placeholder="email1@school.edu, email2@school.edu..."
-              value={bulkInput}
-              onChange={(e) => setBulkInput(e.target.value)}
-              className="bg-white/10 border-white/10 text-white rounded-xl px-4 py-3 w-full text-sm min-h-[80px] placeholder:text-slate-500"
-            />
-            <Button
-              onClick={addBulkEmails}
-              disabled={!bulkInput.trim()}
-              className="bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-xs hover:bg-white/15 mt-2"
-            >
-              Add All
-            </Button>
           </div>
 
-          {/* Email preview */}
-          <Collapsible open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 text-slate-400 text-xs cursor-pointer hover:text-slate-300">
-              {isPreviewOpen ? (
-                <ChevronUp className="w-3 h-3" />
-              ) : (
-                <ChevronDown className="w-3 h-3" />
-              )}
-              Preview invitation email
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
-                <p className="text-slate-400 text-xs mb-1">From: FairGrade</p>
-                <p className="text-slate-300 text-sm mb-2">
-                  Subject: {teacherName} has invited you to join their classroom
-                  on FairGrade
-                </p>
-                <div className="border-t border-white/10 pt-3 space-y-2">
-                  <p className="text-slate-400 text-xs">Hi [Student],</p>
-                  <p className="text-slate-400 text-xs">
-                    {teacherName} has invited you to join their classroom on
-                    FairGrade — a platform that tracks and evaluates individual
-                    contributions in group projects.
-                  </p>
-                  <p className="text-slate-400 text-xs">
-                    Click the button below to accept the invitation and get
-                    started.
-                  </p>
-                  <div className="bg-blue-500 text-white text-xs px-3 py-1.5 rounded inline-block">
-                    Accept Invitation
-                  </div>
-                  <p className="text-slate-500 text-xs">
-                    If you already have a FairGrade account, you'll be added
-                    automatically. If not, you'll be asked to create one.
-                  </p>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center justify-end gap-3 mt-6">
-          <button
-            onClick={() => {
-              onOpenChange(false);
-              resetForm();
-            }}
-            className="text-slate-400 hover:text-white text-sm"
-          >
-            Cancel
-          </button>
+          {/* Send button */}
           <Button
             onClick={handleSendInvitations}
             disabled={emails.length === 0 || isSending}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium"
           >
             {isSending ? (
               <>
@@ -295,6 +205,10 @@ export function InviteStudentsModal({
               </>
             )}
           </Button>
+
+          <p className="text-slate-500 text-xs text-center">
+            Students will receive an email invitation to join your classroom
+          </p>
         </div>
       </DialogContent>
     </Dialog>

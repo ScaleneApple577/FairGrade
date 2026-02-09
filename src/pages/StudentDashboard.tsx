@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
 import { ClassroomInvitationBanner } from "@/components/student/ClassroomInvitationBanner";
-import { api } from "@/lib/api";
+import { api, fetchProjectsWithFallback } from "@/lib/api";
 import { fetchMyTasks, getStatusDisplay, Task } from "@/lib/taskUtils";
 import { 
   getUpcomingAssignments, 
@@ -209,7 +209,7 @@ export default function StudentDashboard() {
         // Fetch projects
         let projectCount = 0;
         try {
-          const projectsData = await api.get<Array<{ id: string; name: string }>>('/api/projects');
+          const projectsData = await fetchProjectsWithFallback<{ id: string; name: string }>();
           projectCount = (projectsData || []).length;
         } catch {
           projectCount = 0;
