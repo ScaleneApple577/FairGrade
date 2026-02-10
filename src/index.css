@@ -172,3 +172,16 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(215 16% 47%);
 }
+
+/* Hide browser autofill icons globally */
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+input::-webkit-textfield-decoration-container {
+  display: none !important;
+}
