@@ -503,9 +503,11 @@ const Auth = () => {
                           placeholder="John"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          autoComplete="new-password"
+                          autoComplete="off"
                           data-form-type="other"
-                          className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-textfield-decoration-container]:hidden"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                           required
                         />
                       </div>
@@ -519,9 +521,11 @@ const Auth = () => {
                           placeholder="Doe"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
-                          autoComplete="new-password"
+                          autoComplete="off"
                           data-form-type="other"
-                          className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-textfield-decoration-container]:hidden"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                         />
                       </div>
                     </div>
@@ -534,13 +538,16 @@ const Auth = () => {
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                     <Input
                       id="email"
-                      type="email"
+                      type="text"
+                      inputMode="email"
                       placeholder="you@school.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="new-password"
+                      autoComplete="off"
                       data-form-type="other"
-                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-textfield-decoration-container]:hidden"
+                      data-lpignore="true"
+                      data-1p-ignore="true"
+                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                       required
                     />
                   </div>
@@ -558,7 +565,9 @@ const Auth = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="new-password"
                       data-form-type="other"
-                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-textfield-decoration-container]:hidden"
+                      data-lpignore="true"
+                      data-1p-ignore="true"
+                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [-webkit-text-security:disc] [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                       required
                     />
                   </div>
