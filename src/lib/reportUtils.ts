@@ -80,8 +80,7 @@ export interface StudentReport {
  * - At-Risk Students Report (filter students where is_at_risk = true)
  */
 export async function getContributionReport(projectId: number | string): Promise<ContributionReport> {
-  const id = typeof projectId === "string" ? parseInt(projectId, 10) : projectId;
-  const response = await api.get(`/api/reports/contribution/${id}`);
+  const response = await api.get(`/api/reports/contribution/${projectId}`);
   return parseReportResponse<ContributionReport>(response);
 }
 
@@ -93,8 +92,7 @@ export async function getContributionReport(projectId: number | string): Promise
  * - Individual Student Report (detailed contribution report for a single student)
  */
 export async function getStudentReport(userId: number | string): Promise<StudentReport> {
-  const id = typeof userId === "string" ? parseInt(userId, 10) : userId;
-  const response = await api.get(`/api/reports/student/${id}`);
+  const response = await api.get(`/api/reports/student/${userId}`);
   return parseReportResponse<StudentReport>(response);
 }
 
@@ -115,13 +113,11 @@ export async function exportReport(
   params.set("report_type", reportType);
   
   if (projectId) {
-    const pid = typeof projectId === "string" ? parseInt(projectId, 10) : projectId;
-    params.set("project_id", pid.toString());
+    params.set("project_id", String(projectId));
   }
   
   if (userId) {
-    const uid = typeof userId === "string" ? parseInt(userId, 10) : userId;
-    params.set("user_id", uid.toString());
+    params.set("user_id", String(userId));
   }
   
   const response = await api.post(`/api/reports/export?${params.toString()}`);

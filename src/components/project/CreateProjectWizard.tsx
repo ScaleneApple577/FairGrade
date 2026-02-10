@@ -22,7 +22,7 @@ interface CreateProjectWizardProps {
 }
 
 interface Classroom {
-  id: number | string;
+  id: string;
   name: string;
 }
 

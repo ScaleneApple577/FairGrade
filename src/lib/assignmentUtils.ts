@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 
 export interface Assignment {
   id: string | number;
-  classroom_id: number;
+  classroom_id: number | string;
   classroom_name?: string;
   title: string;
   description?: string;
@@ -80,8 +80,7 @@ export async function getMyAssignments(
  * GET /api/assignments/classroom/{classroom_id}
  */
 export async function getClassroomAssignments(classroomId: number | string): Promise<Assignment[]> {
-  const id = typeof classroomId === "string" ? parseInt(classroomId, 10) : classroomId;
-  const response = await api.get(`/api/assignments/classroom/${id}`);
+  const response = await api.get(`/api/assignments/classroom/${classroomId}`);
   const data = parseResponse<Assignment[]>(response);
   return Array.isArray(data) ? data : [];
 }
@@ -91,9 +90,8 @@ export async function getClassroomAssignments(classroomId: number | string): Pro
  * GET /api/assignments/{assignment_id}
  */
 export async function getAssignment(assignmentId: number | string): Promise<Assignment | null> {
-  const id = typeof assignmentId === "string" ? parseInt(assignmentId, 10) : assignmentId;
   try {
-    const response = await api.get(`/api/assignments/${id}`);
+    const response = await api.get(`/api/assignments/${assignmentId}`);
     return parseResponse<Assignment>(response);
   } catch {
     return null;
@@ -106,9 +104,7 @@ export async function getAssignment(assignmentId: number | string): Promise<Assi
  */
 export async function createAssignment(payload: CreateAssignmentPayload): Promise<Assignment> {
   const body = {
-    classroom_id: typeof payload.classroom_id === "string" 
-      ? parseInt(payload.classroom_id, 10) 
-      : payload.classroom_id,
+    classroom_id: payload.classroom_id,
     title: payload.title,
     description: payload.description || "",
     due_date: payload.due_date,
@@ -125,8 +121,7 @@ export async function updateAssignment(
   assignmentId: number | string,
   payload: UpdateAssignmentPayload
 ): Promise<Assignment> {
-  const id = typeof assignmentId === "string" ? parseInt(assignmentId, 10) : assignmentId;
-  const response = await api.put(`/api/assignments/${id}`, payload);
+  const response = await api.put(`/api/assignments/${assignmentId}`, payload);
   return parseResponse<Assignment>(response);
 }
 
@@ -135,8 +130,7 @@ export async function updateAssignment(
  * DELETE /api/assignments/{assignment_id}
  */
 export async function deleteAssignment(assignmentId: number | string): Promise<void> {
-  const id = typeof assignmentId === "string" ? parseInt(assignmentId, 10) : assignmentId;
-  await api.delete(`/api/assignments/${id}`);
+  await api.delete(`/api/assignments/${assignmentId}`);
 }
 
 // ============ Helper Functions ============

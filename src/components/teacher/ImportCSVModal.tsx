@@ -13,7 +13,7 @@ import { api } from "@/lib/api";
 interface ImportCSVModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  classroomId?: number;
+  classroomId?: number | string;
   onSuccess: () => void;
 }
 

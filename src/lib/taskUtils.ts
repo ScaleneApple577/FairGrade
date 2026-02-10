@@ -83,7 +83,7 @@ export async function createTask(payload: CreateTaskPayload): Promise<Task> {
   const response = await api.post<ApiTask>('/api/tasks', {
     title: payload.title,
     description: payload.description || '',
-    project_id: typeof payload.projectId === 'string' ? parseInt(payload.projectId, 10) : payload.projectId,
+    project_id: payload.projectId,
     assigned_to: payload.assignedTo ?? null,
     status: payload.status || 'open',
   });
@@ -145,7 +145,7 @@ export async function reassignTask(task: Task, newAssigneeId: number | null): Pr
 export async function fetchTasksForProject(projectId: string): Promise<Task[]> {
   try {
     // Try fetching from project detail first
-    const project = await api.get<{ id: string; tasks?: ApiTask[] }>(`/api/projects/${projectId}`);
+    const project = await api.get<{ id: string; tasks?: ApiTask[] }>(`/api/projects/projects/${projectId}`);
     if (project.tasks && Array.isArray(project.tasks)) {
       return mapApiTasksToTasks(project.tasks);
     }

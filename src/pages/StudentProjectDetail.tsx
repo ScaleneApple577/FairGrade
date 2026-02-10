@@ -100,7 +100,7 @@ export default function StudentProjectDetail() {
       setIsLoading(true);
       try {
         // Backend returns: { id, name, description, files: [...], created_at }
-        const data = await api.get<ApiProject>(`/api/projects/${id}`);
+        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
         
         // Transform to frontend format
         setProject({
@@ -178,7 +178,7 @@ export default function StudentProjectDetail() {
     setLinkUrlError("");
     try {
       // POST /api/projects/{project_id}/files
-      const response = await api.post<ApiFile>(`/api/projects/${id}/files`, {
+      const response = await api.post<ApiFile>(`/api/projects/projects/${id}/files`, {
         name: fileName,
         drive_file_id: driveFileId,
         mime_type: mimeType,
