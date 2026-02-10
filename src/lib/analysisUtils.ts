@@ -37,8 +37,7 @@ function parseAnalysisResponse<T>(response: any): T {
  * POST /api/analysis/ai-check?project_id={id}
  */
 export async function runAICheck(projectId: number | string): Promise<any> {
-  const id = typeof projectId === "string" ? parseInt(projectId, 10) : projectId;
-  const response = await api.post(`/api/analysis/ai-check?project_id=${id}`);
+  const response = await api.post(`/api/analysis/ai-check?project_id=${projectId}`);
   return parseAnalysisResponse(response);
 }
 
@@ -47,8 +46,7 @@ export async function runAICheck(projectId: number | string): Promise<any> {
  * POST /api/analysis/plagiarism?project_id={id}
  */
 export async function runPlagiarismCheck(projectId: number | string): Promise<any> {
-  const id = typeof projectId === "string" ? parseInt(projectId, 10) : projectId;
-  const response = await api.post(`/api/analysis/plagiarism?project_id=${id}`);
+  const response = await api.post(`/api/analysis/plagiarism?project_id=${projectId}`);
   return parseAnalysisResponse(response);
 }
 
@@ -57,8 +55,7 @@ export async function runPlagiarismCheck(projectId: number | string): Promise<an
  * GET /api/analysis/flags/{project_id}
  */
 export async function getAnalysisFlags(projectId: number | string): Promise<AnalysisFlag[]> {
-  const id = typeof projectId === "string" ? parseInt(projectId, 10) : projectId;
-  const response = await api.get(`/api/analysis/flags/${id}`);
+  const response = await api.get(`/api/analysis/flags/${projectId}`);
   const parsed = parseAnalysisResponse<AnalysisFlag[] | AnalysisFlag>(response);
   
   if (Array.isArray(parsed)) {
@@ -82,8 +79,7 @@ export async function getStudentIntegrityFlags(
   studentId: number | string
 ): Promise<AnalysisFlag[]> {
   const allFlags = await getAnalysisFlags(projectId);
-  const studentIdNum = typeof studentId === "string" ? parseInt(studentId, 10) : studentId;
-  return allFlags.filter((f) => f.user_id === studentIdNum);
+  return allFlags.filter((f) => String(f.user_id) === String(studentId));
 }
 
 /**

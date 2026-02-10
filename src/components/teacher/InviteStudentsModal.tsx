@@ -14,7 +14,7 @@ interface InviteStudentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   teacherName: string;
-  classroomId?: number;
+  classroomId?: number | string;
   classroomName?: string;
   onSuccess: () => void;
 }

@@ -89,7 +89,7 @@ export default function TeacherReports() {
       setIsLoading(true);
       try {
         // Fetch projects for dropdowns
-        const projectsData = await api.get<Project[]>("/api/projects");
+        const projectsData = await api.get<Project[]>("/api/projects/projects");
         setProjects(projectsData || []);
         
         // TODO: Need endpoint to list all students for the teacher
@@ -177,14 +177,13 @@ export default function TeacherReports() {
     setIsGeneratingReport(true);
     setAnalysisFlags([]);
     try {
-      const projectIdNum = parseInt(selectedProjectId, 10);
       if (selectedDetectionTypes.includes("ai")) {
-        await runAICheck(projectIdNum);
+        await runAICheck(selectedProjectId);
       }
       if (selectedDetectionTypes.includes("plagiarism")) {
-        await runPlagiarismCheck(projectIdNum);
+        await runPlagiarismCheck(selectedProjectId);
       }
-      const flags = await getAnalysisFlags(projectIdNum);
+      const flags = await getAnalysisFlags(selectedProjectId);
       setAnalysisFlags(flags);
       if (flags.length === 0) {
         toast.info("No issues found!");

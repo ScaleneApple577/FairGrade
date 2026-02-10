@@ -167,21 +167,18 @@ export const api = {
 
 // Fetch projects with fallback logic for endpoint discovery
 export async function fetchProjectsWithFallback<T = any>(): Promise<T[]> {
+  // Primary: GET /api/projects/projects (double path for listing)
   try {
-    const data = await api.get<T[]>('/api/projects');
+    const data = await api.get<T[]>('/api/projects/projects');
     return data || [];
   } catch {
+    // Fallback: GET /api/projects
     try {
-      const data = await api.get<T[]>('/api/projects/');
+      const data = await api.get<T[]>('/api/projects');
       return data || [];
     } catch {
-      try {
-        const data = await api.get<T[]>('/api/projects/projects');
-        return data || [];
-      } catch {
-        console.error('Could not fetch projects from any endpoint');
-        return [];
-      }
+      console.error('Could not fetch projects from any endpoint');
+      return [];
     }
   }
 }

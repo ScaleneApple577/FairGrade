@@ -36,7 +36,7 @@ import {
 // ============ Interfaces ============
 
 interface Classroom {
-  id: number;
+  id: string;
   name: string;
   status: string;
   student_count?: number;
@@ -46,8 +46,8 @@ interface Classroom {
 }
 
 interface ClassroomStudent {
-  id: number;
-  user_id: number;
+  id: number | string;
+  user_id: number | string;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -55,7 +55,7 @@ interface ClassroomStudent {
 }
 
 interface ClassroomInvitation {
-  id: number;
+  id: number | string;
   email: string;
   status: string;
   created_at: string;
@@ -71,7 +71,7 @@ interface StudentRow {
   avgFairscore: number | null;
   projectCount: number;
   source: "student" | "invitation";
-  invitation_id?: number;
+  invitation_id?: number | string;
 }
 
 interface StudentStats {
@@ -83,7 +83,7 @@ interface StudentStats {
 export default function TeacherStudents() {
   // Classroom state
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [selectedClassroomId, setSelectedClassroomId] = useState<number | null>(null);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [invitations, setInvitations] = useState<ClassroomInvitation[]>([]);
   const [isLoadingClassrooms, setIsLoadingClassrooms] = useState(true);

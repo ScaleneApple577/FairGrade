@@ -26,6 +26,7 @@ import { api } from "@/lib/api";
 import { useLiveStatus } from "@/hooks/useLiveStatus";
 import { LiveEditsNotification } from "@/components/live/LiveEditsNotification";
 import { AssignmentsSection } from "@/components/teacher/AssignmentsSection";
+import { CreateProjectWizard } from "@/components/project/CreateProjectWizard";
 
 interface DashboardStats {
   activeProjects: number;
@@ -61,6 +62,7 @@ export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [showCreateProject, setShowCreateProject] = useState(false);
   
   // Data states
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -164,7 +166,7 @@ export default function TeacherDashboard() {
 
           <div className="flex gap-3">
             <Button
-              onClick={() => navigate("/teacher/create")}
+              onClick={() => setShowCreateProject(true)}
               className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
             >
               <Plus className="w-4 h-4" />
@@ -365,7 +367,7 @@ export default function TeacherDashboard() {
                   <p className="text-slate-400">No projects to monitor yet</p>
                   <p className="text-slate-500 text-sm mt-1">Create your first project to see health metrics</p>
                   <Button
-                    onClick={() => navigate("/teacher/create")}
+                    onClick={() => setShowCreateProject(true)}
                     className="mt-4 bg-blue-500 hover:bg-blue-600"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -453,6 +455,12 @@ export default function TeacherDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Create Project Wizard Modal */}
+      <CreateProjectWizard
+        isOpen={showCreateProject}
+        onClose={() => setShowCreateProject(false)}
+      />
     </TeacherLayout>
   );
 }

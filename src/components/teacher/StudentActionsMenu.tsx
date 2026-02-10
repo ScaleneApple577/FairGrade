@@ -33,8 +33,8 @@ interface StudentActionsMenuProps {
   studentName: string;
   studentEmail: string;
   status: "active" | "pending" | "inactive";
-  classroomId?: number;
-  invitationId?: number;
+  classroomId?: number | string;
+  invitationId?: number | string;
   onRefresh: () => void;
 }
 
@@ -58,7 +58,7 @@ export function StudentActionsMenu({
     setIsLoadingProjects(true);
     try {
       // Backend returns: [{ id, name, description, created_at }]
-      const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>("/api/projects");
+      const data = await api.get<Array<{ id: string; name: string; description: string | null; created_at: string }>>("/api/projects/projects");
       // Transform to expected format
       const projects: Project[] = (data || []).map((p) => ({
         id: p.id,

@@ -148,7 +148,7 @@ export default function TeacherProjectDetail() {
       setIsLoading(true);
       try {
         // Backend returns: { id, name, description, files: [...], created_at }
-        const data = await api.get<ApiProject>(`/api/projects/${id}`);
+        const data = await api.get<ApiProject>(`/api/projects/projects/${id}`);
         
         // Transform to frontend format
         setProject({

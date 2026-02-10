@@ -28,7 +28,7 @@ import {
 } from "@/lib/assignmentUtils";
 
 interface Classroom {
-  id: string | number;
+  id: string;
   name: string;
 }
 
