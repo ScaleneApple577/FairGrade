@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, GraduationCap, UserCheck, ArrowLeft, ChevronRight } from "lucide-react";
+import { Loader2, GraduationCap, UserCheck, ArrowLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
 
 const emailSchema = z.string().email("Please enter a valid email address");
@@ -496,7 +496,6 @@ const Auth = () => {
                     <div className="space-y-2">
                       <Label htmlFor="firstName" className="text-slate-300 text-sm font-medium">First Name</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                         <Input
                           id="firstName"
                           type="text"
@@ -507,7 +506,7 @@ const Auth = () => {
                           data-form-type="other"
                           data-lpignore="true"
                           data-1p-ignore="true"
-                          className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
+                          className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                           required
                         />
                       </div>
@@ -535,7 +534,6 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                     <Input
                       id="email"
                       type="text"
@@ -547,7 +545,7 @@ const Auth = () => {
                       data-form-type="other"
                       data-lpignore="true"
                       data-1p-ignore="true"
-                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
+                      className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                       required
                     />
                   </div>
@@ -556,7 +554,6 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                     <Input
                       id="password"
                       type="password"
@@ -567,7 +564,7 @@ const Auth = () => {
                       data-form-type="other"
                       data-lpignore="true"
                       data-1p-ignore="true"
-                      className="pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [-webkit-text-security:disc] [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
+                      className="bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 [-webkit-text-security:disc] [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:!w-0 [&::-webkit-credentials-auto-fill-button]:!opacity-0 [&::-webkit-textfield-decoration-container]:hidden"
                       required
                     />
                   </div>
