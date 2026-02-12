@@ -139,42 +139,6 @@ export function CalendarAISidebar({
         )}
       </div>
 
-      {/* Quick Set Availability Card */}
-      <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5">
-        <h3 className="text-white text-sm font-semibold mb-3">Quick Set Availability</h3>
-        <div className="space-y-2">
-          <button
-            onClick={() => onQuickSet("weekday_9to5")}
-            disabled={isSettingPreset}
-            className="w-full bg-white/10 text-slate-300 py-2 rounded-lg text-xs hover:bg-white/15 transition disabled:opacity-50"
-          >
-            {isSettingPreset ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : "Available all week (9-5)"}
-          </button>
-          <button
-            onClick={() => onQuickSet("weekday_evenings")}
-            disabled={isSettingPreset}
-            className="w-full bg-white/10 text-slate-300 py-2 rounded-lg text-xs hover:bg-white/15 transition disabled:opacity-50"
-          >
-            Available weekday evenings (6-9)
-          </button>
-          <button
-            onClick={() => onQuickSet("weekends")}
-            disabled={isSettingPreset}
-            className="w-full bg-white/10 text-slate-300 py-2 rounded-lg text-xs hover:bg-white/15 transition disabled:opacity-50"
-          >
-            Available weekends only
-          </button>
-          <button
-            onClick={() => onQuickSet("clear")}
-            disabled={isSettingPreset}
-            className="w-full bg-red-500/10 text-red-400 py-2 rounded-lg text-xs hover:bg-red-500/15 transition disabled:opacity-50"
-          >
-            <Trash2 className="w-3 h-3 inline mr-1" />
-            Clear my availability
-          </button>
-        </div>
-      </div>
-
       {/* Upcoming Meetings Card */}
       <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5">
         <h3 className="text-white text-sm font-semibold mb-3">Upcoming Meetings</h3>

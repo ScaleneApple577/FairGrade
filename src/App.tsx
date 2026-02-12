@@ -15,7 +15,9 @@ import StudentCalendar from "./pages/StudentCalendar";
 import StudentReviews from "./pages/StudentReviews";
 import StudentProjects from "./pages/StudentProjects";
 import StudentProjectDetail from "./pages/StudentProjectDetail";
-import StudentStats from "./pages/StudentStats";
+import StudentProfile from "./pages/StudentProfile";
+import StudentAchievements from "./pages/StudentAchievements";
+import StudentSettings from "./pages/StudentSettings";
 import LiveMonitor from "./pages/LiveMonitor";
 import Flags from "./pages/Flags";
 import Timeline from "./pages/Timeline";
@@ -198,10 +200,26 @@ const AppRoutes = () => (
       } 
     />
     <Route 
-      path="/student/stats" 
+      path="/student-profile" 
       element={
         <StudentRoute>
-          <StudentStats />
+          <StudentProfile />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student-achievements" 
+      element={
+        <StudentRoute>
+          <StudentAchievements />
+        </StudentRoute>
+      } 
+    />
+    <Route 
+      path="/student-settings" 
+      element={
+        <StudentRoute>
+          <StudentSettings />
         </StudentRoute>
       } 
     />
