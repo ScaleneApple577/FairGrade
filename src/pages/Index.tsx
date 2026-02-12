@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Play, ChevronDown, Check } from "lucide-react";
+import { Menu, X, Play, Check } from "lucide-react";
 
 // CSS Keyframes
 const silkFlowKeyframes = `
@@ -100,7 +100,7 @@ const Index = () => {
 
       {/* NAVBAR */}
       <nav className="sticky top-0 bg-white/10 backdrop-blur-md border-b border-white/10 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-9 h-11">
@@ -136,15 +136,15 @@ const Index = () => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-slate-300 hover:text-white font-medium transition-colors">Home</Link>
-            <Link to="/features" className="text-slate-300 hover:text-white font-medium transition-colors">Features</Link>
-            <Link to="/pricing" className="text-slate-300 hover:text-white font-medium transition-colors">Pricing</Link>
+            <Link to="/" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Home</Link>
+            <Link to="/features" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Features</Link>
+            <Link to="/pricing" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Pricing</Link>
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-slate-300 hover:text-white font-medium transition-colors">Log In</Link>
-            <Link to="/auth" className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary/90 font-medium transition-colors">
+            <Link to="/auth" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Log In</Link>
+            <Link to="/auth" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 text-sm font-semibold transition-all hover:scale-105">
               Sign Up Now
             </Link>
           </div>
@@ -175,18 +175,10 @@ const Index = () => {
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative pt-20 pb-16 overflow-hidden">
 
         {/* Hero Content */}
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
-          {/* Trust Badge */}
-          <div 
-            className="inline-flex items-center gap-2 bg-white/10 text-white/70 text-sm px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-sm mb-8"
-            style={{ animation: 'fadeSlideUp 0.8s ease-out forwards' }}
-          >
-            <Check className="w-4 h-4" />
-            Trusted by 1,000+ educators worldwide
-          </div>
 
           {/* Main Heading */}
           <h1 
@@ -229,14 +221,6 @@ const Index = () => {
               Watch Demo (2 min)
             </button>
           </div>
-        </div>
-
-        {/* Bounce Chevron */}
-        <div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40"
-          style={{ animation: 'bounce 2s infinite' }}
-        >
-          <ChevronDown className="w-8 h-8" />
         </div>
       </section>
 
