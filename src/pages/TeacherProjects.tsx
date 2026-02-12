@@ -220,25 +220,22 @@ export default function TeacherProjects() {
       <div className="p-8">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white">All Projects</h1>
-            <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <FolderOpen className="w-4 h-4" />
-                <span>{stats.total} total projects</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span>{stats.healthy} healthy</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-yellow-400">
-                <AlertCircle className="w-4 h-4" />
-                <span>{stats.needs_attention} needs attention</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-red-400">
-                <AlertTriangle className="w-4 h-4" />
-                <span>{stats.at_risk} at risk</span>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <FolderOpen className="w-4 h-4" />
+              <span>{stats.total} total projects</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-green-400">
+              <CheckCircle className="w-4 h-4" />
+              <span>{stats.healthy} healthy</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-yellow-400">
+              <AlertCircle className="w-4 h-4" />
+              <span>{stats.needs_attention} needs attention</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-red-400">
+              <AlertTriangle className="w-4 h-4" />
+              <span>{stats.at_risk} at risk</span>
             </div>
           </div>
 

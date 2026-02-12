@@ -124,25 +124,6 @@ export function StudentLayout({
           <MenuVertical menuItems={sidebarItems} variant="dark" />
         </div>
 
-        {/* Extension Token Button */}
-        {showExtensionButton && onGenerateToken && (
-          <div className="px-4 pb-2">
-            <Button
-              onClick={onGenerateToken}
-              disabled={isGeneratingToken}
-              variant="outline"
-              className="w-full bg-white/10 border border-white/10 text-blue-400 hover:bg-white/15"
-            >
-              {isGeneratingToken ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Key className="w-4 h-4 mr-2" />
-              )}
-              Get Extension Token
-            </Button>
-          </div>
-        )}
-
         {/* Log Out */}
         <div className="p-4 border-t border-white/10">
           <button

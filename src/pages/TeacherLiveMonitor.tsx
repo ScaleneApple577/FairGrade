@@ -174,10 +174,6 @@ export default function TeacherLiveMonitor() {
   return (
     <TeacherLayout>
       <div className="p-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Live Activity</h1>
-        </div>
 
         {/* Filter Row */}
         <div className="flex items-center gap-3 mb-6">

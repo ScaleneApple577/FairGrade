@@ -324,22 +324,6 @@ const StudentStats = () => {
 
   return (
     <StudentLayout pageTitle="My Stats">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-blue-500/15 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">My Stats</h1>
-            <p className="text-slate-400">Track your contributions and performance across all projects</p>
-          </div>
-        </div>
-      </motion.div>
 
       {/* Hero Card - Overall Contribution Score */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">

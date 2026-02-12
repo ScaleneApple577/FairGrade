@@ -149,26 +149,10 @@ export default function StudentReviews() {
 
   return (
     <StudentLayout pageTitle="Peer Reviews">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-blue-500/15 rounded-lg flex items-center justify-center">
-            <Star className="w-6 h-6 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Peer Reviews</h1>
-            <p className="text-slate-400">Rate your teammates' contributions</p>
-          </div>
-        </div>
-        <p className="text-slate-500 text-sm mt-4 flex items-center gap-2">
-          <Lock className="w-4 h-4" />
-          Your reviews are anonymous and sent directly to your instructor.
-        </p>
-      </motion.div>
+      <p className="text-slate-500 text-sm mb-6 flex items-center gap-2">
+        <Lock className="w-4 h-4" />
+        Your reviews are anonymous and sent directly to your instructor.
+      </p>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

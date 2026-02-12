@@ -311,14 +311,6 @@ export default function StudentCalendar() {
   // Assignments are user-level (not project-level), so they show regardless
   return (
     <StudentLayout pageTitle="Calendar">
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-white text-2xl font-bold">Calendar</h1>
-        <p className="text-slate-400 text-sm">
-          View your assignments and manage your schedule
-          {/* TODO: When teams API is available, add team context for availability coordination */}
-        </p>
-      </div>
 
       {/* Project Selector - optional, only shows if user has projects for availability */}
       {projects.length > 0 && (
