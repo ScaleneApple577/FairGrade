@@ -303,13 +303,6 @@ export default function StudentDashboard() {
     }
   };
 
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
-
   if (isLoading) {
     return (
       <StudentLayout pageTitle="Dashboard">
@@ -363,7 +356,6 @@ export default function StudentDashboard() {
             Here's what's happening with your projects
           </p>
         </div>
-        <span className="text-slate-500 text-sm">{formattedDate}</span>
       </div>
 
       {/* Stats Cards - Compact Row */}

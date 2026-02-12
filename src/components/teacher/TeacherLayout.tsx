@@ -44,7 +44,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
       <aside className="w-64 bg-[#0f172a] border-r border-white/10 flex flex-col fixed h-full">
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/teacher/dashboard" className="flex items-center gap-3">
             <div className="w-9 h-11">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
                 <path
