@@ -5,16 +5,21 @@ import {
   FolderOpen,
   Calendar,
   Star,
-  BarChart3,
   LogOut,
-  Key,
-  Loader2,
+  User,
+  Trophy,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Sidebar navigation items
 const sidebarItems = [
@@ -22,15 +27,11 @@ const sidebarItems = [
   { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
   { icon: Calendar, label: "Calendar", href: "/student/calendar" },
   { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
-  { icon: BarChart3, label: "My Stats", href: "/student/stats" },
 ];
 
 interface StudentLayoutProps {
   children: ReactNode;
   pageTitle: string;
-  showExtensionButton?: boolean;
-  onGenerateToken?: () => void;
-  isGeneratingToken?: boolean;
 }
 
 // TODO: GET http://localhost:8000/api/auth/profile
@@ -44,9 +45,6 @@ interface UserProfile {
 export function StudentLayout({
   children,
   pageTitle,
-  showExtensionButton = false,
-  onGenerateToken,
-  isGeneratingToken = false,
 }: StudentLayoutProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -146,26 +144,57 @@ export function StudentLayout({
             <div className="flex items-center gap-4">
               <NotificationDropdown />
 
-              <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-                {profile ? (
-                  <>
-                    <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {profile.initials}
-                    </div>
-                    <div className="hidden md:block">
-                      <p className="text-sm font-medium text-white">
-                        {profile.fullName}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-9 h-9 bg-white/10 rounded-full animate-pulse" />
-                    <div className="hidden md:block">
-                      <div className="h-4 w-24 bg-white/10 rounded animate-pulse" />
-                    </div>
-                  </>
-                )}
+              <div className="pl-4 border-l border-white/10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-3 cursor-pointer outline-none">
+                    {profile ? (
+                      <>
+                        <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {profile.initials}
+                        </div>
+                        <div className="hidden md:flex items-center gap-1">
+                          <p className="text-sm font-medium text-white">
+                            {profile.fullName}
+                          </p>
+                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-9 h-9 bg-white/10 rounded-full animate-pulse" />
+                        <div className="hidden md:block">
+                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse" />
+                        </div>
+                      </>
+                    )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-[#1e293b] border border-white/10 shadow-xl"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => navigate("/student-profile")}
+                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/student-achievements")}
+                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
+                    >
+                      <Trophy className="w-4 h-4" />
+                      Achievements
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/student-settings")}
+                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

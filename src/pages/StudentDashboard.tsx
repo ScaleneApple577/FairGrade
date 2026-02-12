@@ -321,9 +321,6 @@ export default function StudentDashboard() {
   return (
     <StudentLayout
       pageTitle="Dashboard"
-      showExtensionButton={true}
-      onGenerateToken={generateExtensionToken}
-      isGeneratingToken={isGenerating}
     >
       {/* Classroom Invitation Banners */}
       <ClassroomInvitationBanner />
