@@ -172,8 +172,12 @@ const Auth = () => {
         description: "Successfully signed in.",
       });
 
-      // Navigate based on role
-      if (normalized.role === 'teacher') {
+      // Check for pending invite redirect
+      const pendingRedirect = sessionStorage.getItem('pending_invite_redirect');
+      if (pendingRedirect) {
+        sessionStorage.removeItem('pending_invite_redirect');
+        navigate(pendingRedirect);
+      } else if (normalized.role === 'teacher') {
         navigate('/teacher/dashboard');
       } else if (normalized.role === 'student') {
         navigate('/student/dashboard');
@@ -216,7 +220,11 @@ const Auth = () => {
         description: "Welcome to FairGrade!",
       });
 
-      if (normalizedUserData.role === 'student') {
+      const pendingRedirect = sessionStorage.getItem('pending_invite_redirect');
+      if (pendingRedirect) {
+        sessionStorage.removeItem('pending_invite_redirect');
+        navigate(pendingRedirect);
+      } else if (normalizedUserData.role === 'student') {
         navigate('/student/dashboard');
       } else if (normalizedUserData.role === 'teacher') {
         navigate('/teacher/dashboard');
