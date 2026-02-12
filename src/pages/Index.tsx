@@ -133,16 +133,9 @@ const Index = () => {
 
           {/* CTA Buttons */}
           <div 
-            className="flex flex-col sm:flex-row gap-4 justify-center mt-10"
+            className="flex justify-center mt-10"
             style={{ animation: 'fadeSlideUp 0.8s ease-out 0.4s forwards', opacity: 0 }}
           >
-            <Link 
-              to="/auth"
-              className="bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-xl text-lg font-semibold shadow-lg transition-colors"
-              style={{ boxShadow: '0 10px 40px rgba(59,130,246,0.25)' }}
-            >
-              Sign Up Free
-            </Link>
             <button className="border-2 border-white/20 text-white hover:bg-white/10 px-8 py-3.5 rounded-xl text-lg font-medium flex items-center justify-center gap-2 transition-colors">
               <Play className="w-5 h-5" />
               Watch Demo (2 min)
