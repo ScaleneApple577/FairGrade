@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { ClassroomGate } from "@/components/student/ClassroomGate";
 
 import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
 import { CalendarMonthView } from "@/components/calendar/CalendarMonthView";
@@ -311,6 +312,7 @@ export default function StudentCalendar() {
   // Assignments are user-level (not project-level), so they show regardless
   return (
     <StudentLayout pageTitle="Calendar">
+      <ClassroomGate>
 
       {/* Project Selector - optional, only shows if user has projects for availability */}
       {projects.length > 0 && (
@@ -482,6 +484,7 @@ export default function StudentCalendar() {
         prefilledStartTime={prefilledMeeting?.startTime}
         prefilledEndTime={prefilledMeeting?.endTime}
       />
+      </ClassroomGate>
     </StudentLayout>
   );
 }

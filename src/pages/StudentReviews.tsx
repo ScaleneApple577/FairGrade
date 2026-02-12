@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Clock, CheckCircle, Lock, Loader2 } from "lucide-react";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { ClassroomGate } from "@/components/student/ClassroomGate";
 import { PendingReviewCard } from "@/components/reviews/PendingReviewCard";
 import { SubmittedReviewCard } from "@/components/reviews/SubmittedReviewCard";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
@@ -149,6 +150,7 @@ export default function StudentReviews() {
 
   return (
     <StudentLayout pageTitle="Peer Reviews">
+      <ClassroomGate>
       <p className="text-slate-500 text-sm mb-6 flex items-center gap-2">
         <Lock className="w-4 h-4" />
         Your reviews are anonymous and sent directly to your instructor.
@@ -296,6 +298,7 @@ export default function StudentReviews() {
         projectName={selectedProjectName}
         onSubmit={handleSubmitReview}
       />
+      </ClassroomGate>
     </StudentLayout>
   );
 }

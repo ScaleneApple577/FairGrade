@@ -2,20 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, FolderOpen, Check, X, Loader2, GraduationCap, Clock, Users } from "lucide-react";
-import { api } from "@/lib/api";
-
-interface Notification {
-  id: string;
-  type: "project_assignment" | "classroom_invitation" | "deadline_reminder" | "review_request" | "general";
-  title: string;
-  message: string;
-  projectId?: string;
-  projectName?: string;
-  courseName?: string;
-  teacherName?: string;
-  createdAt: string;
-  isRead: boolean;
-}
+import { useClassroom } from "@/contexts/ClassroomContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -23,116 +11,47 @@ interface NotificationDropdownProps {
 
 export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { invitations, invitationCount, acceptInvitation, dismissInvitation } = useClassroom();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [acceptingToken, setAcceptingToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setIsLoading(true);
-      try {
-        // TODO: GET /api/student/notifications
-        // const data = await api.get('/api/student/notifications');
-        // setNotifications(data.notifications);
-        
-        // TODO: GET /api/student/notifications/unread-count
-        // const countData = await api.get('/api/student/notifications/unread-count');
-        // setUnreadCount(countData.count);
-        
-        setNotifications([]);
-        setUnreadCount(0);
-      } catch (error) {
-        console.error("Failed to fetch notifications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchNotifications();
-  }, []);
-
-  const handleMarkAllRead = async () => {
+  const handleAccept = async (invitation: any) => {
+    const token = invitation.token;
+    setAcceptingToken(token);
     try {
-      // TODO: PUT /api/student/notifications/mark-all-read
-      // await api.put('/api/student/notifications/mark-all-read');
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      await acceptInvitation(token);
+      toast({
+        title: "Invitation accepted!",
+        description: `You've joined the classroom successfully.`,
+      });
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      console.error("Failed to accept invitation:", error);
+      toast({
+        title: "Failed to accept",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAcceptingToken(null);
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    setNotifications(prev =>
-      prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
-
-    // Navigate based on notification type
-    if (notification.type === "project_assignment" && notification.projectId) {
-      navigate("/student/projects");
-    } else if (notification.type === "classroom_invitation") {
-      // Navigate to dashboard where the invitation banner is shown
-      navigate("/student/dashboard");
-    }
-
-    setIsOpen(false);
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
-
-  const getNotificationIcon = (type: Notification["type"]) => {
-    switch (type) {
-      case "project_assignment":
-        return <FolderOpen className="w-4 h-4 text-blue-400" />;
-      case "classroom_invitation":
-        return <GraduationCap className="w-4 h-4 text-purple-400" />;
-      case "deadline_reminder":
-        return <Clock className="w-4 h-4 text-yellow-400" />;
-      case "review_request":
-        return <Users className="w-4 h-4 text-emerald-400" />;
-      default:
-        return <Bell className="w-4 h-4 text-slate-400" />;
-    }
-  };
-
-  const getNotificationBgColor = (type: Notification["type"]) => {
-    switch (type) {
-      case "project_assignment":
-        return "bg-blue-500/15";
-      case "classroom_invitation":
-        return "bg-purple-500/15";
-      case "deadline_reminder":
-        return "bg-yellow-500/15";
-      case "review_request":
-        return "bg-emerald-500/15";
-      default:
-        return "bg-white/10";
-    }
+  const handleDismiss = (id: string) => {
+    dismissInvitation(id);
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className || ""}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 hover:bg-white/5 rounded-lg transition-colors"
       >
         <Bell className="h-5 w-5 text-slate-400 hover:text-white" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full" />
+        {invitationCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-1">
+            {invitationCount}
+          </span>
         )}
       </button>
 
@@ -156,49 +75,60 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h3 className="text-white font-semibold text-sm">Notifications</h3>
-                {notifications.length > 0 && (
-                  <button
-                    onClick={handleMarkAllRead}
-                    className="text-blue-400 text-xs hover:text-blue-300 transition-colors"
-                  >
-                    Mark all read
-                  </button>
-                )}
               </div>
 
               {/* Content */}
               <div className="max-h-96 overflow-y-auto">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-                  </div>
-                ) : notifications.length === 0 ? (
+                {invitations.length === 0 ? (
                   <div className="py-12 text-center">
                     <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Bell className="w-6 h-6 text-slate-500" />
                     </div>
-                    <p className="text-slate-400 text-sm">No notifications yet</p>
+                    <p className="text-slate-400 text-sm">No new notifications</p>
                   </div>
                 ) : (
-                  notifications.map((notification) => (
+                  invitations.map((invitation) => (
                     <div
-                      key={notification.id}
-                      onClick={() => handleNotificationClick(notification)}
-                      className={`p-3 cursor-pointer transition-colors ${
-                        notification.isRead
-                          ? "bg-white/[0.02] hover:bg-white/[0.04]"
-                          : "bg-blue-500/10 border-l-2 border-blue-400 hover:bg-blue-500/15"
-                      }`}
+                      key={invitation.id}
+                      className="p-4 border-b border-white/5 last:border-b-0"
                     >
-                        <div className="flex gap-3">
-                        <div className={`w-8 h-8 ${getNotificationBgColor(notification.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                          {getNotificationIcon(notification.type)}
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 bg-purple-500/15 rounded-full flex items-center justify-center flex-shrink-0">
+                          <GraduationCap className="w-4 h-4 text-purple-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-slate-200 text-sm">{notification.message}</p>
-                          <p className="text-slate-500 text-xs mt-1">
-                            {getTimeAgo(notification.createdAt)}
+                          <p className="text-slate-200 text-sm">
+                            You've been invited to join{" "}
+                            <span className="text-white font-medium">
+                              {invitation.classroom_name || invitation.classroom_id || "a classroom"}
+                            </span>
                           </p>
+                          {invitation.teacher_name && (
+                            <p className="text-slate-500 text-xs mt-0.5">
+                              From: {invitation.teacher_name}
+                            </p>
+                          )}
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              onClick={() => handleAccept(invitation)}
+                              disabled={acceptingToken === invitation.token}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition disabled:opacity-50"
+                            >
+                              {acceptingToken === invitation.token ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Check className="w-3 h-3" />
+                              )}
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleDismiss(invitation.id)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-medium rounded-lg transition"
+                            >
+                              <X className="w-3 h-3" />
+                              Decline
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
