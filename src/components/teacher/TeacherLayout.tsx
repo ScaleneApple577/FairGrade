@@ -43,7 +43,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
       {/* Sidebar */}
       <aside className="w-64 bg-[#0f172a] border-r border-white/10 flex flex-col fixed h-full">
         {/* Logo */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6">
           <Link to="/teacher/dashboard" className="flex items-center gap-3">
             <div className="w-9 h-11">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
@@ -100,7 +100,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors w-full"

@@ -83,7 +83,7 @@ export function StudentLayout({
       {/* Fixed Sidebar */}
       <aside className="w-64 h-screen bg-[#0f172a] border-r border-white/10 fixed left-0 top-0 flex flex-col">
         {/* Logo Section */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6">
           <Link to="/student/dashboard" className="flex items-center gap-3">
             <div className="w-9 h-11 flex-shrink-0">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
@@ -123,7 +123,7 @@ export function StudentLayout({
         </div>
 
         {/* Log Out */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full p-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
@@ -137,14 +137,14 @@ export function StudentLayout({
       {/* Main Content */}
       <div className="ml-64 min-h-screen bg-[#111827] flex-1">
         {/* Top Bar */}
-        <header className="bg-[#0f172a]/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <header className="bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center justify-between px-8 h-16">
             <div />
 
             <div className="flex items-center gap-4">
               <NotificationDropdown />
 
-              <div className="pl-4 border-l border-white/10">
+              <div className="pl-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-3 cursor-pointer outline-none">
                     {profile ? (

@@ -72,11 +72,11 @@ export const MenuVertical = ({
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className={cn(
-                "font-medium text-sm no-underline flex items-center gap-3",
+                "font-medium text-lg no-underline flex items-center gap-3",
                 isActive && "font-semibold"
               )}
             >
-              {Icon && <Icon className="h-5 w-5" />}
+              {Icon && <Icon className="h-6 w-6" />}
               <span>{item.label}</span>
             </MotionLink>
           </motion.div>
