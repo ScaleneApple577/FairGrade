@@ -44,7 +44,6 @@ export default function TeacherAnalytics() {
   return (
     <TeacherLayout>
       <div className="p-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Analytics Dashboard</h1>
 
         {/* Time Range */}
         <div className="bg-white/5 rounded-xl border border-white/10 p-2 mb-8 inline-flex gap-2">

@@ -157,30 +157,15 @@ export default function StudentProjects() {
   return (
     <StudentLayout pageTitle="My Projects">
       {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-500/15 rounded-lg flex items-center justify-center">
-              <FolderOpen className="w-6 h-6 text-blue-500" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">My Projects</h1>
-              <p className="text-slate-400 mt-1">View and manage your group projects</p>
-            </div>
-          </div>
-          <Button
-            onClick={() => setShowJoinModal(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Join Project
-          </Button>
-        </div>
-      </motion.div>
+      <div className="flex items-center justify-end mb-6">
+        <Button
+          onClick={() => setShowJoinModal(true)}
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+        >
+          <UserPlus className="w-4 h-4 mr-2" />
+          Join Project
+        </Button>
+      </div>
 
       {/* Filter Tabs */}
       <div className="mb-6">

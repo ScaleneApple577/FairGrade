@@ -449,33 +449,25 @@ export default function TeacherStudents() {
   return (
     <TeacherLayout>
       <div className="p-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Students</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Manage your classroom roster
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setIsImportModalOpen(true)}
-              variant="outline"
-              disabled={!selectedClassroomId}
-              className="bg-white/10 border-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/15"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import CSV
-            </Button>
-            <Button
-              onClick={() => setIsInviteModalOpen(true)}
-              disabled={!selectedClassroomId}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Invite Students
-            </Button>
-          </div>
+        {/* Header Actions */}
+        <div className="flex items-center justify-end gap-3 mb-6">
+          <Button
+            onClick={() => setIsImportModalOpen(true)}
+            variant="outline"
+            disabled={!selectedClassroomId}
+            className="bg-white/10 border-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/15"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Import CSV
+          </Button>
+          <Button
+            onClick={() => setIsInviteModalOpen(true)}
+            disabled={!selectedClassroomId}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Invite Students
+          </Button>
         </div>
 
         {/* Classroom Tabs */}
