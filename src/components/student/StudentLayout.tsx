@@ -7,12 +7,11 @@ import {
   Star,
   BarChart3,
   LogOut,
-  Search,
   Key,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { MenuVertical } from "@/components/ui/menu-vertical";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
@@ -87,7 +86,7 @@ export function StudentLayout({
       <aside className="w-64 h-screen bg-[#0f172a] border-r border-white/10 fixed left-0 top-0 flex flex-col">
         {/* Logo Section */}
         <div className="p-6 border-b border-white/10">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/student/dashboard" className="flex items-center gap-3">
             <div className="w-9 h-11 flex-shrink-0">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
                 <path 
@@ -161,19 +160,9 @@ export function StudentLayout({
         {/* Top Bar */}
         <header className="bg-[#0f172a]/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
           <div className="flex items-center justify-between px-8 h-16">
-            <div className="flex items-center gap-4">
-              <h1 className="text-lg font-semibold text-white">{pageTitle}</h1>
-            </div>
+            <div />
 
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <Input
-                  placeholder="Search..."
-                  className="w-64 pl-10 bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-lg"
-                />
-              </div>
-
               <NotificationDropdown />
 
               <div className="flex items-center gap-3 pl-4 border-l border-white/10">
