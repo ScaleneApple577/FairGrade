@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { StudentLayout } from "@/components/student/StudentLayout";
-import { CalendarMiniMonth } from "@/components/calendar/CalendarMiniMonth";
+
 import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
 import { CalendarMonthView } from "@/components/calendar/CalendarMonthView";
 import { CalendarAISidebar } from "@/components/calendar/CalendarAISidebar";
@@ -343,11 +343,6 @@ export default function StudentCalendar() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Left Column - Calendar */}
         <div className="space-y-4">
-          {/* Mini Month Calendar */}
-          <CalendarMiniMonth 
-            currentDate={currentDate} 
-            onSelectDate={handleSelectDate} 
-          />
 
           {/* Calendar Navigation Bar */}
           <div className="flex items-center justify-between">
