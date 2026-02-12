@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Play, Check } from "lucide-react";
+import { Play, Check } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
 
 // CSS Keyframes
 const silkFlowKeyframes = `
@@ -85,7 +86,7 @@ const AnimatedStep = ({ step, index, totalSteps }: { step: { num: string; title:
 };
 
 const Index = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
 
   return (
     <div 
@@ -98,81 +99,7 @@ const Index = () => {
     >
       <style>{silkFlowKeyframes}</style>
 
-      {/* NAVBAR */}
-      <nav className="sticky top-0 bg-white/10 backdrop-blur-md border-b border-white/10 z-50">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-11">
-              <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path 
-                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 10 L10 42 Q10 44 8 43.5" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <span className="text-lg">
-              <span className="font-bold text-white">Fair</span>
-              <span className="font-bold text-blue-400">Grade</span>
-            </span>
-          </Link>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Home</Link>
-            <Link to="/features" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Features</Link>
-            <Link to="/pricing" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Pricing</Link>
-          </div>
-
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-slate-300 hover:text-white text-sm font-medium transition-all hover:scale-105">Log In</Link>
-            <Link to="/auth" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 text-sm font-semibold transition-all hover:scale-105">
-              Sign Up Now
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden p-2 text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-slate-900/95 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-4">
-            <Link to="/" className="block text-slate-300 hover:text-white font-medium">Home</Link>
-            <Link to="/features" className="block text-slate-300 hover:text-white font-medium">Features</Link>
-            <Link to="/pricing" className="block text-slate-300 hover:text-white font-medium">Pricing</Link>
-            <div className="pt-4 border-t border-white/10 space-y-3">
-              <Link to="/auth" className="block text-slate-300 hover:text-white font-medium">Log In</Link>
-              <Link to="/auth" className="block bg-primary text-white px-5 py-2.5 rounded-lg text-center font-medium">
-                Sign Up Now
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* HERO SECTION */}
       <section className="relative pt-20 pb-16 overflow-hidden">
