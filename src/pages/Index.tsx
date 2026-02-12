@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Play, Check } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 
 // CSS Keyframes
 const silkFlowKeyframes = `
@@ -225,9 +226,6 @@ const Index = () => {
           <h2 className="text-3xl md:text-4xl font-bold">
             Ready to make group work fair?
           </h2>
-          <p className="text-primary-foreground/80 text-lg mt-4">
-            Join 1,000+ educators who trust FairGrade.
-          </p>
           <Link 
             to="/auth"
             className="inline-block bg-white text-primary font-semibold px-8 py-4 rounded-xl text-lg mt-8 hover:bg-primary-foreground shadow-lg transition-colors"
@@ -238,89 +236,7 @@ const Index = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-black/30 backdrop-blur-sm text-slate-400 py-16 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-12">
-          {/* Logo & Description */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-11">
-                <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                  <path 
-                    d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                    stroke="#60A5FA" 
-                    strokeWidth="3.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                  <path 
-                    d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                    stroke="#60A5FA" 
-                    strokeWidth="3.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                  <path 
-                    d="M10 10 L10 42 Q10 44 8 43.5" 
-                    stroke="#60A5FA" 
-                    strokeWidth="3.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <span className="text-lg">
-                <span className="font-bold text-white">Fair</span>
-                <span className="font-bold text-blue-400">Grade</span>
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed">
-              Fair grading for group projects. Track contributions, detect issues, grade fairly.
-            </p>
-          </div>
-
-          {/* Product */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Product</h4>
-            <ul className="space-y-2">
-              <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Demo</a></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="max-w-6xl mx-auto border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm">© 2026 FairGrade. All rights reserved.</p>
-          <div className="flex gap-6 text-sm">
-            <a href="#" className="hover:text-white transition-colors">Twitter</a>
-            <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
-            <a href="#" className="hover:text-white transition-colors">GitHub</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -367,7 +367,16 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4 relative">
+      {/* Back to Home */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-1"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
