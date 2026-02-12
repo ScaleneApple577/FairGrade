@@ -27,13 +27,16 @@ const AuthCallback = () => {
         localStorage.setItem("user", JSON.stringify(normalized));
         localStorage.setItem("user_role", normalized.role || "");
 
-        const role = normalized.role;
-        if (role === "teacher") {
+        // Check for pending invite redirect
+        const pendingRedirect = sessionStorage.getItem('pending_invite_redirect');
+        if (pendingRedirect) {
+          sessionStorage.removeItem('pending_invite_redirect');
+          navigate(pendingRedirect, { replace: true });
+        } else if (normalized.role === "teacher") {
           navigate("/teacher/dashboard", { replace: true });
-        } else if (role === "student") {
+        } else if (normalized.role === "student") {
           navigate("/student/dashboard", { replace: true });
         } else {
-          // No role yet — go to auth page for role selection
           navigate("/auth", { replace: true });
         }
       })

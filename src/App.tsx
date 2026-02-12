@@ -29,6 +29,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import FeatureDetailPage from "./pages/FeatureDetailPage";
 import LiveReplay from "./pages/LiveReplay";
 import NotFound from "./pages/NotFound";
+import InviteAccept from "./pages/InviteAccept";
 import AuthCallback from "./pages/AuthCallback";
 import TeacherProjects from "./pages/TeacherProjects";
 import TeacherProjectDetail from "./pages/TeacherProjectDetail";
@@ -224,6 +225,9 @@ const AppRoutes = () => (
         </StudentRoute>
       } 
     />
+
+    {/* Invite accept (standalone, no sidebar) */}
+    <Route path="/invite/accept" element={<InviteAccept />} />
 
     {/* Catch-all */}
     <Route path="*" element={<NotFound />} />

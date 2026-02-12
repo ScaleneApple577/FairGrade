@@ -32,16 +32,30 @@ export function InviteStudentsModal({
   const [inputValue, setInputValue] = useState("");
   const [emails, setEmails] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateEmail = (email: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   };
 
+  const validateEmailDomain = (email: string): boolean => {
+    const lower = email.trim().toLowerCase();
+    if (lower.endsWith("@gmail.com")) return true;
+    // Match .edu or .edu.xx
+    if (/\.edu(\.[a-z]{2,})?$/.test(lower)) return true;
+    return false;
+  };
+
   const addEmail = useCallback((raw: string) => {
     const email = raw.trim().toLowerCase().replace(/[,;\s]+$/, "");
     if (!email) return false;
     if (!validateEmail(email)) return false;
+    if (!validateEmailDomain(email)) {
+      setEmailError("Only @gmail.com and .edu email addresses are accepted.");
+      return false;
+    }
+    setEmailError(null);
     if (emails.includes(email)) return false;
     setEmails((prev) => [...prev, email]);
     return true;
@@ -182,6 +196,9 @@ export function InviteStudentsModal({
                 className="flex-1 min-w-[150px] bg-transparent border-none outline-none text-white placeholder:text-slate-500 text-sm"
               />
             </div>
+            {emailError && (
+              <p className="text-red-400 text-xs mt-2">{emailError}</p>
+            )}
             <p className="text-slate-500 text-xs mt-2">
               Press Enter, comma, or space to add. Paste multiple emails separated by commas or newlines.
             </p>
