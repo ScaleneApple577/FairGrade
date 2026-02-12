@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentLayout } from "@/components/student/StudentLayout";
+import { ClassroomGate } from "@/components/student/ClassroomGate";
 import { JoinProjectModal } from "@/components/student/JoinProjectModal";
 import { api, fetchProjectsWithFallback } from "@/lib/api";
 import { toast } from "sonner";
@@ -156,6 +157,7 @@ export default function StudentProjects() {
 
   return (
     <StudentLayout pageTitle="My Projects">
+      <ClassroomGate>
       {/* Page Header */}
       <div className="flex items-center justify-end mb-6">
         <Button
@@ -350,6 +352,7 @@ export default function StudentProjects() {
         onClose={() => setShowJoinModal(false)}
         onSuccess={handleJoinSuccess}
       />
+      </ClassroomGate>
     </StudentLayout>
   );
 }

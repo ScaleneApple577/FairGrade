@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ClassroomProvider } from "@/contexts/ClassroomContext";
 import { TeacherRoute, StudentRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -236,7 +237,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppRoutes />
+          <ClassroomProvider>
+            <AppRoutes />
+          </ClassroomProvider>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
