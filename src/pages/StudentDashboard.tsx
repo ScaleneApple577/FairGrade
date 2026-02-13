@@ -14,6 +14,9 @@ import {
   Edit3,
   Users,
   Clock,
+  FolderOpen,
+  Star,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,12 +45,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const getActivityIcon = (type: string) => {
   switch (type) {
-    case "task_completed": return { icon: CheckCircle, iconColor: "text-emerald-400" };
-    case "meeting_checkin": return { icon: Calendar, iconColor: "text-blue-400" };
-    case "task_assigned": return { icon: AlertCircle, iconColor: "text-amber-400" };
-    case "availability_marked": return { icon: Clock, iconColor: "text-purple-400" };
-    case "document_edited": return { icon: Edit3, iconColor: "text-cyan-400" };
-    default: return { icon: FileText, iconColor: "text-white/40" };
+    case "task_completed": return { icon: CheckCircle, iconColor: "text-emerald-600" };
+    case "meeting_checkin": return { icon: Calendar, iconColor: "text-blue-600" };
+    case "task_assigned": return { icon: AlertCircle, iconColor: "text-amber-600" };
+    case "availability_marked": return { icon: Clock, iconColor: "text-purple-600" };
+    case "document_edited": return { icon: Edit3, iconColor: "text-cyan-600" };
+    default: return { icon: FileText, iconColor: "text-gray-400" };
   }
 };
 
@@ -83,13 +86,12 @@ interface DashboardData {
   team: TeamInfo | null;
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
-  }),
-};
+const chalkboardLinks = [
+  { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
+  { icon: Calendar, label: "Calendar", href: "/student/calendar" },
+  { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
+  { icon: User, label: "My Profile", href: "/student-profile" },
+];
 
 // --- Component ---
 
@@ -207,6 +209,17 @@ export default function StudentDashboard() {
     }
   };
 
+  const firstName = (() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user.first_name || (user.fullName || user.name || '').split(' ')[0] || '';
+      }
+    } catch {}
+    return '';
+  })();
+
   if (isLoading) {
     return (
       <StudentLayout pageTitle="Dashboard">
@@ -224,147 +237,181 @@ export default function StudentDashboard() {
       <ClassroomInvitationBanner />
       <ProjectAssignmentBanner assignments={projectAssignments} onDismiss={handleDismissAssignment} />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        {/* Welcome */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-white">
-            Welcome back{(() => {
-              try {
-                const storedUser = localStorage.getItem('user');
-                if (storedUser) {
-                  const user = JSON.parse(storedUser);
-                  const firstName = user.first_name || (user.fullName || user.name || '').split(' ')[0];
-                  if (firstName) return `, ${firstName}`;
-                }
-              } catch {}
-              return '';
-            })()}
-          </h1>
-          <p className="text-white/50 text-sm mt-1">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
+      <div style={{ perspective: "1200px" }}>
+        {/* ===== ZONE 1: THE WALL ===== */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="classroom-wall rounded-t-2xl px-6 pt-8 pb-16"
+          style={{ minHeight: "420px" }}
+        >
+          {/* Chalkboard */}
+          <div className="chalkboard max-w-3xl mx-auto px-8 py-8 pb-12">
+            {/* Chalk doodles */}
+            <div className="absolute top-3 right-4 chalk-text text-lg opacity-30 select-none">★ ✦ ☆</div>
+            <div className="absolute bottom-8 left-4 chalk-text text-sm opacity-20 select-none">→ ✧</div>
 
-        {/* Recent Activity — full width */}
-        <motion.div custom={0} initial="hidden" animate="visible" variants={cardVariants} className="glass-card mb-6">
-          <h3 className="text-sm font-semibold text-white mb-4">Recent Activity</h3>
-          {data.recentActivity.length > 0 ? (
-            <div className="space-y-0.5">
-              {data.recentActivity.map((activity) => {
-                const { icon: Icon, iconColor } = getActivityIcon(activity.type);
-                return (
-                  <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
-                    <Icon className={`w-4 h-4 ${iconColor} flex-shrink-0`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{activity.title}</p>
-                      <p className="text-xs text-white/40">{activity.project} · {activity.timestamp}</p>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Welcome */}
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="chalk-text text-3xl md:text-4xl font-bold text-center mb-2"
+            >
+              Welcome back{firstName ? `, ${firstName}` : ''}!
+            </motion.h1>
+            <p className="chalk-text text-center text-sm opacity-50 mb-8">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+
+            {/* Nav grid */}
+            <div className="grid grid-cols-2 gap-x-12 gap-y-6 max-w-md mx-auto">
+              {chalkboardLinks.map((item, i) => (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.08, duration: 0.35 }}
+                >
+                  <Link
+                    to={item.href}
+                    className="chalk-link chalk-text flex items-center gap-3 text-xl md:text-2xl font-bold py-2"
+                  >
+                    <item.icon className="w-5 h-5 text-white/60 flex-shrink-0" />
+                    {item.label}
+                  </Link>
+                </motion.div>
+              ))}
             </div>
-          ) : (
-            <div className="text-center py-10">
-              <FileText className="w-6 h-6 text-white/15 mx-auto mb-2" />
-              <p className="text-xs text-white/30">No recent activity</p>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Upcoming Assignments + This Week — side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Upcoming Assignments */}
-          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-white">Upcoming Assignments</h3>
-              <Link to="/student/calendar" className="text-xs text-white/30 hover:text-blue-400 transition-colors">View all</Link>
-            </div>
-            {data.upcomingAssignments.length > 0 ? (
-              <div className="space-y-2">
-                {data.upcomingAssignments.map((assignment) => {
-                  const urgency = getAssignmentUrgency(assignment);
-                  return (
-                    <div key={assignment.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-colors">
-                      <div className="min-w-0">
-                        <p className="text-sm text-white truncate">{assignment.title}</p>
-                        <p className="text-xs text-white/40 mt-0.5">{assignment.classroom_name || 'Classroom'}</p>
-                      </div>
-                      <span className={`text-xs flex-shrink-0 ml-3 ${urgency === 'today' ? 'text-red-400' : urgency === 'soon' ? 'text-amber-400' : 'text-white/30'}`}>
-                        {formatDueDate(assignment.due_date)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                <p className="text-xs text-white/30">No upcoming assignments</p>
-              </div>
-            )}
-          </motion.div>
-
-          {/* This Week */}
-          <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
-            <h3 className="text-sm font-semibold text-white mb-4">This Week</h3>
-            {data.thisWeekEvents.length > 0 ? (
-              <div className="space-y-2">
-                {data.thisWeekEvents.map((event) => (
-                  <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
-                    <div className="text-center min-w-[32px]">
-                      <p className="text-blue-400 text-[10px] font-medium">{event.date}</p>
-                      <p className="text-white text-sm font-semibold">{event.day}</p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{event.title}</p>
-                      <p className="text-xs text-white/40">{event.startTime}{event.endTime && ` – ${event.endTime}`}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                <p className="text-xs text-white/30">No events this week</p>
-              </div>
-            )}
-          </motion.div>
-        </div>
-
-        {/* My Team */}
-        <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">My Team</h3>
-            {data.team && (
-              <span className="text-xs text-white/30 ml-auto">{data.team.projectName}</span>
-            )}
           </div>
-          {data.team ? (
-            <div>
-              <p className="text-white/60 text-xs mb-3">{data.team.groupName}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {data.team.members.map((member) => (
-                  <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors">
-                    <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                      {member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-white truncate">{member.name}</p>
-                      <p className="text-xs text-white/30 truncate">{member.email}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Users className="w-6 h-6 text-white/15 mx-auto mb-2" />
-              <p className="text-xs text-white/30">No team assigned</p>
-            </div>
-          )}
         </motion.div>
-      </motion.div>
+
+        {/* ===== TRANSITION SHADOW ===== */}
+        <div
+          className="h-6 relative z-10"
+          style={{
+            background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.05) 40%, transparent 100%)",
+          }}
+        />
+
+        {/* ===== ZONE 2: THE DESK ===== */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="desk-surface rounded-b-2xl px-6 py-10"
+          style={{ minHeight: "340px", transformOrigin: "top center", transform: "rotateX(1deg)" }}
+        >
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+            {/* Paper — Recent Activity */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.4 }}
+              className="paper-card desk-item-hover p-5 md:col-span-1"
+              style={{ transform: "rotate(-2deg)" }}
+            >
+              <h3 className="font-semibold text-gray-800 text-sm mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                Recent Activity
+              </h3>
+              {data.recentActivity.length > 0 ? (
+                <div className="space-y-2">
+                  {data.recentActivity.slice(0, 5).map((activity) => {
+                    const { icon: Icon, iconColor } = getActivityIcon(activity.type);
+                    return (
+                      <div key={activity.id} className="flex items-start gap-2 text-xs">
+                        <Icon className={`w-3.5 h-3.5 mt-0.5 ${iconColor} flex-shrink-0`} />
+                        <div className="min-w-0">
+                          <p className="text-gray-700 truncate">{activity.title}</p>
+                          <p className="text-gray-400 text-[10px]">{activity.project} · {activity.timestamp}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <FileText className="w-5 h-5 text-gray-300 mx-auto mb-1" />
+                  <p className="text-xs text-gray-400">No recent activity</p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Sticky Note — Upcoming Assignments */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, duration: 0.4 }}
+              className="sticky-note desk-item-hover p-5 md:col-span-1"
+              style={{ transform: "rotate(3deg)" }}
+            >
+              <h3 className="font-bold text-gray-800 text-sm mb-3 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                Upcoming Assignments
+              </h3>
+              {data.upcomingAssignments.length > 0 ? (
+                <div className="space-y-2">
+                  {data.upcomingAssignments.slice(0, 4).map((assignment) => {
+                    const urgency = getAssignmentUrgency(assignment);
+                    return (
+                      <div key={assignment.id} className="flex items-center justify-between text-xs">
+                        <p className="text-gray-700 truncate flex-1 mr-2">{assignment.title}</p>
+                        <span className={`flex-shrink-0 font-semibold ${urgency === 'today' ? 'text-red-600' : urgency === 'soon' ? 'text-amber-600' : 'text-gray-500'}`}>
+                          {formatDueDate(assignment.due_date)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Calendar className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                  <p className="text-xs text-gray-500">No upcoming assignments</p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* ID Badge — My Team */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.4 }}
+              className="id-badge desk-item-hover p-5 md:col-span-1"
+              style={{ transform: "rotate(-1deg)" }}
+            >
+              <h3 className="font-semibold text-gray-800 text-sm mb-1 flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-700" />
+                My Team
+              </h3>
+              {data.team ? (
+                <div>
+                  <p className="text-[10px] text-gray-500 mb-3">{data.team.groupName} — {data.team.projectName}</p>
+                  <div className="space-y-2">
+                    {data.team.members.map((member) => (
+                      <div key={member.id} className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                          {member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-700 truncate leading-tight">{member.name}</p>
+                          <p className="text-[10px] text-gray-400 truncate">{member.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Users className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                  <p className="text-xs text-gray-500">No team assigned</p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Token Modal — kept for programmatic access */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
