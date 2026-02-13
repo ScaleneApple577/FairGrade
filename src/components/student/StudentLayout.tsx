@@ -72,7 +72,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar - light whiteboard theme */}
-      <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-56 flex-shrink-0 bg-[#f5f5f0] flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5">
           <Link to="/student/dashboard" className="flex items-center gap-2.5">
@@ -91,7 +91,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
         </div>
 
         {/* Divider */}
-        <div className="mx-4 h-px bg-gray-200" />
+        <div className="mx-4 h-px bg-gray-300/40" />
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4">
@@ -117,7 +117,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
         </nav>
 
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-gray-200">
+        <div className="px-3 py-4 border-t border-gray-300/40">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-['Caveat'] text-lg text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all duration-200 w-full"
@@ -131,7 +131,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className={`flex-shrink-0 z-50 h-14 border-b border-gray-200 ${headerClassName || "bg-white"}`}>
+        <header className={`flex-shrink-0 z-50 h-14 ${headerClassName || "bg-[#f5f5f0]"}`}>
           <div className="flex items-center justify-end px-6 h-full">
             <div className="flex items-center gap-3">
               <NotificationDropdown />
@@ -151,7 +151,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-44 bg-white border border-gray-200 shadow-lg"
+                  className="w-44 bg-[#f5f5f0] border border-gray-300/50 shadow-lg"
                 >
                   <DropdownMenuItem
                     onClick={() => navigate("/student-profile")}
