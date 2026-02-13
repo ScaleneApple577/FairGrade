@@ -2,32 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* FairGrade Design System — Clean, Professional Dark Theme */
+/* FairGrade Design System — Premium Light Theme */
 
 @layer base {
   :root {
-    --background: 220 14% 7%;
-    --foreground: 210 17% 95%;
+    --background: 0 0% 98%;
+    --foreground: 220 14% 10%;
 
-    --card: 220 13% 10%;
-    --card-foreground: 210 17% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 10%;
 
-    --popover: 220 13% 10%;
-    --popover-foreground: 210 17% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 10%;
 
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 14%;
-    --secondary-foreground: 210 17% 95%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 14% 30%;
 
-    --muted: 220 13% 14%;
-    --muted-foreground: 215 14% 58%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 220 13% 14%;
-    --accent-foreground: 210 17% 95%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 14% 10%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -38,27 +38,27 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 13% 15%;
-    --input: 220 13% 15%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 217 91% 60%;
 
     --radius: 0.5rem;
 
     --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 76% 48%) 100%);
-    --gradient-hero-light: linear-gradient(135deg, hsl(220 14% 10%) 0%, hsl(220 14% 7%) 100%);
+    --gradient-hero-light: linear-gradient(135deg, hsl(220 14% 98%) 0%, hsl(220 14% 95%) 100%);
 
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 
-    --sidebar-background: 220 14% 6%;
-    --sidebar-foreground: 210 17% 95%;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 220 14% 10%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 12%;
-    --sidebar-accent-foreground: 210 17% 95%;
-    --sidebar-border: 220 13% 13%;
+    --sidebar-accent: 217 91% 97%;
+    --sidebar-accent-foreground: 217 91% 50%;
+    --sidebar-border: 220 13% 93%;
     --sidebar-ring: 217 91% 60%;
   }
 }
@@ -69,14 +69,14 @@
   }
 
   html {
-    background-color: hsl(220 14% 7%);
+    background-color: hsl(0 0% 98%);
     overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: hsl(220 14% 7%);
+    background-color: hsl(0 0% 98%);
     overscroll-behavior: none;
     margin: 0;
     padding: 0;
@@ -85,26 +85,34 @@
   }
 
   #root {
-    background-color: hsl(220 14% 7%);
+    background-color: hsl(0 0% 98%);
     min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', system-ui, sans-serif;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
+  /* Premium card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Public landing page button hover */
   .btn-public-hover {
     @apply transition-all duration-200 ease-in-out;
   }
-  
   .btn-public-hover:hover {
     transform: scale(1.05) translateY(-2px);
     box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
   }
-  
   .btn-public-hover:active {
     transform: scale(0.98);
   }
@@ -120,12 +128,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 13% 20%);
+  background: hsl(220 13% 85%);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(220 13% 28%);
+  background: hsl(220 13% 72%);
 }
 
 /* Hide browser autofill icons globally */

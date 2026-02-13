@@ -57,6 +57,15 @@ interface Alert {
   timestamp: string;
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  }),
+};
+
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
@@ -88,13 +97,13 @@ export default function TeacherDashboard() {
   const getAlertConfig = (severity: string) => {
     switch (severity) {
       case "critical":
-        return { borderColor: "border-red-400/30", bgColor: "bg-red-500/5", icon: AlertTriangle, iconColor: "text-red-400" };
+        return { borderColor: "border-l-red-400", bgColor: "bg-red-50", icon: AlertTriangle, iconColor: "text-red-500" };
       case "warning":
-        return { borderColor: "border-yellow-400/30", bgColor: "bg-yellow-500/5", icon: AlertCircle, iconColor: "text-yellow-400" };
+        return { borderColor: "border-l-yellow-400", bgColor: "bg-yellow-50", icon: AlertCircle, iconColor: "text-yellow-600" };
       case "info":
-        return { borderColor: "border-blue-400/30", bgColor: "bg-blue-500/5", icon: Info, iconColor: "text-blue-400" };
+        return { borderColor: "border-l-blue-400", bgColor: "bg-blue-50", icon: Info, iconColor: "text-blue-500" };
       default:
-        return { borderColor: "border-white/[0.06]", bgColor: "bg-white/[0.02]", icon: Info, iconColor: "text-[#8b949e]" };
+        return { borderColor: "border-l-gray-300", bgColor: "bg-gray-50", icon: Info, iconColor: "text-gray-400" };
     }
   };
 
@@ -120,18 +129,30 @@ export default function TeacherDashboard() {
     return (
       <TeacherLayout>
         <div className="p-6 flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="w-5 h-5 text-[#8b949e] animate-spin" />
+          <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
         </div>
       </TeacherLayout>
     );
   }
 
+  const statItems = [
+    { label: "Active Projects", value: stats?.activeProjects ?? 0, icon: FolderOpen, color: "text-blue-500" },
+    { label: "Total Students", value: stats?.totalStudents ?? 0, icon: Users, color: "text-emerald-500" },
+    { label: "At Risk", value: stats?.atRiskProjects ?? 0, icon: AlertTriangle, color: "text-amber-500" },
+    { label: "Flagged", value: stats?.flaggedIssues ?? 0, icon: FileText, color: "text-purple-500" },
+  ];
+
   return (
     <TeacherLayout>
-      <div className="p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="p-6"
+      >
         {/* Welcome Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold text-white">
+          <h1 className="text-xl font-semibold text-gray-900">
             Welcome back{(() => {
               try {
                 const storedUser = localStorage.getItem('user');
@@ -149,7 +170,7 @@ export default function TeacherDashboard() {
           <div className="flex gap-2">
             <Button
               onClick={() => setShowCreateProject(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-sm h-8 px-3 rounded-md"
+              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-sm h-8 px-3 rounded-lg shadow-sm transition-all duration-150 hover:shadow-md hover:scale-[1.02]"
             >
               <Plus className="w-3.5 h-3.5" />
               New Project
@@ -157,7 +178,7 @@ export default function TeacherDashboard() {
             <Button
               variant="ghost"
               onClick={() => toast.success("Generating reports...")}
-              className="flex items-center gap-2 text-[#8b949e] hover:text-white hover:bg-white/[0.06] text-sm h-8 px-3"
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 text-sm h-8 px-3 transition-all duration-150"
             >
               <Download className="w-3.5 h-3.5" />
               Export
@@ -167,19 +188,21 @@ export default function TeacherDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "Active Projects", value: stats?.activeProjects ?? 0, icon: FolderOpen },
-            { label: "Total Students", value: stats?.totalStudents ?? 0, icon: Users },
-            { label: "At Risk", value: stats?.atRiskProjects ?? 0, icon: AlertTriangle },
-            { label: "Flagged", value: stats?.flaggedIssues ?? 0, icon: FileText },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white/[0.03] rounded-lg p-4">
+          {statItems.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              className="bg-white rounded-xl p-4 shadow-sm card-hover"
+            >
               <div className="flex items-center gap-2 mb-2">
-                <stat.icon className="w-4 h-4 text-[#8b949e]" />
-                <span className="text-xs text-[#8b949e] font-medium">{stat.label}</span>
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-xs text-gray-500 font-medium">{stat.label}</span>
               </div>
-              <p className="text-2xl font-semibold text-white">{stat.value}</p>
-            </div>
+              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+            </motion.div>
           ))}
         </div>
 
@@ -191,29 +214,27 @@ export default function TeacherDashboard() {
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-5">
             {/* Project Health */}
-            <div className="bg-white/[0.03] rounded-lg p-5">
+            <div className="bg-white rounded-xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-white">Project Health</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-2.5 py-1 bg-white/[0.06] border border-white/[0.06] text-[#8b949e] rounded-md text-xs"
-                  >
-                    <option value="all">All</option>
-                    <option value="healthy">Healthy</option>
-                    <option value="needs_attention">Needs Attention</option>
-                    <option value="at_risk">At Risk</option>
-                  </select>
-                </div>
+                <h2 className="text-sm font-semibold text-gray-900">Project Health</h2>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-xs transition-colors hover:border-gray-300"
+                >
+                  <option value="all">All</option>
+                  <option value="healthy">Healthy</option>
+                  <option value="needs_attention">Needs Attention</option>
+                  <option value="at_risk">At Risk</option>
+                </select>
               </div>
 
               {filteredProjects.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {filteredProjects.map((project) => (
                     <div
                       key={project.id}
-                      className="flex items-center justify-between p-3 rounded-md hover:bg-white/[0.03] cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-all duration-150"
                       onClick={() => navigate(`/project/${project.id}`)}
                     >
                       <div className="flex items-center gap-3">
@@ -222,21 +243,21 @@ export default function TeacherDashboard() {
                           project.status === "needs_attention" ? "bg-yellow-500" : "bg-emerald-500"
                         }`} />
                         <div>
-                          <p className="text-sm font-medium text-white">{project.name}</p>
-                          <p className="text-xs text-[#8b949e]">{project.course} · {project.studentCount} students</p>
+                          <p className="text-sm font-medium text-gray-900">{project.name}</p>
+                          <p className="text-xs text-gray-500">{project.course} · {project.studentCount} students</p>
                         </div>
                       </div>
-                      <span className="text-xs text-[#8b949e]">Due {project.deadline}</span>
+                      <span className="text-xs text-gray-400">Due {project.deadline}</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <FolderOpen className="w-8 h-8 text-[#8b949e]/40 mx-auto mb-3" />
-                  <p className="text-sm text-[#8b949e]">No projects yet</p>
+                  <FolderOpen className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No projects yet</p>
                   <Button
                     onClick={() => setShowCreateProject(true)}
-                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-sm h-8 px-3 rounded-md"
+                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-sm h-8 px-3 rounded-lg shadow-sm"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Create Project
@@ -249,12 +270,12 @@ export default function TeacherDashboard() {
           {/* RIGHT COLUMN */}
           <div className="space-y-5">
             {/* Recent Alerts */}
-            <div className="bg-white/[0.03] rounded-lg p-5">
+            <div className="bg-white rounded-xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white">Alerts</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Alerts</h3>
                 <button
                   onClick={() => navigate("/flags")}
-                  className="text-xs text-[#8b949e] hover:text-white transition-colors"
+                  className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
                 >
                   View all
                 </button>
@@ -266,11 +287,11 @@ export default function TeacherDashboard() {
                     const config = getAlertConfig(alert.severity);
                     const AlertIcon = getAlertIcon(alert.type);
                     return (
-                      <div key={alert.id} className="flex items-start gap-2.5 p-2.5 rounded-md hover:bg-white/[0.02]">
+                      <div key={alert.id} className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                         <AlertIcon className={`w-4 h-4 ${config.iconColor} flex-shrink-0 mt-0.5`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-white">{alert.title}</p>
-                          <p className="text-xs text-[#8b949e] mt-0.5 line-clamp-1">{alert.description}</p>
+                          <p className="text-xs font-medium text-gray-900">{alert.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{alert.description}</p>
                         </div>
                       </div>
                     );
@@ -278,22 +299,22 @@ export default function TeacherDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Bell className="w-6 h-6 text-[#8b949e]/40 mx-auto mb-2" />
-                  <p className="text-xs text-[#8b949e]">No alerts</p>
+                  <Bell className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-400">No alerts</p>
                 </div>
               )}
             </div>
 
             {/* Live Activity */}
-            <div className="bg-white/[0.03] rounded-lg p-5">
+            <div className="bg-white rounded-xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   {totalActive > 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />}
-                  <h3 className="text-sm font-semibold text-white">Live Activity</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Live Activity</h3>
                 </div>
                 <button
                   onClick={() => navigate("/teacher/live-monitor")}
-                  className="text-xs text-[#8b949e] hover:text-white transition-colors"
+                  className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
                 >
                   View all
                 </button>
@@ -307,14 +328,14 @@ export default function TeacherDashboard() {
                 />
               ) : (
                 <div className="text-center py-8">
-                  <Activity className="w-6 h-6 text-[#8b949e]/40 mx-auto mb-2" />
-                  <p className="text-xs text-[#8b949e]">No active students</p>
+                  <Activity className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-400">No active students</p>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <CreateProjectWizard
         isOpen={showCreateProject}
