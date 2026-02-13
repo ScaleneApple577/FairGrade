@@ -70,11 +70,9 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
     location.pathname === href || location.pathname.startsWith(href + "/");
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] flex">
-      {/* Rain background removed */}
-
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 h-screen bg-[#111633] fixed left-0 top-0 flex flex-col relative z-10">
+      <aside className="w-56 flex-shrink-0 bg-[#111633] flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5">
           <Link to="/student/dashboard" className="flex items-center gap-2.5">
@@ -134,9 +132,9 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
       </aside>
 
       {/* Main Content */}
-      <div className="ml-56 min-h-screen flex-1 relative z-10 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className={`sticky top-0 z-50 h-14 backdrop-blur-xl ${headerClassName || "bg-[#0a0e27]/80"}`}>
+        <header className={`flex-shrink-0 z-50 h-14 ${headerClassName || "bg-[#0a0e27]"}`}>
           <div className="flex items-center justify-end px-6 h-full">
             <div className="flex items-center gap-3">
               <NotificationDropdown />
@@ -186,7 +184,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
         </header>
 
         {/* Page Content */}
-        <main className={noPadding ? "flex-1 flex flex-col" : "p-6"}>
+        <main className={noPadding ? "flex-1 flex flex-col overflow-auto" : "flex-1 overflow-auto p-6 bg-[#0a0e27]"}>
           {children}
         </main>
       </div>
