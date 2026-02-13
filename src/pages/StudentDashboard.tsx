@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import {
   CheckCircle,
-  TrendingUp,
-  Clock,
   Calendar,
   AlertCircle,
   FileText,
@@ -12,12 +10,10 @@ import {
   Copy,
   CheckCheck,
   Loader2,
-  FolderOpen,
   Bell,
-  ArrowUpRight,
-  ChevronRight,
   Edit3,
-  Trophy,
+  Users,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,25 +29,16 @@ import { StudentLayout } from "@/components/student/StudentLayout";
 import { ProjectAssignmentBanner } from "@/components/student/ProjectAssignmentBanner";
 import { ClassroomInvitationBanner } from "@/components/student/ClassroomInvitationBanner";
 import { api, fetchProjectsWithFallback } from "@/lib/api";
-import { fetchMyTasks, getStatusDisplay, Task } from "@/lib/taskUtils";
 import { 
   getUpcomingAssignments, 
   getOverdueAssignments, 
   formatDueDate, 
   getAssignmentUrgency, 
-  getUrgencyStyles,
   type Assignment 
 } from "@/lib/assignmentUtils";
+import { supabase } from "@/integrations/supabase/client";
 
-interface ProjectAssignment {
-  id: string;
-  notificationId: string;
-  projectId: string;
-  projectName: string;
-  courseName: string;
-  deadline: string;
-  teamSize: number;
-}
+// --- Helper functions ---
 
 const getActivityIcon = (type: string) => {
   switch (type) {
@@ -64,49 +51,36 @@ const getActivityIcon = (type: string) => {
   }
 };
 
-const getStatusStyles = (status: string) => {
-  const display = getStatusDisplay(status);
-  const legacyMap: Record<string, string> = {
-    'todo': 'open', 'in_progress': 'in_progress', 'review': 'in_progress', 'done': 'done',
-  };
-  const mappedStatus = legacyMap[status] || status;
-  const mappedDisplay = getStatusDisplay(mappedStatus);
-  return { bg: mappedDisplay.color.split(' ')[0], text: mappedDisplay.color.split(' ')[1], label: mappedDisplay.label };
-};
+// --- Types ---
 
-const getHealthStyles = (health: string) => {
-  switch (health) {
-    case "green": return { text: "text-emerald-400", dot: "bg-emerald-500", label: "On Track", progressColor: "bg-emerald-500" };
-    case "yellow": return { text: "text-yellow-400", dot: "bg-yellow-500", label: "Needs Attention", progressColor: "bg-yellow-500" };
-    case "red": return { text: "text-red-400", dot: "bg-red-500", label: "At Risk", progressColor: "bg-red-500" };
-    default: return { text: "text-white/40", dot: "bg-white/30", label: "Unknown", progressColor: "bg-white/30" };
-  }
-};
+interface ProjectAssignment {
+  id: string;
+  notificationId: string;
+  projectId: string;
+  projectName: string;
+  courseName: string;
+  deadline: string;
+  teamSize: number;
+}
 
-function getScoreColor(score: number | null): string {
-  if (score === null) return "bg-white/20";
-  if (score >= 75) return "bg-emerald-500";
-  if (score >= 50) return "bg-blue-500";
-  if (score >= 25) return "bg-yellow-500";
-  return "bg-red-500";
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface TeamInfo {
+  groupName: string;
+  projectName: string;
+  members: TeamMember[];
 }
 
 interface DashboardData {
   student: { firstName: string };
-  stats: {
-    activeProjects: number;
-    assignmentsDueSoon: number;
-    assignmentsOverdue: number;
-    contributionScore: number | null;
-    contributionChange: number;
-    nextMeeting: { title: string; date: string; time: string } | null;
-    achievementsUnlocked: number;
-  };
   recentActivity: Array<{ id: string; type: string; title: string; project: string; timestamp: string }>;
-  upcomingTasks: Array<{ id: number; title: string; project: string; status: string; dueDate?: string | null; priority?: string | null }>;
   thisWeekEvents: Array<{ id: string; title: string; date: string; day: string; startTime: string; endTime: string; type: string }>;
-  projects: Array<{ id: string; name: string; course: string; deadline: string; health: string; myContributionScore: number }>;
   upcomingAssignments: Assignment[];
+  team: TeamInfo | null;
 }
 
 const cardVariants = {
@@ -117,13 +91,7 @@ const cardVariants = {
   }),
 };
 
-const statGradients = [
-  "bg-gradient-to-br from-[#1e3a8a] to-[#3b82f6]",
-  "bg-gradient-to-br from-[#065f46] to-[#10b981]",
-  "bg-gradient-to-br from-[#9a3412] to-[#f97316]",
-  "bg-gradient-to-br from-[#581c87] to-[#a855f7]",
-  "bg-gradient-to-br from-[#9d174d] to-[#ec4899]",
-];
+// --- Component ---
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -136,22 +104,11 @@ export default function StudentDashboard() {
   const [projectAssignments, setProjectAssignments] = useState<ProjectAssignment[]>([]);
 
   useEffect(() => {
-    const fetchProjectAssignments = async () => {
-      try {
-        setProjectAssignments([]);
-      } catch (error) {
-        console.error("Failed to fetch project assignments:", error);
-      }
-    };
-    fetchProjectAssignments();
+    setProjectAssignments([]);
   }, []);
 
   const handleDismissAssignment = async (notificationId: string) => {
-    try {
-      setProjectAssignments(prev => prev.filter(a => a.notificationId !== notificationId));
-    } catch (error) {
-      console.error("Failed to dismiss assignment:", error);
-    }
+    setProjectAssignments(prev => prev.filter(a => a.notificationId !== notificationId));
   };
 
   useEffect(() => {
@@ -159,40 +116,60 @@ export default function StudentDashboard() {
       setIsLoading(true);
       try {
         const upcomingAssignments = await getUpcomingAssignments(7);
-        const overdueAssignments = await getOverdueAssignments();
-        
-        let projectCount = 0;
+
+        // Fetch team info
+        let team: TeamInfo | null = null;
         try {
-          const projectsData = await fetchProjectsWithFallback<{ id: string; name: string }>();
-          projectCount = (projectsData || []).length;
-        } catch {
-          projectCount = 0;
-        }
-        
+          const storedUser = localStorage.getItem('user');
+          const userId = storedUser ? JSON.parse(storedUser).id : null;
+          if (userId) {
+            const { data: ps } = await supabase
+              .from('project_students')
+              .select('group_id, project_id')
+              .eq('student_id', userId)
+              .not('group_id', 'is', null)
+              .limit(1)
+              .single();
+
+            if (ps?.group_id) {
+              const [{ data: groupData }, { data: projectData }, { data: teammates }] = await Promise.all([
+                supabase.from('groups').select('group_name, group_number').eq('id', ps.group_id).single(),
+                supabase.from('projects').select('name').eq('id', ps.project_id).single(),
+                supabase.from('project_students').select('student_id').eq('group_id', ps.group_id),
+              ]);
+
+              const memberIds = (teammates || []).map(t => t.student_id);
+              const { data: profiles } = await supabase
+                .from('profiles')
+                .select('user_id, full_name, email')
+                .in('user_id', memberIds);
+
+              team = {
+                groupName: groupData?.group_name || `Group ${groupData?.group_number || '?'}`,
+                projectName: projectData?.name || 'Project',
+                members: (profiles || []).map(p => ({
+                  id: p.user_id,
+                  name: p.full_name || p.email,
+                  email: p.email,
+                })),
+              };
+            }
+          }
+        } catch {}
+
         setDashboardData({
           student: { firstName: "Student" },
-          stats: {
-            activeProjects: projectCount,
-            assignmentsDueSoon: upcomingAssignments.length,
-            assignmentsOverdue: overdueAssignments.length,
-            contributionScore: null,
-            contributionChange: 0,
-            nextMeeting: null,
-            achievementsUnlocked: 0,
-          },
           recentActivity: [],
-          upcomingTasks: [],
           thisWeekEvents: [],
-          projects: [],
-          upcomingAssignments: upcomingAssignments,
+          upcomingAssignments,
+          team,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard:", error);
         toast.error("Failed to load dashboard data");
         setDashboardData({
           student: { firstName: "Student" },
-          stats: { activeProjects: 0, assignmentsDueSoon: 0, assignmentsOverdue: 0, contributionScore: null, contributionChange: 0, nextMeeting: null, achievementsUnlocked: 0 },
-          recentActivity: [], upcomingTasks: [], thisWeekEvents: [], projects: [], upcomingAssignments: [],
+          recentActivity: [], thisWeekEvents: [], upcomingAssignments: [], team: null,
         });
       } finally {
         setIsLoading(false);
@@ -242,14 +219,6 @@ export default function StudentDashboard() {
 
   const data = dashboardData!;
 
-  const statItems = [
-    { label: "Projects", value: data.stats.activeProjects, icon: FolderOpen },
-    { label: "Avg. Score", value: data.stats.contributionScore ?? "—", icon: TrendingUp, extra: "/100", hasBar: true, barValue: data.stats.contributionScore },
-    { label: "Due Soon", value: data.stats.assignmentsDueSoon, icon: CheckCircle, overdue: data.stats.assignmentsOverdue },
-    { label: "Next Meeting", value: data.stats.nextMeeting ? data.stats.nextMeeting.date : "None", icon: Calendar, isSmall: true },
-    { label: "Achievements", value: `${data.stats.achievementsUnlocked}`, icon: Trophy, extra: "/30", clickable: true },
-  ];
-
   return (
     <StudentLayout pageTitle="Dashboard">
       <ClassroomInvitationBanner />
@@ -276,176 +245,128 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {statItems.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              custom={i}
-              initial="hidden"
-              animate="visible"
-              variants={cardVariants}
-              className={`${statGradients[i]} rounded-2xl p-5 relative overflow-hidden card-hover ${stat.clickable ? 'cursor-pointer' : ''}`}
-              onClick={stat.clickable ? () => navigate("/student/stats") : undefined}
-            >
-              <stat.icon className="stat-watermark w-14 h-14 text-white" />
-              <div className="relative z-10">
-                <p className="text-white/70 text-xs font-medium mb-1">{stat.label}</p>
-                {stat.overdue > 0 && (
-                  <span className="text-red-300 text-[10px] block mb-1">{stat.overdue} overdue</span>
-                )}
-                <div className="flex items-baseline gap-1">
-                  <span className={`${stat.isSmall ? 'text-sm' : 'text-2xl'} font-bold text-white`}>{stat.value}</span>
-                  {stat.extra && <span className="text-xs text-white/50">{stat.extra}</span>}
-                </div>
-                {stat.hasBar && (
-                  <div className="h-1 bg-white/20 rounded-full w-full mt-2 overflow-hidden">
-                    <div className={`h-full rounded-full bg-white/60 transition-all duration-500`} style={{ width: `${stat.barValue ?? 0}%` }} />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Recent Activity */}
-            <div className="glass-card">
-              <h3 className="text-sm font-semibold text-white mb-4">Recent Activity</h3>
-              {data.recentActivity.length > 0 ? (
-                <div className="space-y-0.5">
-                  {data.recentActivity.map((activity) => {
-                    const { icon: Icon, iconColor } = getActivityIcon(activity.type);
-                    return (
-                      <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
-                        <Icon className={`w-4 h-4 ${iconColor} flex-shrink-0`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{activity.title}</p>
-                          <p className="text-xs text-white/40">{activity.project} · {activity.timestamp}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <FileText className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                  <p className="text-xs text-white/30">No recent activity</p>
-                </div>
-              )}
-            </div>
-
-            {/* Upcoming Assignments */}
-            <div className="glass-card">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white">Upcoming Assignments</h3>
-                <Link to="/student/calendar" className="text-xs text-white/30 hover:text-blue-400 transition-colors">View all</Link>
-              </div>
-              {data.upcomingAssignments.length > 0 ? (
-                <div className="space-y-2">
-                  {data.upcomingAssignments.map((assignment) => {
-                    const urgency = getAssignmentUrgency(assignment);
-                    return (
-                      <div key={assignment.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-colors">
-                        <div className="min-w-0">
-                          <p className="text-sm text-white truncate">{assignment.title}</p>
-                          <p className="text-xs text-white/40 mt-0.5">{assignment.classroom_name || 'Classroom'}</p>
-                        </div>
-                        <span className={`text-xs flex-shrink-0 ml-3 ${urgency === 'today' ? 'text-red-400' : urgency === 'soon' ? 'text-amber-400' : 'text-white/30'}`}>
-                          {formatDueDate(assignment.due_date)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                  <p className="text-xs text-white/30">No upcoming assignments</p>
-                </div>
-              )}
-            </div>
-
-            {/* Project Tasks */}
-            <div className="glass-card">
-              <h3 className="text-sm font-semibold text-white mb-4">Project Tasks</h3>
-              {data.upcomingTasks.length > 0 ? (
-                <div className="space-y-1">
-                  {data.upcomingTasks.map((task) => {
-                    const statusStyles = getStatusStyles(task.status);
-                    return (
-                      <div key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
-                        <div className="w-4 h-4 rounded border border-white/20 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{task.title}</p>
-                          <p className="text-xs text-white/40">{task.project}{task.dueDate ? ` · Due: ${task.dueDate}` : ''}</p>
-                        </div>
-                        <span className={`px-2 py-0.5 text-[10px] font-medium rounded ${statusStyles.bg} ${statusStyles.text}`}>
-                          {statusStyles.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                  <p className="text-xs text-white/30">No tasks yet</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* This Week */}
-            <div className="glass-card">
-              <h3 className="text-sm font-semibold text-white mb-4">This Week</h3>
-              {data.thisWeekEvents.length > 0 ? (
-                <div className="space-y-2">
-                  {data.thisWeekEvents.map((event) => (
-                    <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
-                      <div className="text-center min-w-[32px]">
-                        <p className="text-blue-400 text-[10px] font-medium">{event.date}</p>
-                        <p className="text-white text-sm font-semibold">{event.day}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{event.title}</p>
-                        <p className="text-xs text-white/40">{event.startTime}{event.endTime && ` – ${event.endTime}`}</p>
-                      </div>
+        {/* Recent Activity — full width */}
+        <motion.div custom={0} initial="hidden" animate="visible" variants={cardVariants} className="glass-card mb-6">
+          <h3 className="text-sm font-semibold text-white mb-4">Recent Activity</h3>
+          {data.recentActivity.length > 0 ? (
+            <div className="space-y-0.5">
+              {data.recentActivity.map((activity) => {
+                const { icon: Icon, iconColor } = getActivityIcon(activity.type);
+                return (
+                  <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
+                    <Icon className={`w-4 h-4 ${iconColor} flex-shrink-0`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{activity.title}</p>
+                      <p className="text-xs text-white/40">{activity.project} · {activity.timestamp}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
-                  <p className="text-xs text-white/30">No events this week</p>
-                </div>
-              )}
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            <div className="text-center py-10">
+              <FileText className="w-6 h-6 text-white/15 mx-auto mb-2" />
+              <p className="text-xs text-white/30">No recent activity</p>
+            </div>
+          )}
+        </motion.div>
 
-            {/* Quick Actions */}
-            <div className="glass-card">
-              <h3 className="text-sm font-semibold text-white mb-4">Quick Actions</h3>
+        {/* Upcoming Assignments + This Week — side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Upcoming Assignments */}
+          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white">Upcoming Assignments</h3>
+              <Link to="/student/calendar" className="text-xs text-white/30 hover:text-blue-400 transition-colors">View all</Link>
+            </div>
+            {data.upcomingAssignments.length > 0 ? (
               <div className="space-y-2">
-                <Button
-                  onClick={generateExtensionToken}
-                  disabled={isGenerating}
-                  className="w-full justify-start text-sm h-9 btn-glass font-normal"
-                >
-                  <Key className="w-4 h-4 mr-2 text-white/40" />
-                  {isGenerating ? "Generating..." : "Generate Extension Token"}
-                </Button>
+                {data.upcomingAssignments.map((assignment) => {
+                  const urgency = getAssignmentUrgency(assignment);
+                  return (
+                    <div key={assignment.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm text-white truncate">{assignment.title}</p>
+                        <p className="text-xs text-white/40 mt-0.5">{assignment.classroom_name || 'Classroom'}</p>
+                      </div>
+                      <span className={`text-xs flex-shrink-0 ml-3 ${urgency === 'today' ? 'text-red-400' : urgency === 'soon' ? 'text-amber-400' : 'text-white/30'}`}>
+                        {formatDueDate(assignment.due_date)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                <p className="text-xs text-white/30">No upcoming assignments</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* This Week */}
+          <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
+            <h3 className="text-sm font-semibold text-white mb-4">This Week</h3>
+            {data.thisWeekEvents.length > 0 ? (
+              <div className="space-y-2">
+                {data.thisWeekEvents.map((event) => (
+                  <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
+                    <div className="text-center min-w-[32px]">
+                      <p className="text-blue-400 text-[10px] font-medium">{event.date}</p>
+                      <p className="text-white text-sm font-semibold">{event.day}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{event.title}</p>
+                      <p className="text-xs text-white/40">{event.startTime}{event.endTime && ` – ${event.endTime}`}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                <p className="text-xs text-white/30">No events this week</p>
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* My Team */}
+        <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="glass-card">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4 text-blue-400" />
+            <h3 className="text-sm font-semibold text-white">My Team</h3>
+            {data.team && (
+              <span className="text-xs text-white/30 ml-auto">{data.team.projectName}</span>
+            )}
+          </div>
+          {data.team ? (
+            <div>
+              <p className="text-white/60 text-xs mb-3">{data.team.groupName}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {data.team.members.map((member) => (
+                  <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors">
+                    <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
+                      {member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm text-white truncate">{member.name}</p>
+                      <p className="text-xs text-white/30 truncate">{member.email}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="w-6 h-6 text-white/15 mx-auto mb-2" />
+              <p className="text-xs text-white/30">No team assigned</p>
+            </div>
+          )}
+        </motion.div>
       </motion.div>
 
-      {/* Token Modal */}
+      {/* Token Modal — kept for programmatic access */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
         <DialogContent className="bg-[#111633]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl">
           <DialogHeader>
@@ -459,11 +380,7 @@ export default function StudentDashboard() {
               <code className="flex-1 text-sm text-white/80 break-all font-mono">
                 {generatedToken}
               </code>
-              <Button
-                onClick={copyToken}
-                size="sm"
-                className="btn-gradient rounded-lg"
-              >
+              <Button onClick={copyToken} size="sm" className="btn-gradient rounded-lg">
                 {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
