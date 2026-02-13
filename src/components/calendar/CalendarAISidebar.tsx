@@ -29,7 +29,7 @@ export function CalendarAISidebar({
   return (
     <div className="space-y-4">
       {/* AI Recommendation Card */}
-      <div className={wb ? "pb-5 border-b border-gray-300/40" : "bg-white/[0.04] border border-white/10 rounded-2xl p-6"}>
+      <div className={wb ? "border-2 border-blue-400 rounded-xl p-4 bg-transparent" : "bg-white/[0.04] border border-white/10 rounded-2xl p-6"}>
         <div className="flex items-center gap-2 mb-1">
           <Bot className={`w-5 h-5 ${wb ? "text-blue-600" : "text-blue-400"}`} />
           <h3 className={`text-lg font-semibold ${wb ? "font-['Caveat'] text-[#333] text-xl" : "text-white"}`}>AI Suggested Times</h3>
@@ -84,7 +84,7 @@ export function CalendarAISidebar({
       </div>
 
       {/* Upcoming Meetings */}
-      <div className={wb ? "pb-5 border-b border-gray-300/40" : "bg-white/[0.04] border border-white/10 rounded-2xl p-5"}>
+      <div className={wb ? "border-2 border-red-400 rounded-xl p-4 bg-transparent" : "bg-white/[0.04] border border-white/10 rounded-2xl p-5"}>
         <h3 className={`text-sm font-semibold mb-3 ${wb ? "font-['Caveat'] text-[#333] text-lg" : "text-white"}`}>Upcoming Meetings</h3>
         {meetings.length === 0 ? (
           <p className={`text-xs ${wb ? "font-['Caveat'] text-gray-400 text-sm" : "text-slate-500"}`}>No meetings scheduled yet</p>
@@ -115,7 +115,7 @@ export function CalendarAISidebar({
       </div>
 
       {/* Team Availability Status */}
-      <div className={wb ? "pb-5" : "bg-white/[0.04] border border-white/10 rounded-2xl p-5"}>
+      <div className={wb ? "border-2 border-green-400 rounded-xl p-4 bg-transparent" : "bg-white/[0.04] border border-white/10 rounded-2xl p-5"}>
         <h3 className={`text-sm font-semibold mb-3 ${wb ? "font-['Caveat'] text-[#333] text-lg" : "text-white"}`}>Team Availability Status</h3>
         {teamStatus.length === 0 ? (
           <p className={`text-xs ${wb ? "font-['Caveat'] text-gray-400 text-sm" : "text-slate-500"}`}>No team members</p>

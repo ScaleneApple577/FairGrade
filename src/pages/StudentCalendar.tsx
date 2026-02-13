@@ -205,7 +205,7 @@ export default function StudentCalendar() {
               )}
 
               {/* Legend */}
-              <div className="bg-white/60 border border-gray-200 rounded-xl p-3 flex flex-wrap items-center gap-4 md:gap-6">
+              <div className="bg-transparent p-3 flex flex-wrap items-center gap-4 md:gap-6">
                 {[
                   { color: "bg-emerald-200 border-emerald-300", label: "All Available" },
                   { color: "bg-yellow-200 border-yellow-300", label: "Most Available" },
