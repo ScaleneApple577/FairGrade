@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { StudentLayout } from "@/components/student/StudentLayout";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 import { ClassroomGate } from "@/components/student/ClassroomGate";
 import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
 import { CalendarMonthView } from "@/components/calendar/CalendarMonthView";
@@ -119,32 +119,27 @@ export default function StudentCalendar() {
 
   if (isLoadingProjects && isLoadingAssignments) {
     return (
-      <StudentLayout pageTitle="Calendar" noPadding>
-        <div className="flex items-center justify-center h-64 bg-[#f5f5f0]">
+      <div className="min-h-screen bg-[#f5f5f0]">
+        <StudentPageHeader />
+        <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout pageTitle="Calendar" noPadding>
-      <div
-        className="flex-1 relative"
-        style={{ background: "#f5f5f0" }}
-      >
+    <div className="min-h-screen bg-[#f5f5f0]">
+      <StudentPageHeader />
+      <div className="flex-1 relative" style={{ background: "#f5f5f0" }}>
         {/* Whiteboard texture overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-100" style={{
           backgroundImage: "linear-gradient(90deg, rgba(200,200,200,0.03) 1px, transparent 1px), linear-gradient(rgba(200,200,200,0.03) 1px, transparent 1px)",
           backgroundSize: "20px 20px",
         }} />
 
-        {/* Top aluminum frame strip */}
-
-
-
         <ClassroomGate>
-        <div className="relative z-10 p-6">
+        <div className="relative z-10 px-6 pb-6">
           {projects.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
               {projects.map((project) => (
@@ -230,6 +225,6 @@ export default function StudentCalendar() {
         </div>
         </ClassroomGate>
       </div>
-    </StudentLayout>
+    </div>
   );
 }

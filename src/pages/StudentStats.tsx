@@ -41,7 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { StudentLayout } from "@/components/student/StudentLayout";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 import { api } from "@/lib/api";
 // NOTE: Task field mapping - backend API uses { title, status } not { name, completed }
 // Status values: 'open', 'in_progress', 'done' (backend) vs boolean 'completed' (Supabase table)
@@ -314,17 +314,19 @@ const StudentStats = () => {
 
   if (isLoading) {
     return (
-      <StudentLayout pageTitle="My Stats">
+      <div className="min-h-screen bg-[#f5f5f0]">
+        <StudentPageHeader />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout pageTitle="My Stats">
-
+    <div className="min-h-screen bg-[#f5f5f0]">
+      <StudentPageHeader />
+      <div className="px-6 pb-6">
       {/* Hero Card - Overall Contribution Score */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">
         <div className="flex items-center justify-between">
@@ -923,7 +925,8 @@ const StudentStats = () => {
           isTeacher={false}
         />
       )}
-    </StudentLayout>
+      </div>
+    </div>
   );
 };
 

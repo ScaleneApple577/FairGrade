@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Trophy, Lock } from "lucide-react";
-import { StudentLayout } from "@/components/student/StudentLayout";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 
 // All 30 achievements definition
 const allAchievements = [
@@ -67,77 +67,79 @@ export default function StudentAchievements() {
     : allAchievements.filter(a => a.category === filter);
 
   return (
-    <StudentLayout pageTitle="Achievements">
-      {/* Progress Header */}
-      <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 rounded-2xl p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-400" />
-              Achievements
-            </h2>
-            <p className="text-slate-400 text-sm mt-1">Track your progress and unlock milestones</p>
+    <div className="min-h-screen bg-[#f5f5f0]">
+      <StudentPageHeader />
+      <div className="px-6 pb-6">
+        {/* Progress Header */}
+        <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-gray-200 rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                Achievements
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">Track your progress and unlock milestones</p>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-gray-800">{unlockedCount}<span className="text-gray-400 text-lg">/{allAchievements.length}</span></p>
+              <p className="text-gray-500 text-xs">Unlocked</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-white">{unlockedCount}<span className="text-slate-500 text-lg">/{allAchievements.length}</span></p>
-            <p className="text-slate-400 text-xs">Unlocked</p>
+          <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+              style={{ width: `${(unlockedCount / allAchievements.length) * 100}%` }}
+            />
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
-            style={{ width: `${(unlockedCount / allAchievements.length) * 100}%` }}
-          />
-        </div>
-      </div>
 
-      {/* Category Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {categories.map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => setFilter(cat.key)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition ${
-              filter === cat.key
-                ? "bg-blue-500 text-white"
-                : "bg-white/10 text-slate-400 hover:text-white hover:bg-white/15"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Achievement Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map(achievement => {
-          const unlocked = isUnlocked(achievement.id);
-          return (
-            <div
-              key={achievement.id}
-              className={`rounded-xl border p-5 transition ${
-                unlocked
-                  ? "bg-white/[0.06] border-white/15"
-                  : "bg-white/[0.02] border-white/5 opacity-50"
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {categories.map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => setFilter(cat.key)}
+              className={`px-3 py-1.5 rounded-lg text-sm transition ${
+                filter === cat.key
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
               }`}
             >
-              <div className="flex items-start gap-3">
-                <div className="text-3xl">{unlocked ? achievement.emoji : "🔒"}</div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-semibold text-sm ${unlocked ? "text-white" : "text-slate-500"}`}>
-                    {achievement.name}
-                  </p>
-                  <p className="text-slate-500 text-xs mt-0.5">{achievement.description}</p>
-                  <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-400 capitalize">
-                    {achievement.category}
-                  </span>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Achievement Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(achievement => {
+            const unlocked = isUnlocked(achievement.id);
+            return (
+              <div
+                key={achievement.id}
+                className={`rounded-xl border p-5 transition ${
+                  unlocked
+                    ? "bg-white/60 border-gray-200"
+                    : "bg-gray-50/50 border-gray-100 opacity-50"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">{unlocked ? achievement.emoji : "🔒"}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm ${unlocked ? "text-gray-800" : "text-gray-400"}`}>
+                      {achievement.name}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5">{achievement.description}</p>
+                    <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 capitalize">
+                      {achievement.category}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </StudentLayout>
+    </div>
   );
 }
