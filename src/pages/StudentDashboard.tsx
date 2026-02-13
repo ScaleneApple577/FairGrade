@@ -238,14 +238,15 @@ export default function StudentDashboard() {
       <ProjectAssignmentBanner assignments={projectAssignments} onDismiss={handleDismissAssignment} />
 
       <div
-        className="flex-1 relative overflow-hidden"
+        className="-m-6 relative overflow-hidden flex flex-col"
         style={{
           background: "linear-gradient(170deg, #2d4a3e 0%, #243f34 40%, #1e3529 100%)",
           boxShadow: "inset 0 0 60px rgba(0,0,0,0.35)",
-          minHeight: "calc(100vh - 64px)",
+          minHeight: "calc(100vh - 56px)",
+          width: "calc(100% + 48px)",
         }}
       >
-        {/* Chalk dust texture overlay */}
+        {/* Chalk dust texture */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
           backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
           backgroundSize: "18px 18px",
@@ -261,10 +262,8 @@ export default function StudentDashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative z-10 flex flex-col items-center justify-center px-8 py-16"
-          style={{ minHeight: "calc(100vh - 64px)" }}
+          className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 py-16"
         >
-          {/* Welcome */}
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -277,7 +276,6 @@ export default function StudentDashboard() {
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
 
-          {/* Nav grid */}
           <div className="grid grid-cols-2 gap-x-20 gap-y-10 max-w-xl mx-auto">
             {chalkboardLinks.map((item, i) => (
               <motion.div
@@ -299,7 +297,7 @@ export default function StudentDashboard() {
         </motion.div>
 
         {/* Chalk ledge */}
-        <div className="absolute bottom-0 left-0 right-0 h-3" style={{
+        <div className="h-3 flex-shrink-0" style={{
           background: "linear-gradient(180deg, #8B7355 0%, #6d5a43 100%)",
           boxShadow: "0 -2px 6px rgba(0,0,0,0.3)",
         }} />
