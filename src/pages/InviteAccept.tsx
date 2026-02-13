@@ -16,13 +16,12 @@ const InviteAccept = () => {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setErrorMessage("No invitation token found in the URL.");
+      setErrorMessage("Invalid invitation link. Please check the link from your email.");
       return;
     }
 
     const accessToken = localStorage.getItem("access_token");
     if (!accessToken) {
-      // Store the full URL so we can redirect back after login
       sessionStorage.setItem("pending_invite_redirect", window.location.pathname + window.location.search);
       setStatus("not-logged-in");
       return;
@@ -54,7 +53,7 @@ const InviteAccept = () => {
             <LogIn className="h-12 w-12 text-blue-400 mx-auto" />
             <h1 className="text-xl font-bold text-white">Sign In Required</h1>
             <p className="text-slate-400 text-sm">
-              You need to sign in first to accept this invitation.
+              You need to sign in first to accept this classroom invitation.
             </p>
             <Button
               onClick={() => navigate("/auth")}
