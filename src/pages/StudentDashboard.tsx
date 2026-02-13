@@ -237,54 +237,72 @@ export default function StudentDashboard() {
       <ClassroomInvitationBanner />
       <ProjectAssignmentBanner assignments={projectAssignments} onDismiss={handleDismissAssignment} />
 
-      <div className="flex-1" style={{ background: "#f5f0e8", minHeight: "calc(100vh - 64px)" }}>
+      <div
+        className="flex-1 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(170deg, #2d4a3e 0%, #243f34 40%, #1e3529 100%)",
+          boxShadow: "inset 0 0 60px rgba(0,0,0,0.35)",
+          minHeight: "calc(100vh - 64px)",
+        }}
+      >
+        {/* Chalk dust texture overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+          backgroundSize: "18px 18px",
+        }} />
+
+        {/* Chalk doodles */}
+        <div className="absolute top-6 right-8 chalk-text text-2xl opacity-20 select-none">★ ✦ ☆</div>
+        <div className="absolute bottom-16 left-8 chalk-text text-lg opacity-15 select-none">→ ✧ ∞</div>
+        <div className="absolute top-1/3 right-12 chalk-text text-sm opacity-10 select-none rotate-12">π ≈ 3.14</div>
+        <div className="absolute bottom-1/3 left-12 chalk-text text-xs opacity-10 select-none -rotate-6">E = mc²</div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="px-6 py-8 flex items-start justify-center"
+          className="relative z-10 flex flex-col items-center justify-center px-8 py-16"
           style={{ minHeight: "calc(100vh - 64px)" }}
         >
-          {/* Chalkboard */}
-          <div className="chalkboard w-full max-w-4xl px-10 py-10 pb-14" style={{ minHeight: "400px" }}>
-            {/* Chalk doodles */}
-            <div className="absolute top-3 right-4 chalk-text text-lg opacity-30 select-none">★ ✦ ☆</div>
-            <div className="absolute bottom-8 left-4 chalk-text text-sm opacity-20 select-none">→ ✧</div>
+          {/* Welcome */}
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="chalk-text text-4xl md:text-5xl font-bold text-center mb-3"
+          >
+            Welcome back{firstName ? `, ${firstName}` : ''}!
+          </motion.h1>
+          <p className="chalk-text text-center text-base opacity-50 mb-16">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
 
-            {/* Welcome */}
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="chalk-text text-3xl md:text-4xl font-bold text-center mb-2"
-            >
-              Welcome back{firstName ? `, ${firstName}` : ''}!
-            </motion.h1>
-            <p className="chalk-text text-center text-sm opacity-50 mb-10">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
-
-            {/* Nav grid */}
-            <div className="grid grid-cols-2 gap-x-16 gap-y-8 max-w-lg mx-auto">
-              {chalkboardLinks.map((item, i) => (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.08, duration: 0.35 }}
+          {/* Nav grid */}
+          <div className="grid grid-cols-2 gap-x-20 gap-y-10 max-w-xl mx-auto">
+            {chalkboardLinks.map((item, i) => (
+              <motion.div
+                key={item.href}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.08, duration: 0.35 }}
+              >
+                <Link
+                  to={item.href}
+                  className="chalk-link chalk-text flex items-center gap-4 text-2xl md:text-3xl font-bold py-3 cursor-pointer"
                 >
-                  <Link
-                    to={item.href}
-                    className="chalk-link chalk-text flex items-center gap-3 text-xl md:text-2xl font-bold py-3 cursor-pointer"
-                  >
-                    <item.icon className="w-6 h-6 text-white/60 flex-shrink-0" />
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                  <item.icon className="w-7 h-7 text-white/50 flex-shrink-0" />
+                  {item.label}
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
+
+        {/* Chalk ledge */}
+        <div className="absolute bottom-0 left-0 right-0 h-3" style={{
+          background: "linear-gradient(180deg, #8B7355 0%, #6d5a43 100%)",
+          boxShadow: "0 -2px 6px rgba(0,0,0,0.3)",
+        }} />
       </div>
 
       {/* Token Modal — kept for programmatic access */}
