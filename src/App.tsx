@@ -160,7 +160,7 @@ const AppRoutes = () => (
       } 
     />
 
-    {/* Student routes */}
+    {/* Student Dashboard — standalone full-screen chalkboard, no sidebar */}
     <Route 
       path="/student/dashboard" 
       element={
