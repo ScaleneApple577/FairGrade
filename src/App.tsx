@@ -193,6 +193,7 @@ const AppRoutes = () => (
         </StudentRoute>
       } 
     />
+    {/* Student Reviews — standalone full-screen notebook, no sidebar */}
     <Route 
       path="/student/reviews" 
       element={
