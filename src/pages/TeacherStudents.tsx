@@ -399,8 +399,8 @@ export default function TeacherStudents() {
   if (isLoadingClassrooms) {
     return (
       <TeacherLayout>
-        <div className="p-8 flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        <div className="p-6 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-5 h-5 text-[#8b949e] animate-spin" />
         </div>
       </TeacherLayout>
     );
@@ -411,31 +411,27 @@ export default function TeacherStudents() {
   if (classrooms.length === 0) {
     return (
       <TeacherLayout>
-        <div className="p-8">
+        <div className="p-6">
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-            <div className="w-20 h-20 bg-blue-500/15 rounded-full flex items-center justify-center mb-6">
-              <GraduationCap className="w-10 h-10 text-blue-400" />
-            </div>
-            <h1 className="text-xl font-bold text-white mb-2">
+            <GraduationCap className="w-8 h-8 text-[#8b949e]/50 mb-4" />
+            <h1 className="text-base font-semibold text-white mb-1">
               Create Your First Classroom
             </h1>
-            <p className="text-slate-400 text-sm mb-6 max-w-md">
+            <p className="text-[#8b949e] text-sm mb-5 max-w-sm">
               A classroom is like a course section. Create one to start inviting students.
             </p>
             <Input
               value={newClassroomName}
               onChange={(e) => setNewClassroomName(e.target.value)}
               placeholder="e.g., CS 101 — Fall 2026"
-              className="bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 w-80 placeholder:text-slate-500 mb-4"
+              className="bg-white/[0.06] border border-white/[0.06] text-white rounded-md px-3 py-2 w-72 placeholder:text-[#8b949e]/60 mb-3 text-sm"
             />
             <Button
               onClick={handleCreateClassroom}
               disabled={!newClassroomName.trim() || isCreatingClassroom}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 h-8 rounded-md text-sm font-medium"
             >
-              {isCreatingClassroom ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
+              {isCreatingClassroom ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               Create Classroom
             </Button>
           </div>
@@ -448,38 +444,38 @@ export default function TeacherStudents() {
 
   return (
     <TeacherLayout>
-      <div className="p-8">
+      <div className="p-6">
         {/* Header Actions */}
-        <div className="flex items-center justify-end gap-3 mb-6">
+        <div className="flex items-center justify-end gap-2 mb-5">
           <Button
             onClick={() => setIsImportModalOpen(true)}
-            variant="outline"
+            variant="ghost"
             disabled={!selectedClassroomId}
-            className="bg-white/10 border-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/15"
+            className="text-[#8b949e] hover:text-white hover:bg-white/[0.06] text-sm h-8 px-3"
           >
-            <Upload className="w-4 h-4 mr-2" />
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
             Import CSV
           </Button>
           <Button
             onClick={() => setIsInviteModalOpen(true)}
             disabled={!selectedClassroomId}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium"
+            className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 rounded-md text-sm font-medium"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             Invite Students
           </Button>
         </div>
 
         {/* Classroom Tabs */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <div className="flex items-center gap-1 mb-5 flex-wrap border-b border-white/[0.06] pb-3">
           {classrooms.map((classroom) => (
             <button
               key={classroom.id}
               onClick={() => setSelectedClassroomId(classroom.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 selectedClassroomId === classroom.id
-                  ? "bg-blue-500 text-white"
-                  : "bg-white/10 text-slate-400 hover:bg-white/15 hover:text-white"
+                  ? "bg-white/[0.08] text-white"
+                  : "text-[#8b949e] hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               {classroom.name}
@@ -487,155 +483,107 @@ export default function TeacherStudents() {
           ))}
           <button
             onClick={() => setIsCreateClassroomOpen(true)}
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-white/10 border border-dashed border-white/20 text-slate-400 hover:text-white hover:bg-white/15 transition-all"
+            className="px-3 py-1.5 rounded-md text-sm text-[#8b949e] hover:text-white hover:bg-white/[0.04] transition-colors"
           >
-            + New Classroom
+            + New
           </button>
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="bg-white/10 text-slate-300 text-xs px-3 py-1.5 rounded-full">
-            {stats.total} Total Students
-          </span>
-          <span className="bg-emerald-500/15 text-emerald-400 text-xs px-3 py-1.5 rounded-full">
-            {stats.active} Active
-          </span>
-          <span className="bg-yellow-500/15 text-yellow-400 text-xs px-3 py-1.5 rounded-full">
-            {stats.pending} Pending Invites
-          </span>
+        <div className="flex items-center gap-4 mb-5 text-xs text-[#8b949e]">
+          <span>{stats.total} total</span>
+          <span className="text-emerald-400">{stats.active} active</span>
+          <span className="text-yellow-400">{stats.pending} pending</span>
         </div>
 
         {isLoadingClassroom ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            <Loader2 className="w-5 h-5 text-[#8b949e] animate-spin" />
           </div>
         ) : (
           <>
             {/* Search and filter bar */}
-            <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-6">
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/10 text-white rounded-lg px-4 py-2.5 text-sm placeholder:text-slate-500 w-full"
-                  />
-                </div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-white/10 border border-white/10 text-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Students</option>
-                  <option value="active">Active</option>
-                  <option value="pending">Pending Invite</option>
-                </select>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-white/10 border border-white/10 text-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="name">Name (A-Z)</option>
-                  <option value="name_desc">Name (Z-A)</option>
-                  <option value="date_newest">Date Added (Newest)</option>
-                  <option value="date_oldest">Date Added (Oldest)</option>
-                </select>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-[#8b949e]" />
+                <Input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 bg-white/[0.06] border-white/[0.06] text-white rounded-md h-8 text-sm placeholder:text-[#8b949e]/60"
+                />
               </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-white/[0.06] border border-white/[0.06] text-[#8b949e] rounded-md px-2.5 h-8 text-xs"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-white/[0.06] border border-white/[0.06] text-[#8b949e] rounded-md px-2.5 h-8 text-xs"
+              >
+                <option value="name">Name A-Z</option>
+                <option value="name_desc">Name Z-A</option>
+                <option value="date_newest">Newest</option>
+                <option value="date_oldest">Oldest</option>
+              </select>
             </div>
 
             {/* Bulk actions bar */}
             {selectedStudents.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-4 flex items-center justify-between"
-              >
-                <span className="text-white text-sm">
-                  {selectedStudents.length} student(s) selected
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => handleBulkAction("assign")}
-                    size="sm"
-                    className="bg-blue-500/15 text-blue-400 px-3 py-1.5 rounded-lg text-sm hover:bg-blue-500/25"
-                  >
-                    <FolderPlus className="w-3 h-3 mr-1" />
-                    Assign to Project
+              <div className="flex items-center justify-between p-2.5 mb-3 rounded-md bg-blue-600/10 border border-blue-500/10">
+                <span className="text-white text-xs">{selectedStudents.length} selected</span>
+                <div className="flex items-center gap-1.5">
+                  <Button onClick={() => handleBulkAction("assign")} size="sm" className="bg-white/[0.06] text-white h-7 px-2.5 text-xs rounded-md hover:bg-white/[0.1]">
+                    <FolderPlus className="w-3 h-3 mr-1" />Assign
                   </Button>
                   {hasPendingSelected && (
-                    <Button
-                      onClick={() => handleBulkAction("resend")}
-                      size="sm"
-                      className="bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-sm hover:bg-white/15"
-                    >
-                      <Send className="w-3 h-3 mr-1" />
-                      Resend Invitations
+                    <Button onClick={() => handleBulkAction("resend")} size="sm" className="bg-white/[0.06] text-white h-7 px-2.5 text-xs rounded-md hover:bg-white/[0.1]">
+                      <Send className="w-3 h-3 mr-1" />Resend
                     </Button>
                   )}
-                  <Button
-                    onClick={() => handleBulkAction("remove")}
-                    size="sm"
-                    className="bg-red-500/15 text-red-400 px-3 py-1.5 rounded-lg text-sm hover:bg-red-500/25"
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Remove Selected
+                  <Button onClick={() => handleBulkAction("remove")} size="sm" className="bg-red-500/10 text-red-400 h-7 px-2.5 text-xs rounded-md hover:bg-red-500/20">
+                    <Trash2 className="w-3 h-3 mr-1" />Remove
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Students table */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="rounded-lg overflow-hidden border border-white/[0.06]">
               {filteredStudents.length > 0 ? (
                 <table className="w-full">
-                  <thead className="bg-white/10">
-                    <tr>
-                      <th className="p-4 text-left">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="p-3 text-left w-10">
                         <Checkbox
-                          checked={
-                            selectedStudents.length === filteredStudents.length &&
-                            filteredStudents.length > 0
-                          }
+                          checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
                           onCheckedChange={handleSelectAll}
                           className="border-white/20"
                         />
                       </th>
-                      <th className="text-left p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="text-left p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Avg. Score
-                      </th>
-                      <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Projects
-                      </th>
-                      <th className="text-center p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Joined
-                      </th>
-                      <th className="text-right p-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-[#8b949e]">Name</th>
+                      <th className="text-left p-3 text-xs font-medium text-[#8b949e]">Email</th>
+                      <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Status</th>
+                      <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Score</th>
+                      <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Projects</th>
+                      <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Joined</th>
+                      <th className="text-right p-3 text-xs font-medium text-[#8b949e]">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-white/[0.04]">
                     {filteredStudents.map((student) => (
-                      <motion.tr
+                      <tr
                         key={student.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="hover:bg-white/[0.03] transition"
+                        className="hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="p-4">
+                        <td className="p-3">
                           <Checkbox
                             checked={selectedStudents.includes(student.id)}
                             onCheckedChange={(checked) =>
@@ -644,89 +592,52 @@ export default function TeacherStudents() {
                             className="border-white/20"
                           />
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2.5">
                             <div className="relative">
-                              <div
-                                className={`w-9 h-9 ${getAvatarColor(
-                                  student.id
-                                )} rounded-full flex items-center justify-center text-white text-sm font-medium`}
-                              >
+                              <div className={`w-7 h-7 ${getAvatarColor(student.id)} rounded-full flex items-center justify-center text-white text-[10px] font-medium`}>
                                 {getInitials(student.name, student.email)}
                               </div>
-                              {student.source === "student" &&
-                                isStudentLive(student.id.replace("student-", "")) && (
-                                  <StatusDot
-                                    status="editing"
-                                    className="absolute -bottom-0.5 -right-0.5"
-                                  />
-                                )}
+                              {student.source === "student" && isStudentLive(student.id.replace("student-", "")) && (
+                                <StatusDot status="editing" className="absolute -bottom-0.5 -right-0.5" />
+                              )}
                             </div>
                             <div>
-                              <span className="text-white text-sm font-medium block">
-                                {student.name || "—"}
-                              </span>
-                              {student.source === "student" &&
-                                isStudentLive(student.id.replace("student-", "")) &&
-                                getStudentActiveFile(student.id.replace("student-", "")) && (
-                                  <EditingLabel
-                                    fileName={
-                                      getStudentActiveFile(student.id.replace("student-", ""))!.fileName
-                                    }
-                                  />
-                                )}
+                              <span className="text-white text-sm block">{student.name || "—"}</span>
+                              {student.source === "student" && isStudentLive(student.id.replace("student-", "")) && getStudentActiveFile(student.id.replace("student-", "")) && (
+                                <EditingLabel fileName={getStudentActiveFile(student.id.replace("student-", ""))!.fileName} />
+                              )}
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 text-slate-400 text-sm">{student.email}</td>
-                        <td className="p-4 text-center">
+                        <td className="p-3 text-[#8b949e] text-sm">{student.email}</td>
+                        <td className="p-3 text-center">
                           {student.status === "active" && (
-                            <span className="bg-emerald-500/15 text-emerald-400 text-xs px-2.5 py-1 rounded-full">
-                              Active
-                            </span>
+                            <span className="text-emerald-400 text-xs">Active</span>
                           )}
                           {student.status === "pending" && (
-                            <span className="bg-yellow-500/15 text-yellow-400 text-xs px-2.5 py-1 rounded-full">
-                              Pending Invite
-                            </span>
+                            <span className="text-yellow-400 text-xs">Pending</span>
                           )}
                         </td>
-                        <td className="p-4 text-center">
+                        <td className="p-3 text-center">
                           {student.avgFairscore !== null ? (
-                            <button
-                              onClick={() => handleViewScore(student)}
-                              className="inline-flex items-center gap-2 hover:opacity-80 transition"
-                            >
-                              <CircularScoreRing
-                                score={student.avgFairscore}
-                                size="sm"
-                                animate={false}
-                              />
-                              <span
-                                className={`font-bold text-sm ${getScoreColorClass(
-                                  student.avgFairscore
-                                )}`}
-                              >
-                                {student.avgFairscore}
-                              </span>
+                            <button onClick={() => handleViewScore(student)} className="inline-flex items-center gap-1.5 hover:opacity-80 transition">
+                              <CircularScoreRing score={student.avgFairscore} size="sm" animate={false} />
+                              <span className={`font-medium text-xs ${getScoreColorClass(student.avgFairscore)}`}>{student.avgFairscore}</span>
                             </button>
                           ) : (
-                            <span className="text-slate-600">—</span>
+                            <span className="text-[#8b949e]/40">—</span>
                           )}
                         </td>
-                        <td className="p-4 text-center text-slate-300 text-sm">
-                          {student.projectCount}
-                        </td>
-                        <td className="p-4 text-center">
+                        <td className="p-3 text-center text-[#8b949e] text-sm">{student.projectCount}</td>
+                        <td className="p-3 text-center">
                           {student.status === "pending" ? (
-                            <span className="text-yellow-400 text-xs">Invite pending</span>
+                            <span className="text-yellow-400 text-xs">Pending</span>
                           ) : (
-                            <span className="text-slate-500 text-sm">
-                              {formatDate(student.joinedAt)}
-                            </span>
+                            <span className="text-[#8b949e] text-xs">{formatDate(student.joinedAt)}</span>
                           )}
                         </td>
-                        <td className="p-4 text-right">
+                        <td className="p-3 text-right">
                           <StudentActionsMenu
                             studentId={student.id}
                             studentName={student.name || ""}
@@ -737,35 +648,24 @@ export default function TeacherStudents() {
                             onRefresh={handleRefresh}
                           />
                         </td>
-                      </motion.tr>
+                      </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <div className="p-16 text-center">
-                  <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-white text-lg font-medium">
-                    No students in this classroom yet
+                <div className="p-12 text-center">
+                  <Users className="w-7 h-7 text-[#8b949e]/40 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-white mb-1">No students yet</p>
+                  <p className="text-xs text-[#8b949e] mb-4 max-w-sm mx-auto">
+                    Invite students by email to get started.
                   </p>
-                  <p className="text-slate-400 text-sm mt-2 max-w-md mx-auto">
-                    Invite students by email to get started. They'll receive an
-                    invitation to join your classroom on FairGrade.
-                  </p>
-                  <div className="flex items-center justify-center gap-3 mt-6">
-                    <Button
-                      onClick={() => setIsInviteModalOpen(true)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium"
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Invite Students
-                    </Button>
-                  </div>
-                  <button
-                    onClick={() => setIsImportModalOpen(true)}
-                    className="text-blue-400 text-sm hover:text-blue-300 mt-3 inline-block"
+                  <Button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 rounded-md text-sm font-medium"
                   >
-                    or Import from CSV
-                  </button>
+                    <Mail className="w-3.5 h-3.5 mr-1.5" />
+                    Invite Students
+                  </Button>
                 </div>
               )}
             </div>
@@ -775,35 +675,26 @@ export default function TeacherStudents() {
 
       {/* Create Classroom Modal */}
       <Dialog open={isCreateClassroomOpen} onOpenChange={setIsCreateClassroomOpen}>
-        <DialogContent className="bg-[#1e293b] border border-white/10 rounded-2xl p-6 max-w-md">
+        <DialogContent className="bg-[hsl(220,13%,10%)] border border-white/[0.08] rounded-lg p-5 max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-white text-xl font-bold">
-              Create New Classroom
-            </DialogTitle>
+            <DialogTitle className="text-white text-base font-semibold">New Classroom</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
+          <div className="mt-3">
             <Input
               value={newClassroomName}
               onChange={(e) => setNewClassroomName(e.target.value)}
               placeholder="e.g., CS 101 — Fall 2026"
-              className="bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 placeholder:text-slate-500"
+              className="bg-white/[0.06] border-white/[0.06] text-white rounded-md h-9 text-sm placeholder:text-[#8b949e]/60"
             />
           </div>
-          <div className="flex items-center justify-end gap-3 mt-6">
-            <button
-              onClick={() => setIsCreateClassroomOpen(false)}
-              className="text-slate-400 hover:text-white text-sm"
-            >
-              Cancel
-            </button>
+          <div className="flex items-center justify-end gap-2 mt-4">
+            <button onClick={() => setIsCreateClassroomOpen(false)} className="text-[#8b949e] hover:text-white text-sm px-3 py-1.5">Cancel</button>
             <Button
               onClick={handleCreateClassroom}
               disabled={!newClassroomName.trim() || isCreatingClassroom}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 rounded-md text-sm font-medium"
             >
-              {isCreatingClassroom ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
+              {isCreatingClassroom ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
               Create
             </Button>
           </div>

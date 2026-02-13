@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -12,7 +12,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { MenuVertical } from "@/components/ui/menu-vertical";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import {
   DropdownMenu,
@@ -21,12 +20,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Sidebar navigation items
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
-  { icon: FolderOpen, label: "My Projects", href: "/student/projects" },
+  { icon: FolderOpen, label: "Projects", href: "/student/projects" },
   { icon: Calendar, label: "Calendar", href: "/student/calendar" },
-  { icon: Star, label: "Peer Reviews", href: "/student/reviews" },
+  { icon: Star, label: "Reviews", href: "/student/reviews" },
 ];
 
 interface StudentLayoutProps {
@@ -34,7 +32,6 @@ interface StudentLayoutProps {
   pageTitle: string;
 }
 
-// TODO: GET http://localhost:8000/api/auth/profile
 interface UserProfile {
   id: string;
   email: string;
@@ -42,32 +39,21 @@ interface UserProfile {
   initials: string;
 }
 
-export function StudentLayout({
-  children,
-  pageTitle,
-}: StudentLayoutProps) {
+export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  // Build profile from auth user
   useEffect(() => {
     if (user) {
-      // Build full name from firstName + lastName or fullName
       const fullName = user.fullName || 
         `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
         user.email;
-      
       const initials = fullName 
         ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : user.email.charAt(0).toUpperCase();
-      
-      setProfile({
-        id: user.id,
-        email: user.email,
-        fullName,
-        initials,
-      });
+      setProfile({ id: user.id, email: user.email, fullName, initials });
     } else {
       setProfile(null);
     }
@@ -78,130 +64,122 @@ export function StudentLayout({
     navigate("/auth");
   };
 
+  const isActive = (href: string) =>
+    location.pathname === href || location.pathname.startsWith(href + "/");
+
   return (
-    <div className="min-h-screen bg-[#111827] flex">
-      {/* Fixed Sidebar */}
-      <aside className="w-64 h-screen bg-[#0f172a] border-r border-white/10 fixed left-0 top-0 flex flex-col">
-        {/* Logo Section */}
-        <div className="p-6">
-          <Link to="/student/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-11 flex-shrink-0">
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className="w-56 h-screen bg-[hsl(220,14%,6%)] border-r border-white/[0.06] fixed left-0 top-0 flex flex-col">
+        {/* Logo */}
+        <div className="px-5 py-5">
+          <Link to="/student/dashboard" className="flex items-center gap-2.5">
+            <div className="w-7 h-8 flex-shrink-0">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path 
-                  d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 10 L10 42 Q10 44 8 43.5" 
-                  stroke="#3B82F6" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#3B82F6" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-xl font-bold">
+            <span className="text-base font-semibold">
               <span className="text-white">Fair</span>
               <span className="text-blue-400">Grade</span>
             </span>
           </Link>
         </div>
 
-        {/* Navigation Menu */}
-        <div className="flex-1 p-4">
-          <MenuVertical menuItems={sidebarItems} variant="dark" />
-        </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-2">
+          <div className="space-y-0.5">
+            {sidebarItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
+                    active
+                      ? "text-white bg-white/[0.06]"
+                      : "text-[#8b949e] hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 bg-blue-500 rounded-r" />
+                  )}
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
 
-        {/* Log Out */}
-        <div className="p-4">
+        {/* Logout */}
+        <div className="px-3 py-4">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full p-3 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#8b949e] hover:text-white hover:bg-white/[0.04] transition-colors w-full"
           >
-            <LogOut className="w-5 h-5" />
-            <span>Log Out</span>
+            <LogOut className="h-4 w-4" />
+            <span>Log out</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen bg-[#111827] flex-1">
+      <div className="ml-56 min-h-screen flex-1">
         {/* Top Bar */}
-        <header className="bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center justify-between px-8 h-16">
-            <div />
-
-            <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-50 h-12 border-b border-white/[0.06] bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center justify-end px-6 h-full">
+            <div className="flex items-center gap-3">
               <NotificationDropdown />
-
-              <div className="pl-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-3 cursor-pointer outline-none">
-                    {profile ? (
-                      <>
-                        <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {profile.initials}
-                        </div>
-                        <div className="hidden md:flex items-center gap-1">
-                          <p className="text-sm font-medium text-white">
-                            {profile.fullName}
-                          </p>
-                          <ChevronDown className="w-4 h-4 text-slate-400" />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-9 h-9 bg-white/10 rounded-full animate-pulse" />
-                        <div className="hidden md:block">
-                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse" />
-                        </div>
-                      </>
-                    )}
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-48 bg-[#1e293b] border border-white/10 shadow-xl"
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer outline-none">
+                  {profile ? (
+                    <>
+                      <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                        {profile.initials}
+                      </div>
+                      <span className="text-sm text-[#8b949e] hidden md:block">{profile.fullName}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-[#8b949e]" />
+                    </>
+                  ) : (
+                    <div className="w-7 h-7 bg-white/10 rounded-full animate-pulse" />
+                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-44 bg-[hsl(220,13%,10%)] border border-white/[0.08]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => navigate("/student-profile")}
+                    className="text-[#8b949e] hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
                   >
-                    <DropdownMenuItem
-                      onClick={() => navigate("/student-profile")}
-                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/student-achievements")}
-                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
-                    >
-                      <Trophy className="w-4 h-4" />
-                      Achievements
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/student-settings")}
-                      className="text-slate-200 hover:!bg-white/10 hover:!text-white cursor-pointer gap-2"
-                    >
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    <User className="w-3.5 h-3.5" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/student-achievements")}
+                    className="text-[#8b949e] hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
+                  >
+                    <Trophy className="w-3.5 h-3.5" />
+                    Achievements
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/student-settings")}
+                    className="text-[#8b949e] hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    Settings
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-8">
+        <main className="p-6">
           {children}
         </main>
       </div>
