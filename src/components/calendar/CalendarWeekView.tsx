@@ -80,17 +80,17 @@ export function CalendarWeekView({
     <div
       ref={gridRef}
       className={wb
-        ? "bg-white/60 border border-gray-200 rounded-xl overflow-hidden select-none"
+        ? "bg-transparent rounded-xl overflow-hidden select-none"
         : "bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden select-none"
       }
       onMouseUp={handleMouseUp}
       onMouseLeave={() => { setHoveredSlot(null); if (isDragging) handleMouseUp(); }}
     >
       {/* Header Row */}
-      <div className={`grid grid-cols-[64px_repeat(7,1fr)] ${wb ? "bg-gray-50 border-b border-gray-200" : "bg-white/10 border-b border-white/10"}`}>
+      <div className={`grid grid-cols-[64px_repeat(7,1fr)] ${wb ? "bg-transparent border-b border-gray-300/50" : "bg-white/10 border-b border-white/10"}`}>
         <div className="p-2" />
         {days.map((day) => (
-          <div key={day.toISOString()} className={`p-2 text-center ${wb ? "border-l border-gray-200" : "border-l border-white/5"} ${isToday(day) ? (wb ? "bg-blue-50" : "bg-blue-500/20") : ""}`}>
+          <div key={day.toISOString()} className={`p-2 text-center ${wb ? "border-l border-gray-300/50" : "border-l border-white/5"} ${isToday(day) ? (wb ? "" : "bg-blue-500/20") : ""}`}>
             <div className={`${wb ? "font-['Caveat'] text-gray-400 text-xs uppercase tracking-wider" : "text-slate-500 text-[10px] uppercase tracking-wider"}`}>
               {format(day, "EEE")}
             </div>
@@ -113,7 +113,7 @@ export function CalendarWeekView({
       <div className="max-h-[600px] overflow-y-auto">
         {HOURS.map((hour) => (
           <div key={hour} className="grid grid-cols-[64px_repeat(7,1fr)]">
-            <div className={`p-2 text-right pr-3 text-[10px] ${wb ? "font-['Caveat'] text-gray-400 text-xs border-b border-gray-100" : "text-slate-500 border-b border-white/5"}`}>
+            <div className={`p-2 text-right pr-3 text-[10px] ${wb ? "font-['Caveat'] text-gray-400 text-xs border-b border-gray-300/30" : "text-slate-500 border-b border-white/5"}`}>
               {hour === 12 ? "12 PM" : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
             </div>
             {days.map((day) => {
@@ -131,7 +131,7 @@ export function CalendarWeekView({
                   key={`${dateStr}-${hour}`}
                   className={`
                     relative h-10 cursor-pointer transition-all
-                    ${wb ? "border-l border-b border-gray-200/70" : "border-l border-b border-white/5"}
+                    ${wb ? "border-l border-b border-gray-300/40" : "border-l border-b border-white/5"}
                     ${isLoading ? "animate-pulse" : ""}
                     ${getSlotColor(slot)}
                     ${inDragRange ? (wb ? "!bg-blue-100 border-blue-300" : "!bg-blue-500/20 border-blue-500") : ""}
