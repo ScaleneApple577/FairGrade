@@ -55,12 +55,12 @@ interface ProjectAssignment {
 
 const getActivityIcon = (type: string) => {
   switch (type) {
-    case "task_completed": return { icon: CheckCircle, iconColor: "text-emerald-500" };
-    case "meeting_checkin": return { icon: Calendar, iconColor: "text-blue-500" };
-    case "task_assigned": return { icon: AlertCircle, iconColor: "text-amber-500" };
-    case "availability_marked": return { icon: Clock, iconColor: "text-purple-500" };
-    case "document_edited": return { icon: Edit3, iconColor: "text-cyan-500" };
-    default: return { icon: FileText, iconColor: "text-gray-400" };
+    case "task_completed": return { icon: CheckCircle, iconColor: "text-emerald-400" };
+    case "meeting_checkin": return { icon: Calendar, iconColor: "text-blue-400" };
+    case "task_assigned": return { icon: AlertCircle, iconColor: "text-amber-400" };
+    case "availability_marked": return { icon: Clock, iconColor: "text-purple-400" };
+    case "document_edited": return { icon: Edit3, iconColor: "text-cyan-400" };
+    default: return { icon: FileText, iconColor: "text-white/40" };
   }
 };
 
@@ -76,15 +76,15 @@ const getStatusStyles = (status: string) => {
 
 const getHealthStyles = (health: string) => {
   switch (health) {
-    case "green": return { text: "text-emerald-600", dot: "bg-emerald-500", label: "On Track", progressColor: "bg-emerald-500" };
-    case "yellow": return { text: "text-yellow-600", dot: "bg-yellow-500", label: "Needs Attention", progressColor: "bg-yellow-500" };
-    case "red": return { text: "text-red-600", dot: "bg-red-500", label: "At Risk", progressColor: "bg-red-500" };
-    default: return { text: "text-gray-400", dot: "bg-gray-400", label: "Unknown", progressColor: "bg-gray-400" };
+    case "green": return { text: "text-emerald-400", dot: "bg-emerald-500", label: "On Track", progressColor: "bg-emerald-500" };
+    case "yellow": return { text: "text-yellow-400", dot: "bg-yellow-500", label: "Needs Attention", progressColor: "bg-yellow-500" };
+    case "red": return { text: "text-red-400", dot: "bg-red-500", label: "At Risk", progressColor: "bg-red-500" };
+    default: return { text: "text-white/40", dot: "bg-white/30", label: "Unknown", progressColor: "bg-white/30" };
   }
 };
 
 function getScoreColor(score: number | null): string {
-  if (score === null) return "bg-gray-300";
+  if (score === null) return "bg-white/20";
   if (score >= 75) return "bg-emerald-500";
   if (score >= 50) return "bg-blue-500";
   if (score >= 25) return "bg-yellow-500";
@@ -110,12 +110,20 @@ interface DashboardData {
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
   }),
 };
+
+const statGradients = [
+  "bg-gradient-to-br from-[#1e3a8a] to-[#3b82f6]",
+  "bg-gradient-to-br from-[#065f46] to-[#10b981]",
+  "bg-gradient-to-br from-[#9a3412] to-[#f97316]",
+  "bg-gradient-to-br from-[#581c87] to-[#a855f7]",
+  "bg-gradient-to-br from-[#9d174d] to-[#ec4899]",
+];
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -226,7 +234,7 @@ export default function StudentDashboard() {
     return (
       <StudentLayout pageTitle="Dashboard">
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
         </div>
       </StudentLayout>
     );
@@ -235,11 +243,11 @@ export default function StudentDashboard() {
   const data = dashboardData!;
 
   const statItems = [
-    { label: "Projects", value: data.stats.activeProjects, icon: FolderOpen, color: "text-blue-500" },
-    { label: "Avg. Score", value: data.stats.contributionScore ?? "—", icon: TrendingUp, color: "text-emerald-500", extra: "/100", hasBar: true, barValue: data.stats.contributionScore },
-    { label: "Due Soon", value: data.stats.assignmentsDueSoon, icon: CheckCircle, color: "text-amber-500", overdue: data.stats.assignmentsOverdue },
-    { label: "Next Meeting", value: data.stats.nextMeeting ? data.stats.nextMeeting.date : "None", icon: Calendar, color: "text-purple-500", isSmall: true },
-    { label: "Achievements", value: `${data.stats.achievementsUnlocked}`, icon: Trophy, color: "text-orange-500", extra: "/30", clickable: true },
+    { label: "Projects", value: data.stats.activeProjects, icon: FolderOpen },
+    { label: "Avg. Score", value: data.stats.contributionScore ?? "—", icon: TrendingUp, extra: "/100", hasBar: true, barValue: data.stats.contributionScore },
+    { label: "Due Soon", value: data.stats.assignmentsDueSoon, icon: CheckCircle, overdue: data.stats.assignmentsOverdue },
+    { label: "Next Meeting", value: data.stats.nextMeeting ? data.stats.nextMeeting.date : "None", icon: Calendar, isSmall: true },
+    { label: "Achievements", value: `${data.stats.achievementsUnlocked}`, icon: Trophy, extra: "/30", clickable: true },
   ];
 
   return (
@@ -247,10 +255,10 @@ export default function StudentDashboard() {
       <ClassroomInvitationBanner />
       <ProjectAssignmentBanner assignments={projectAssignments} onDismiss={handleDismissAssignment} />
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {/* Welcome */}
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-900">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-white">
             Welcome back{(() => {
               try {
                 const storedUser = localStorage.getItem('user');
@@ -263,10 +271,13 @@ export default function StudentDashboard() {
               return '';
             })()}
           </h1>
+          <p className="text-white/50 text-sm mt-1">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {statItems.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -274,46 +285,46 @@ export default function StudentDashboard() {
               initial="hidden"
               animate="visible"
               variants={cardVariants}
-              className={`bg-white rounded-xl p-4 shadow-sm card-hover ${stat.clickable ? 'cursor-pointer' : ''}`}
+              className={`${statGradients[i]} rounded-2xl p-5 relative overflow-hidden card-hover ${stat.clickable ? 'cursor-pointer' : ''}`}
               onClick={stat.clickable ? () => navigate("/student/stats") : undefined}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
-                <span className="text-xs text-gray-500">{stat.label}</span>
+              <stat.icon className="stat-watermark w-14 h-14 text-white" />
+              <div className="relative z-10">
+                <p className="text-white/70 text-xs font-medium mb-1">{stat.label}</p>
                 {stat.overdue > 0 && (
-                  <span className="text-red-500 text-[10px] ml-auto">{stat.overdue} overdue</span>
+                  <span className="text-red-300 text-[10px] block mb-1">{stat.overdue} overdue</span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <span className={`${stat.isSmall ? 'text-sm' : 'text-2xl'} font-bold text-white`}>{stat.value}</span>
+                  {stat.extra && <span className="text-xs text-white/50">{stat.extra}</span>}
+                </div>
+                {stat.hasBar && (
+                  <div className="h-1 bg-white/20 rounded-full w-full mt-2 overflow-hidden">
+                    <div className={`h-full rounded-full bg-white/60 transition-all duration-500`} style={{ width: `${stat.barValue ?? 0}%` }} />
+                  </div>
                 )}
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className={`${stat.isSmall ? 'text-sm' : 'text-xl'} font-semibold text-gray-900`}>{stat.value}</span>
-                {stat.extra && <span className="text-xs text-gray-400">{stat.extra}</span>}
-              </div>
-              {stat.hasBar && (
-                <div className="h-1 bg-gray-100 rounded-full w-full mt-2 overflow-hidden">
-                  <div className={`h-full rounded-full ${getScoreColor(stat.barValue ?? null)} transition-all duration-500`} style={{ width: `${stat.barValue ?? 0}%` }} />
-                </div>
-              )}
             </motion.div>
           ))}
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-6">
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="glass-card">
+              <h3 className="text-sm font-semibold text-white mb-4">Recent Activity</h3>
               {data.recentActivity.length > 0 ? (
                 <div className="space-y-0.5">
                   {data.recentActivity.map((activity) => {
                     const { icon: Icon, iconColor } = getActivityIcon(activity.type);
                     return (
-                      <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
                         <Icon className={`w-4 h-4 ${iconColor} flex-shrink-0`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">{activity.title}</p>
-                          <p className="text-xs text-gray-500">{activity.project} · {activity.timestamp}</p>
+                          <p className="text-sm text-white truncate">{activity.title}</p>
+                          <p className="text-xs text-white/40">{activity.project} · {activity.timestamp}</p>
                         </div>
                       </div>
                     );
@@ -321,29 +332,29 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <FileText className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">No recent activity</p>
+                  <FileText className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                  <p className="text-xs text-white/30">No recent activity</p>
                 </div>
               )}
             </div>
 
             {/* Upcoming Assignments */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
+            <div className="glass-card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">Upcoming Assignments</h3>
-                <Link to="/student/calendar" className="text-xs text-gray-400 hover:text-blue-600 transition-colors">View all</Link>
+                <h3 className="text-sm font-semibold text-white">Upcoming Assignments</h3>
+                <Link to="/student/calendar" className="text-xs text-white/30 hover:text-blue-400 transition-colors">View all</Link>
               </div>
               {data.upcomingAssignments.length > 0 ? (
                 <div className="space-y-2">
                   {data.upcomingAssignments.map((assignment) => {
                     const urgency = getAssignmentUrgency(assignment);
                     return (
-                      <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div key={assignment.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-colors">
                         <div className="min-w-0">
-                          <p className="text-sm text-gray-900 truncate">{assignment.title}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{assignment.classroom_name || 'Classroom'}</p>
+                          <p className="text-sm text-white truncate">{assignment.title}</p>
+                          <p className="text-xs text-white/40 mt-0.5">{assignment.classroom_name || 'Classroom'}</p>
                         </div>
-                        <span className={`text-xs flex-shrink-0 ml-3 ${urgency === 'today' ? 'text-red-500' : urgency === 'soon' ? 'text-amber-500' : 'text-gray-400'}`}>
+                        <span className={`text-xs flex-shrink-0 ml-3 ${urgency === 'today' ? 'text-red-400' : urgency === 'soon' ? 'text-amber-400' : 'text-white/30'}`}>
                           {formatDueDate(assignment.due_date)}
                         </span>
                       </div>
@@ -352,25 +363,25 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <Calendar className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">No upcoming assignments</p>
+                  <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                  <p className="text-xs text-white/30">No upcoming assignments</p>
                 </div>
               )}
             </div>
 
             {/* Project Tasks */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Project Tasks</h3>
+            <div className="glass-card">
+              <h3 className="text-sm font-semibold text-white mb-4">Project Tasks</h3>
               {data.upcomingTasks.length > 0 ? (
                 <div className="space-y-1">
                   {data.upcomingTasks.map((task) => {
                     const statusStyles = getStatusStyles(task.status);
                     return (
-                      <div key={task.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                        <div className="w-4 h-4 rounded border border-gray-300 flex-shrink-0" />
+                      <div key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
+                        <div className="w-4 h-4 rounded border border-white/20 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">{task.title}</p>
-                          <p className="text-xs text-gray-500">{task.project}{task.dueDate ? ` · Due: ${task.dueDate}` : ''}</p>
+                          <p className="text-sm text-white truncate">{task.title}</p>
+                          <p className="text-xs text-white/40">{task.project}{task.dueDate ? ` · Due: ${task.dueDate}` : ''}</p>
                         </div>
                         <span className={`px-2 py-0.5 text-[10px] font-medium rounded ${statusStyles.bg} ${statusStyles.text}`}>
                           {statusStyles.label}
@@ -381,51 +392,51 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <CheckCircle className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">No tasks yet</p>
+                  <CheckCircle className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                  <p className="text-xs text-white/30">No tasks yet</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Right Column */}
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* This Week */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">This Week</h3>
+            <div className="glass-card">
+              <h3 className="text-sm font-semibold text-white mb-4">This Week</h3>
               {data.thisWeekEvents.length > 0 ? (
                 <div className="space-y-2">
                   {data.thisWeekEvents.map((event) => (
-                    <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer">
                       <div className="text-center min-w-[32px]">
-                        <p className="text-blue-600 text-[10px] font-medium">{event.date}</p>
-                        <p className="text-gray-900 text-sm font-semibold">{event.day}</p>
+                        <p className="text-blue-400 text-[10px] font-medium">{event.date}</p>
+                        <p className="text-white text-sm font-semibold">{event.day}</p>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 truncate">{event.title}</p>
-                        <p className="text-xs text-gray-500">{event.startTime}{event.endTime && ` – ${event.endTime}`}</p>
+                        <p className="text-sm text-white truncate">{event.title}</p>
+                        <p className="text-xs text-white/40">{event.startTime}{event.endTime && ` – ${event.endTime}`}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Calendar className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">No events this week</p>
+                  <Calendar className="w-6 h-6 text-white/15 mx-auto mb-2" />
+                  <p className="text-xs text-white/30">No events this week</p>
                 </div>
               )}
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="glass-card">
+              <h3 className="text-sm font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <Button
                   onClick={generateExtensionToken}
                   disabled={isGenerating}
-                  className="w-full justify-start text-sm h-9 bg-gray-50 text-gray-700 hover:bg-gray-100 border-0 shadow-none font-normal transition-all duration-150"
+                  className="w-full justify-start text-sm h-9 btn-glass font-normal"
                 >
-                  <Key className="w-4 h-4 mr-2 text-gray-400" />
+                  <Key className="w-4 h-4 mr-2 text-white/40" />
                   {isGenerating ? "Generating..." : "Generate Extension Token"}
                 </Button>
               </div>
@@ -436,22 +447,22 @@ export default function StudentDashboard() {
 
       {/* Token Modal */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
-        <DialogContent className="bg-white border border-gray-200 shadow-xl">
+        <DialogContent className="bg-[#111633]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Extension Token</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-white">Extension Token</DialogTitle>
+            <DialogDescription className="text-white/50">
               Copy this token and paste it into the FairGrade browser extension.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-3 border border-gray-200">
-              <code className="flex-1 text-sm text-gray-700 break-all font-mono">
+            <div className="flex items-center gap-2 bg-white/[0.06] rounded-xl p-3 border border-white/10">
+              <code className="flex-1 text-sm text-white/80 break-all font-mono">
                 {generatedToken}
               </code>
               <Button
                 onClick={copyToken}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm"
+                className="btn-gradient rounded-lg"
               >
                 {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </Button>

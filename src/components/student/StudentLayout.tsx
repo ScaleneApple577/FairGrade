@@ -68,45 +68,48 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
     location.pathname === href || location.pathname.startsWith(href + "/");
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-[#0a0e27] flex">
       {/* Sidebar */}
-      <aside className="w-56 h-screen bg-white border-r border-gray-200/80 fixed left-0 top-0 flex flex-col">
+      <aside className="w-56 h-screen bg-[#111633] fixed left-0 top-0 flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5">
           <Link to="/student/dashboard" className="flex items-center gap-2.5">
             <div className="w-7 h-8 flex-shrink-0">
               <svg viewBox="0 0 40 48" className="w-full h-full" fill="none">
-                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#2563eb" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#2563eb" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#2563eb" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 14 Q10 10 14 9 L32 5 Q35 4.5 36 7 Q36 9.5 33 10.5 L15 15" stroke="#60a5fa" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 24 L26 20 Q29 19 30 21 Q30 23 27 24 L15 27" stroke="#60a5fa" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 10 L10 42 Q10 44 8 43.5" stroke="#60a5fa" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <span className="text-base font-semibold">
-              <span className="text-gray-900">Fair</span>
-              <span className="text-blue-600">Grade</span>
+              <span className="text-white">Fair</span>
+              <span className="text-blue-400">Grade</span>
             </span>
           </Link>
         </div>
 
+        {/* Gradient divider */}
+        <div className="mx-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2">
-          <div className="space-y-0.5">
+        <nav className="flex-1 px-3 py-4">
+          <div className="space-y-1">
             {sidebarItems.map((item) => {
               const active = isActive(item.href);
               return (
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 relative ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                     active
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                      ? "text-white bg-blue-500/10"
+                      : "text-white/40 hover:text-white/80 hover:bg-white/[0.04]"
                   }`}
                 >
                   {active && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-600 rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-400 rounded-r-full shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
                   )}
-                  <item.icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-blue-600" : "text-gray-400"}`} />
+                  <item.icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-blue-400" : "text-white/40"}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -115,10 +118,10 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
         </nav>
 
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-gray-100">
+        <div className="px-3 py-4 border-t border-white/[0.06]">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all duration-150 w-full"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/40 hover:text-white/80 hover:bg-white/[0.04] transition-all duration-200 w-full"
           >
             <LogOut className="h-4 w-4" />
             <span>Log out</span>
@@ -127,9 +130,9 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="ml-56 min-h-screen flex-1">
+      <div className="ml-56 min-h-screen flex-1 relative z-10">
         {/* Top Bar */}
-        <header className="sticky top-0 z-50 h-12 border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-50 h-14 bg-[#0a0e27]/80 backdrop-blur-xl">
           <div className="flex items-center justify-end px-6 h-full">
             <div className="flex items-center gap-3">
               <NotificationDropdown />
@@ -137,37 +140,37 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
                 <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer outline-none">
                   {profile ? (
                     <>
-                      <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium ring-2 ring-blue-100">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-semibold ring-2 ring-blue-400/30">
                         {profile.initials}
                       </div>
-                      <span className="text-sm text-gray-600 hidden md:block">{profile.fullName}</span>
-                      <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-sm text-white/60 hidden md:block">{profile.fullName}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-white/30" />
                     </>
                   ) : (
-                    <div className="w-7 h-7 bg-gray-200 rounded-full animate-pulse" />
+                    <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse" />
                   )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-44 bg-white border border-gray-200 shadow-lg"
+                  className="w-44 bg-[#111633] border border-white/10 shadow-xl"
                 >
                   <DropdownMenuItem
                     onClick={() => navigate("/student-profile")}
-                    className="text-gray-600 hover:!bg-gray-50 hover:!text-gray-900 cursor-pointer gap-2 text-sm"
+                    className="text-white/60 hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
                   >
                     <User className="w-3.5 h-3.5" />
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate("/student-achievements")}
-                    className="text-gray-600 hover:!bg-gray-50 hover:!text-gray-900 cursor-pointer gap-2 text-sm"
+                    className="text-white/60 hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
                   >
                     <Trophy className="w-3.5 h-3.5" />
                     Achievements
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate("/student-settings")}
-                    className="text-gray-600 hover:!bg-gray-50 hover:!text-gray-900 cursor-pointer gap-2 text-sm"
+                    className="text-white/60 hover:!bg-white/[0.06] hover:!text-white cursor-pointer gap-2 text-sm"
                   >
                     <Settings className="w-3.5 h-3.5" />
                     Settings
