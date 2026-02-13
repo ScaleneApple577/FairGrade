@@ -41,23 +41,13 @@ import TeacherLiveReplay from "./pages/TeacherLiveReplay";
 
 const queryClient = new QueryClient();
 
-// Auth redirect component - redirects authenticated users away from auth page
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, role } = useAuth();
-
-  if (isLoading) {
-    return <>{children}</>;
-  }
-
+  if (isLoading) return <>{children}</>;
   if (isAuthenticated) {
-    // Redirect to appropriate dashboard
-    if (role === "teacher") {
-      return <Navigate to="/teacher/dashboard" replace />;
-    } else if (role === "student") {
-      return <Navigate to="/student/dashboard" replace />;
-    }
+    if (role === "teacher") return <Navigate to="/teacher/dashboard" replace />;
+    if (role === "student") return <Navigate to="/student/dashboard" replace />;
   }
-
   return <>{children}</>;
 }
 
@@ -65,169 +55,35 @@ const AppRoutes = () => (
   <Routes>
     {/* Public routes */}
     <Route path="/" element={<Index />} />
-    <Route 
-      path="/auth" 
-      element={
-        <AuthRedirect>
-          <Auth />
-        </AuthRedirect>
-      } 
-    />
+    <Route path="/auth" element={<AuthRedirect><Auth /></AuthRedirect>} />
     <Route path="/auth/callback" element={<AuthCallback />} />
     <Route path="/pricing" element={<PricingPage />} />
     <Route path="/features" element={<FeaturesPage />} />
     <Route path="/features/:featureId" element={<FeatureDetailPage />} />
 
     {/* Teacher routes */}
-    <Route 
-      path="/teacher/dashboard" 
-      element={
-        <TeacherRoute>
-          <TeacherDashboard />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/projects" 
-      element={
-        <TeacherRoute>
-          <TeacherProjects />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/projects/:id" 
-      element={
-        <TeacherRoute>
-          <TeacherProjectDetail />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/students" 
-      element={
-        <TeacherRoute>
-          <TeacherStudents />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/analytics" 
-      element={
-        <TeacherRoute>
-          <TeacherAnalytics />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/live-monitor" 
-      element={
-        <TeacherRoute>
-          <TeacherLiveMonitor />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/reports" 
-      element={
-        <TeacherRoute>
-          <TeacherReports />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/live-replay/:projectId/:fileId" 
-      element={
-        <TeacherRoute>
-          <TeacherLiveReplay />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/create" 
-      element={
-        <TeacherRoute>
-          <CreateProject />
-        </TeacherRoute>
-      } 
-    />
-    <Route 
-      path="/teacher/settings" 
-      element={
-        <TeacherRoute>
-          <Settings />
-        </TeacherRoute>
-      } 
-    />
+    <Route path="/teacher/dashboard" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
+    <Route path="/teacher/projects" element={<TeacherRoute><TeacherProjects /></TeacherRoute>} />
+    <Route path="/teacher/projects/:id" element={<TeacherRoute><TeacherProjectDetail /></TeacherRoute>} />
+    <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
+    <Route path="/teacher/analytics" element={<TeacherRoute><TeacherAnalytics /></TeacherRoute>} />
+    <Route path="/teacher/live-monitor" element={<TeacherRoute><TeacherLiveMonitor /></TeacherRoute>} />
+    <Route path="/teacher/reports" element={<TeacherRoute><TeacherReports /></TeacherRoute>} />
+    <Route path="/teacher/live-replay/:projectId/:fileId" element={<TeacherRoute><TeacherLiveReplay /></TeacherRoute>} />
+    <Route path="/teacher/create" element={<TeacherRoute><CreateProject /></TeacherRoute>} />
+    <Route path="/teacher/settings" element={<TeacherRoute><Settings /></TeacherRoute>} />
 
-    {/* Student Dashboard — standalone full-screen chalkboard, no sidebar */}
-    <Route 
-      path="/student/dashboard" 
-      element={
-        <StudentRoute>
-          <StudentDashboard />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student/projects" 
-      element={
-        <StudentRoute>
-          <StudentProjects />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student/projects/:id" 
-      element={
-        <StudentRoute>
-          <StudentProjectDetail />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student/calendar" 
-      element={
-        <StudentRoute>
-          <StudentCalendar />
-        </StudentRoute>
-      } 
-    />
-    {/* Student Reviews — standalone full-screen notebook, no sidebar */}
-    <Route 
-      path="/student/reviews" 
-      element={
-        <StudentRoute>
-          <StudentReviews />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student-profile" 
-      element={
-        <StudentRoute>
-          <StudentProfile />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student-achievements" 
-      element={
-        <StudentRoute>
-          <StudentAchievements />
-        </StudentRoute>
-      } 
-    />
-    <Route 
-      path="/student-settings" 
-      element={
-        <StudentRoute>
-          <StudentSettings />
-        </StudentRoute>
-      } 
-    />
+    {/* Student routes — all standalone, no sidebar */}
+    <Route path="/student/dashboard" element={<StudentRoute><StudentDashboard /></StudentRoute>} />
+    <Route path="/student/projects" element={<StudentRoute><StudentProjects /></StudentRoute>} />
+    <Route path="/student/projects/:id" element={<StudentRoute><StudentProjectDetail /></StudentRoute>} />
+    <Route path="/student/calendar" element={<StudentRoute><StudentCalendar /></StudentRoute>} />
+    <Route path="/student/reviews" element={<StudentRoute><StudentReviews /></StudentRoute>} />
+    <Route path="/student-profile" element={<StudentRoute><StudentProfile /></StudentRoute>} />
+    <Route path="/student-achievements" element={<StudentRoute><StudentAchievements /></StudentRoute>} />
+    <Route path="/student-settings" element={<StudentRoute><StudentSettings /></StudentRoute>} />
 
-    {/* Invite accept (standalone, no sidebar) */}
+    {/* Invite accept */}
     <Route path="/invite/accept" element={<InviteAccept />} />
 
     {/* Catch-all */}

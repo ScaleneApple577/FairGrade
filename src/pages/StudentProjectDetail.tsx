@@ -15,7 +15,7 @@ import {
   Users,
   Clock,
 } from "lucide-react";
-import { StudentLayout } from "@/components/student/StudentLayout";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,17 +234,19 @@ export default function StudentProjectDetail() {
 
   if (isLoading) {
     return (
-      <StudentLayout pageTitle="Project Details">
-        <div className="p-8 flex items-center justify-center min-h-[50vh]">
+      <div className="min-h-screen bg-[#f5f5f0]">
+        <StudentPageHeader backLabel="Back to Projects" backTo="/student/projects" />
+        <div className="px-6 pb-6 flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout pageTitle={project?.name || "Project Details"}>
-      <div className="p-8">
+    <div className="min-h-screen bg-[#f5f5f0]">
+      <StudentPageHeader backLabel="Back to Projects" backTo="/student/projects" />
+      <div className="px-6 pb-6">
         {/* Back Button */}
         <button
           onClick={() => navigate("/student/projects")}
@@ -557,6 +559,6 @@ export default function StudentProjectDetail() {
           </motion.div>
         </div>
       )}
-    </StudentLayout>
+    </div>
   );
 }
