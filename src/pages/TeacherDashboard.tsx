@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Download,
-  TrendingUp,
   Users,
   AlertTriangle,
   CheckCircle,
@@ -64,13 +63,11 @@ export default function TeacherDashboard() {
   const [courseFilter, setCourseFilter] = useState("all");
   const [showCreateProject, setShowCreateProject] = useState(false);
   
-  // Data states
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [projects, setProjects] = useState<ProjectHealth[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Live status
   const { liveEdits, totalActive } = useLiveStatus();
 
   useEffect(() => {
@@ -78,16 +75,6 @@ export default function TeacherDashboard() {
       setIsLoading(true);
       try {
         // Fetch dashboard stats from API
-        // const statsData = await api.get('/api/teacher/dashboard');
-        // setStats(statsData);
-        
-        // Fetch project health
-        // const healthData = await api.get('/api/teacher/projects/health');
-        // setProjects(healthData);
-        
-        // Fetch alerts
-        // const alertsData = await api.get('/api/teacher/alerts');
-        // setAlerts(alertsData);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
         toast.error("Failed to load dashboard data");
@@ -95,20 +82,19 @@ export default function TeacherDashboard() {
         setIsLoading(false);
       }
     };
-    
     fetchDashboard();
   }, []);
 
   const getAlertConfig = (severity: string) => {
     switch (severity) {
       case "critical":
-        return { borderColor: "border-red-400", bgColor: "bg-red-500/10", icon: AlertTriangle, iconColor: "text-red-400" };
+        return { borderColor: "border-red-400/30", bgColor: "bg-red-500/5", icon: AlertTriangle, iconColor: "text-red-400" };
       case "warning":
-        return { borderColor: "border-yellow-400", bgColor: "bg-yellow-500/10", icon: AlertCircle, iconColor: "text-yellow-400" };
+        return { borderColor: "border-yellow-400/30", bgColor: "bg-yellow-500/5", icon: AlertCircle, iconColor: "text-yellow-400" };
       case "info":
-        return { borderColor: "border-blue-400", bgColor: "bg-blue-500/10", icon: Info, iconColor: "text-blue-400" };
+        return { borderColor: "border-blue-400/30", bgColor: "bg-blue-500/5", icon: Info, iconColor: "text-blue-400" };
       default:
-        return { borderColor: "border-slate-500", bgColor: "bg-white/5", icon: Info, iconColor: "text-slate-400" };
+        return { borderColor: "border-white/[0.06]", bgColor: "bg-white/[0.02]", icon: Info, iconColor: "text-[#8b949e]" };
     }
   };
 
@@ -133,8 +119,8 @@ export default function TeacherDashboard() {
   if (isLoading) {
     return (
       <TeacherLayout>
-        <div className="p-8 flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        <div className="p-6 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-5 h-5 text-[#8b949e] animate-spin" />
         </div>
       </TeacherLayout>
     );
@@ -142,235 +128,117 @@ export default function TeacherDashboard() {
 
   return (
     <TeacherLayout>
-      <div className="p-8">
-        {/* Welcome Header with Quick Actions */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              Welcome back{(() => {
-                try {
-                  const storedUser = localStorage.getItem('user');
-                  if (storedUser) {
-                    const user = JSON.parse(storedUser);
-                    // Check first_name first, then extract from fullName/name
-                    const firstName = user.first_name || 
-                      (user.fullName || user.name || '').split(' ')[0];
-                    if (firstName) return `, ${firstName}`;
-                  }
-                } catch {}
-                return '';
-              })()}!
-            </h1>
-            <p className="text-slate-400 mt-1">Here's what's happening with your courses</p>
-          </div>
+      <div className="p-6">
+        {/* Welcome Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold text-white">
+            Welcome back{(() => {
+              try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                  const user = JSON.parse(storedUser);
+                  const firstName = user.first_name || 
+                    (user.fullName || user.name || '').split(' ')[0];
+                  if (firstName) return `, ${firstName}`;
+                }
+              } catch {}
+              return '';
+            })()}
+          </h1>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <Button
               onClick={() => setShowCreateProject(true)}
-              className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
+              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-sm h-8 px-3 rounded-md"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               New Project
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => toast.success("Generating reports...")}
-              className="flex items-center gap-2 bg-white/10 border border-white/10 text-white hover:bg-white/15"
+              className="flex items-center gap-2 text-[#8b949e] hover:text-white hover:bg-white/[0.06] text-sm h-8 px-3"
             >
-              <Download className="w-4 h-4" />
-              Export Reports
+              <Download className="w-3.5 h-3.5" />
+              Export
             </Button>
           </div>
         </div>
 
-        {/* Overview Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Active Projects */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 rounded-xl border border-white/10 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-500/15 rounded-lg flex items-center justify-center">
-                <FolderOpen className="w-6 h-6 text-blue-400" />
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "Active Projects", value: stats?.activeProjects ?? 0, icon: FolderOpen },
+            { label: "Total Students", value: stats?.totalStudents ?? 0, icon: Users },
+            { label: "At Risk", value: stats?.atRiskProjects ?? 0, icon: AlertTriangle },
+            { label: "Flagged", value: stats?.flaggedIssues ?? 0, icon: FileText },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white/[0.03] rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className="w-4 h-4 text-[#8b949e]" />
+                <span className="text-xs text-[#8b949e] font-medium">{stat.label}</span>
               </div>
+              <p className="text-2xl font-semibold text-white">{stat.value}</p>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats?.activeProjects ?? 0}</h3>
-            <p className="text-slate-400 text-sm mb-2">Active Projects</p>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <Info className="w-3 h-3" />
-              <span>No new projects this week</span>
-            </div>
-          </motion.div>
-
-          {/* Total Students */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white/5 rounded-xl border border-white/10 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-500/15 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats?.totalStudents ?? 0}</h3>
-            <p className="text-slate-400 text-sm mb-2">Total Students</p>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <Info className="w-3 h-3" />
-              <span>Across all projects</span>
-            </div>
-          </motion.div>
-
-          {/* At-Risk Projects */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white/5 rounded-xl border border-white/10 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-red-500/15 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats?.atRiskProjects ?? 0}</h3>
-            <p className="text-slate-400 text-sm mb-2">At-Risk Projects</p>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <CheckCircle className="w-3 h-3" />
-              <span>No intervention needed</span>
-            </div>
-          </motion.div>
-
-          {/* Flagged Issues */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white/5 rounded-xl border border-white/10 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-yellow-500/15 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-yellow-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats?.flaggedIssues ?? 0}</h3>
-            <p className="text-slate-400 text-sm mb-2">Flagged Issues</p>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <CheckCircle className="w-3 h-3" />
-              <span>No alerts</span>
-            </div>
-          </motion.div>
+          ))}
         </div>
 
-        {/* Assignments Section — uses POST/GET/PUT/DELETE /api/assignments */}
+        {/* Assignments Section */}
         <AssignmentsSection />
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* LEFT COLUMN - 2/3 width */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Project Health Monitoring Grid */}
-            <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Project Health Overview</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Project Health */}
+            <div className="bg-white/[0.03] rounded-lg p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-white">Project Health</h2>
                 <div className="flex gap-2">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-1 bg-white/10 border border-white/10 text-slate-300 rounded-lg text-sm"
+                    className="px-2.5 py-1 bg-white/[0.06] border border-white/[0.06] text-[#8b949e] rounded-md text-xs"
                   >
-                    <option value="all">All Projects</option>
-                    <option value="healthy">Healthy Only</option>
+                    <option value="all">All</option>
+                    <option value="healthy">Healthy</option>
                     <option value="needs_attention">Needs Attention</option>
                     <option value="at_risk">At Risk</option>
                   </select>
-                  <select
-                    value={courseFilter}
-                    onChange={(e) => setCourseFilter(e.target.value)}
-                    className="px-3 py-1 bg-white/10 border border-white/10 text-slate-300 rounded-lg text-sm"
-                  >
-                    <option value="all">All Courses</option>
-                  </select>
                 </div>
               </div>
 
-              {/* Legend */}
-              <div className="flex items-center gap-6 mb-4 pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-slate-300">Healthy - All metrics good</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-slate-300">Needs Attention - Minor issues</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm text-slate-300">At Risk - Critical issues</span>
-                </div>
-              </div>
-
-              {/* Projects Grid or Empty State */}
               {filteredProjects.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {filteredProjects.map((project) => (
-                    <motion.div
+                    <div
                       key={project.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        project.status === "at_risk"
-                          ? "bg-red-500/10 border-red-500/20 hover:bg-red-500/15"
-                          : project.status === "needs_attention"
-                          ? "bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/15"
-                          : "bg-green-500/10 border-green-500/20 hover:bg-green-500/15"
-                      }`}
+                      className="flex items-center justify-between p-3 rounded-md hover:bg-white/[0.03] cursor-pointer transition-colors"
                       onClick={() => navigate(`/project/${project.id}`)}
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-bold text-white">{project.name}</h3>
-                            <span
-                              className={`px-2 py-1 text-white text-xs rounded-full font-medium flex items-center gap-1 ${
-                                project.status === "at_risk"
-                                  ? "bg-red-500"
-                                  : project.status === "needs_attention"
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
-                            >
-                              {project.status === "at_risk" && <AlertTriangle className="w-3 h-3" />}
-                              {project.status === "needs_attention" && <Clock className="w-3 h-3" />}
-                              {project.status === "healthy" && <CheckCircle className="w-3 h-3" />}
-                              {project.status.replace("_", " ")}
-                            </span>
-                          </div>
-                          <p className="text-sm text-slate-400">
-                            {project.course} • {project.studentCount} students • Due {project.deadline}
-                          </p>
+                      <div className="flex items-center gap-3">
+                        <span className={`w-2 h-2 rounded-full ${
+                          project.status === "at_risk" ? "bg-red-500" :
+                          project.status === "needs_attention" ? "bg-yellow-500" : "bg-emerald-500"
+                        }`} />
+                        <div>
+                          <p className="text-sm font-medium text-white">{project.name}</p>
+                          <p className="text-xs text-[#8b949e]">{project.course} · {project.studentCount} students</p>
                         </div>
-                        <button className="px-3 py-1 rounded-lg text-sm font-medium bg-white/10 border border-white/10 text-white hover:bg-white/15">
-                          View
-                        </button>
                       </div>
-                    </motion.div>
+                      <span className="text-xs text-[#8b949e]">Due {project.deadline}</span>
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <FolderOpen className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400">No projects to monitor yet</p>
-                  <p className="text-slate-500 text-sm mt-1">Create your first project to see health metrics</p>
+                <div className="text-center py-12">
+                  <FolderOpen className="w-8 h-8 text-[#8b949e]/40 mx-auto mb-3" />
+                  <p className="text-sm text-[#8b949e]">No projects yet</p>
                   <Button
                     onClick={() => setShowCreateProject(true)}
-                    className="mt-4 bg-blue-500 hover:bg-blue-600"
+                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-sm h-8 px-3 rounded-md"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Create Project
                   </Button>
                 </div>
@@ -378,37 +246,31 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN - 1/3 width */}
-          <div className="space-y-6">
+          {/* RIGHT COLUMN */}
+          <div className="space-y-5">
             {/* Recent Alerts */}
-            <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+            <div className="bg-white/[0.03] rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-white">Recent Alerts</h3>
+                <h3 className="text-sm font-semibold text-white">Alerts</h3>
                 <button
                   onClick={() => navigate("/flags")}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-xs text-[#8b949e] hover:text-white transition-colors"
                 >
-                  View All
+                  View all
                 </button>
               </div>
 
               {alerts.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {alerts.slice(0, 5).map((alert) => {
                     const config = getAlertConfig(alert.severity);
                     const AlertIcon = getAlertIcon(alert.type);
                     return (
-                      <div
-                        key={alert.id}
-                        className={`p-3 rounded-lg border-l-4 ${config.borderColor} ${config.bgColor}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <AlertIcon className={`w-5 h-5 ${config.iconColor} flex-shrink-0 mt-0.5`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white">{alert.title}</p>
-                            <p className="text-xs text-slate-400 mt-1 line-clamp-2">{alert.description}</p>
-                            <p className="text-xs text-slate-500 mt-1">{alert.timestamp}</p>
-                          </div>
+                      <div key={alert.id} className="flex items-start gap-2.5 p-2.5 rounded-md hover:bg-white/[0.02]">
+                        <AlertIcon className={`w-4 h-4 ${config.iconColor} flex-shrink-0 mt-0.5`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-white">{alert.title}</p>
+                          <p className="text-xs text-[#8b949e] mt-0.5 line-clamp-1">{alert.description}</p>
                         </div>
                       </div>
                     );
@@ -416,25 +278,24 @@ export default function TeacherDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Bell className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">No alerts</p>
-                  <p className="text-slate-500 text-xs mt-1">Everything looks good!</p>
+                  <Bell className="w-6 h-6 text-[#8b949e]/40 mx-auto mb-2" />
+                  <p className="text-xs text-[#8b949e]">No alerts</p>
                 </div>
               )}
             </div>
 
-            {/* Live Activity Preview */}
-            <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+            {/* Live Activity */}
+            <div className="bg-white/[0.03] rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${totalActive > 0 ? "bg-red-500" : "bg-green-500"}`}></div>
-                  <h3 className="font-bold text-white">Live Activity</h3>
+                  {totalActive > 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />}
+                  <h3 className="text-sm font-semibold text-white">Live Activity</h3>
                 </div>
                 <button
                   onClick={() => navigate("/teacher/live-monitor")}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-xs text-[#8b949e] hover:text-white transition-colors"
                 >
-                  View All
+                  View all
                 </button>
               </div>
 
@@ -446,9 +307,8 @@ export default function TeacherDashboard() {
                 />
               ) : (
                 <div className="text-center py-8">
-                  <Activity className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">No recent activity</p>
-                  <p className="text-slate-500 text-xs mt-1">Activity will appear here when students start working</p>
+                  <Activity className="w-6 h-6 text-[#8b949e]/40 mx-auto mb-2" />
+                  <p className="text-xs text-[#8b949e]">No active students</p>
                 </div>
               )}
             </div>
@@ -456,7 +316,6 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Create Project Wizard Modal */}
       <CreateProjectWizard
         isOpen={showCreateProject}
         onClose={() => setShowCreateProject(false)}
