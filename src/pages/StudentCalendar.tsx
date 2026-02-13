@@ -119,87 +119,118 @@ export default function StudentCalendar() {
 
   if (isLoadingProjects && isLoadingAssignments) {
     return (
-      <StudentLayout pageTitle="Calendar">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+      <StudentLayout pageTitle="Calendar" noPadding>
+        <div className="flex items-center justify-center h-64 bg-[#f5f5f0]">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
       </StudentLayout>
     );
   }
 
   return (
-    <StudentLayout pageTitle="Calendar">
-      <ClassroomGate>
+    <StudentLayout pageTitle="Calendar" noPadding>
+      <div
+        className="flex-1 relative"
+        style={{ background: "#f5f5f0" }}
+      >
+        {/* Whiteboard texture overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-100" style={{
+          backgroundImage: "linear-gradient(90deg, rgba(200,200,200,0.03) 1px, transparent 1px), linear-gradient(rgba(200,200,200,0.03) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }} />
 
-      {projects.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {projects.map((project) => (
-            <button key={project.id} onClick={() => setSelectedProjectId(project.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                selectedProjectId === project.id ? "btn-gradient shadow-lg" : "bg-white/[0.06] text-white/40 hover:bg-white/10 hover:text-white/60"
-              }`}>
-              {project.name}
-            </button>
-          ))}
-        </div>
-      )}
+        {/* Top aluminum frame strip */}
+        <div className="h-1 flex-shrink-0" style={{
+          background: "linear-gradient(90deg, #d1d5db, #e5e7eb, #d1d5db)",
+        }} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        <div className="space-y-4">
-          {/* Calendar Navigation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={goToPreviousWeek} className="btn-glass px-3"><ChevronLeft className="w-4 h-4" /></Button>
-              <Button variant="outline" size="sm" onClick={goToToday} disabled={isCurrentWeek} className="btn-glass px-3 py-1.5 text-sm disabled:opacity-50">Today</Button>
-              <Button variant="outline" size="sm" onClick={goToNextWeek} className="btn-glass px-3"><ChevronRight className="w-4 h-4" /></Button>
-            </div>
-            <div className="text-white font-medium min-w-[220px] text-center">
-              {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-            </div>
-            <div className="flex items-center gap-1">
-              {(["week", "month"] as ViewMode[]).map(v => (
-                <button key={v} onClick={() => setViewMode(v)}
-                  className={`px-3 py-1.5 rounded-xl text-sm transition-all duration-200 ${viewMode === v ? "btn-gradient shadow-lg" : "bg-white/[0.06] text-white/40 hover:bg-white/60"}`}>
-                  {v.charAt(0).toUpperCase() + v.slice(1)}
+        <ClassroomGate>
+        <div className="relative z-10 p-6">
+          {projects.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {projects.map((project) => (
+                <button key={project.id} onClick={() => setSelectedProjectId(project.id)}
+                  className={`font-['Caveat'] px-4 py-2 rounded-lg text-base font-semibold transition-all duration-200 ${
+                    selectedProjectId === project.id
+                      ? "bg-[#333] text-white shadow-sm"
+                      : "bg-white/60 text-gray-500 hover:bg-white hover:text-gray-700 border border-gray-200"
+                  }`}>
+                  {project.name}
                 </button>
               ))}
             </div>
-          </div>
-
-          {isSaving && (<div className="text-white/30 text-xs flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Saving...</div>)}
-
-          {viewMode === "week" ? (
-            <CalendarWeekView weekStart={weekStart} weekEnd={weekEnd} availabilityData={availabilityData} myAvailability={myAvailability}
-              meetings={weekViewMeetings} isLoading={isLoadingAvailability} onToggleAvailability={handleToggleAvailability} onSavingChange={setIsSaving} />
-          ) : (
-            <CalendarMonthView currentDate={currentDate} availabilityData={availabilityData} isLoading={isLoadingAvailability} onSelectDate={handleSelectDate} />
           )}
 
-          {/* Legend */}
-          <div className="glass-card !p-3 flex flex-wrap items-center gap-4 md:gap-6">
-            {[
-              { color: "bg-emerald-500/25 border-emerald-500/20", label: "All Available" },
-              { color: "bg-yellow-500/20 border-yellow-500/15", label: "Most Available" },
-              { color: "bg-orange-500/15 border-orange-500/10", label: "Some Available" },
-              { color: "bg-red-500/10 border-red-500/10", label: "None Available" },
-              { color: "bg-blue-500/30 border-blue-500/25", label: "AI Recommended" },
-            ].map(item => (
-              <div key={item.label} className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${item.color} border`} />
-                <span className="text-white/40 text-xs">{item.label}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="space-y-4">
+              {/* Calendar Navigation */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button onClick={goToPreviousWeek} className="font-['Caveat'] px-3 py-1.5 text-lg text-gray-500 hover:text-gray-800 transition-colors">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button onClick={goToToday} disabled={isCurrentWeek}
+                    className="font-['Caveat'] px-3 py-1.5 text-base font-semibold text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors">
+                    Today
+                  </button>
+                  <button onClick={goToNextWeek} className="font-['Caveat'] px-3 py-1.5 text-lg text-gray-500 hover:text-gray-800 transition-colors">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="font-['Caveat'] text-xl font-semibold text-[#333] min-w-[220px] text-center">
+                  {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+                </div>
+                <div className="flex items-center gap-1">
+                  {(["week", "month"] as ViewMode[]).map(v => (
+                    <button key={v} onClick={() => setViewMode(v)}
+                      className={`font-['Caveat'] px-4 py-1.5 text-base font-semibold transition-all duration-200 ${
+                        viewMode === v
+                          ? "text-[#333] border-b-3 border-[#2563eb]"
+                          : "text-gray-400 hover:text-gray-600 border-b-3 border-transparent"
+                      }`}
+                      style={{ borderBottomWidth: "3px" }}>
+                      {v.charAt(0).toUpperCase() + v.slice(1)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
+
+              {isSaving && (<div className="text-gray-400 text-xs flex items-center gap-2 font-['Caveat']"><Loader2 className="w-3 h-3 animate-spin" />Saving...</div>)}
+
+              {viewMode === "week" ? (
+                <CalendarWeekView weekStart={weekStart} weekEnd={weekEnd} availabilityData={availabilityData} myAvailability={myAvailability}
+                  meetings={weekViewMeetings} isLoading={isLoadingAvailability} onToggleAvailability={handleToggleAvailability} onSavingChange={setIsSaving} whiteboard />
+              ) : (
+                <CalendarMonthView currentDate={currentDate} availabilityData={availabilityData} isLoading={isLoadingAvailability} onSelectDate={handleSelectDate} whiteboard />
+              )}
+
+              {/* Legend */}
+              <div className="bg-white/60 border border-gray-200 rounded-xl p-3 flex flex-wrap items-center gap-4 md:gap-6">
+                {[
+                  { color: "bg-emerald-200 border-emerald-300", label: "All Available" },
+                  { color: "bg-yellow-200 border-yellow-300", label: "Most Available" },
+                  { color: "bg-orange-200 border-orange-300", label: "Some Available" },
+                  { color: "bg-red-200 border-red-300", label: "None Available" },
+                  { color: "bg-blue-200 border-blue-300", label: "AI Recommended" },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded ${item.color} border`} />
+                    <span className="font-['Caveat'] text-gray-500 text-sm">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CalendarAISidebar recommendations={recommendations} meetings={meetings} teamStatus={teamStatus}
+              isLoading={isLoadingSidebar} onSelectRecommendation={handleSelectRecommendation} onScheduleMeeting={handleScheduleMeeting}
+              onQuickSet={handleQuickSet} isSettingPreset={isSettingPreset} whiteboard />
           </div>
+
+          <ScheduleMeetingModal isOpen={showMeetingModal} onClose={() => { setShowMeetingModal(false); setPrefilledMeeting(null); }}
+            onSchedule={handleCreateMeeting} prefilledDate={prefilledMeeting?.date} prefilledStartTime={prefilledMeeting?.startTime} prefilledEndTime={prefilledMeeting?.endTime} />
         </div>
-
-        <CalendarAISidebar recommendations={recommendations} meetings={meetings} teamStatus={teamStatus}
-          isLoading={isLoadingSidebar} onSelectRecommendation={handleSelectRecommendation} onScheduleMeeting={handleScheduleMeeting}
-          onQuickSet={handleQuickSet} isSettingPreset={isSettingPreset} />
+        </ClassroomGate>
       </div>
-
-      <ScheduleMeetingModal isOpen={showMeetingModal} onClose={() => { setShowMeetingModal(false); setPrefilledMeeting(null); }}
-        onSchedule={handleCreateMeeting} prefilledDate={prefilledMeeting?.date} prefilledStartTime={prefilledMeeting?.startTime} prefilledEndTime={prefilledMeeting?.endTime} />
-      </ClassroomGate>
     </StudentLayout>
   );
 }
