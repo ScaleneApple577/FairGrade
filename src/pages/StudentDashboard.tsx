@@ -233,17 +233,15 @@ export default function StudentDashboard() {
   const data = dashboardData!;
 
   return (
-    <StudentLayout pageTitle="Dashboard">
+    <StudentLayout pageTitle="Dashboard" noPadding headerClassName="bg-[#2d4a3e]/90">
       <ClassroomInvitationBanner />
       <ProjectAssignmentBanner assignments={projectAssignments} onDismiss={handleDismissAssignment} />
 
       <div
-        className="-m-6 relative overflow-hidden flex flex-col"
+        className="relative overflow-hidden flex flex-col flex-1"
         style={{
           background: "linear-gradient(170deg, #2d4a3e 0%, #243f34 40%, #1e3529 100%)",
           boxShadow: "inset 0 0 60px rgba(0,0,0,0.35)",
-          minHeight: "calc(100vh - 56px)",
-          width: "calc(100% + 48px)",
         }}
       >
         {/* Chalk dust texture */}

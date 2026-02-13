@@ -30,6 +30,8 @@ const sidebarItems = [
 interface StudentLayoutProps {
   children: ReactNode;
   pageTitle: string;
+  noPadding?: boolean;
+  headerClassName?: string;
 }
 
 interface UserProfile {
@@ -39,7 +41,7 @@ interface UserProfile {
   initials: string;
 }
 
-export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
+export function StudentLayout({ children, pageTitle, noPadding, headerClassName }: StudentLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -132,9 +134,9 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="ml-56 min-h-screen flex-1 relative z-10">
+      <div className="ml-56 min-h-screen flex-1 relative z-10 flex flex-col">
         {/* Top Bar */}
-        <header className="sticky top-0 z-50 h-14 bg-[#0a0e27]/80 backdrop-blur-xl">
+        <header className={`sticky top-0 z-50 h-14 backdrop-blur-xl ${headerClassName || "bg-[#0a0e27]/80"}`}>
           <div className="flex items-center justify-end px-6 h-full">
             <div className="flex items-center gap-3">
               <NotificationDropdown />
@@ -184,7 +186,7 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className={noPadding ? "flex-1 flex flex-col" : "p-6"}>
           {children}
         </main>
       </div>
