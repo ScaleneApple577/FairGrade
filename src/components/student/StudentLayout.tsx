@@ -69,8 +69,7 @@ export function StudentLayout({ children, pageTitle }: StudentLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#0a0e27] flex">
-      {/* Rain background */}
-      <div className="rain-bg" />
+      {/* Rain background removed */}
 
       {/* Sidebar */}
       <aside className="w-56 h-screen bg-[#111633] fixed left-0 top-0 flex flex-col relative z-10">
