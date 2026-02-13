@@ -20,7 +20,7 @@ const actionIcons = {
   upload: Upload, uploaded: Upload, submit: Upload, submitted: Upload,
 };
 
-const avatarColors = ["bg-blue-500", "bg-emerald-500", "bg-purple-500", "bg-orange-500", "bg-pink-500", "bg-cyan-500"];
+const avatarColors = ["bg-gradient-to-br from-blue-500 to-blue-700", "bg-gradient-to-br from-emerald-500 to-emerald-700", "bg-gradient-to-br from-purple-500 to-purple-700", "bg-gradient-to-br from-orange-500 to-orange-700", "bg-gradient-to-br from-pink-500 to-pink-700", "bg-gradient-to-br from-cyan-500 to-cyan-700"];
 function getAvatarColor(id: string): string { const index = parseInt(id.replace(/\D/g, ''), 10) % avatarColors.length; return avatarColors[index] || avatarColors[0]; }
 function getInitials(name: string): string { return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2); }
 
@@ -67,27 +67,27 @@ export default function TeacherLiveMonitor() {
   });
 
   if (isLoading || liveLoading) {
-    return (<TeacherLayout><div className="p-8 flex items-center justify-center min-h-[50vh]"><Loader2 className="w-5 h-5 text-blue-500 animate-spin" /></div></TeacherLayout>);
+    return (<TeacherLayout><div className="p-8 flex items-center justify-center min-h-[50vh]"><Loader2 className="w-5 h-5 text-blue-400 animate-spin" /></div></TeacherLayout>);
   }
 
   return (
     <TeacherLayout>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="p-8">
         {/* Filter Row */}
         <div className="flex items-center gap-3 mb-6">
           {[{ value: projectFilter, setter: setProjectFilter, options: projects }, { value: studentFilter, setter: setStudentFilter, options: students }].map((f, idx) => (
             <div key={idx} className="relative">
-              <select value={f.value} onChange={(e) => f.setter(e.target.value)} className="appearance-none bg-white border border-gray-200 text-gray-600 text-sm px-3 py-2 pr-8 rounded-lg shadow-sm cursor-pointer">
+              <select value={f.value} onChange={(e) => f.setter(e.target.value)} className="appearance-none bg-white/[0.06] border border-white/[0.06] text-white/60 text-sm px-3 py-2 pr-8 rounded-xl cursor-pointer">
                 {f.options.map((opt, i) => (<option key={opt} value={i === 0 ? "all" : opt}>{opt}</option>))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
             </div>
           ))}
           <div className="relative">
-            <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} className="appearance-none bg-white border border-gray-200 text-gray-600 text-sm px-3 py-2 pr-8 rounded-lg shadow-sm cursor-pointer">
+            <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} className="appearance-none bg-white/[0.06] border border-white/[0.06] text-white/60 text-sm px-3 py-2 pr-8 rounded-xl cursor-pointer">
               {timeRanges.map((range) => (<option key={range.value} value={range.value}>{range.label}</option>))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
           </div>
         </div>
 
@@ -98,24 +98,24 @@ export default function TeacherLiveMonitor() {
               const ActionIcon = actionIcons[activity.action as keyof typeof actionIcons] || FileText;
               return (
                 <motion.div key={activity.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.02 }}
-                  className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-150 flex items-center gap-4 shadow-sm">
+                  className="glass-card !p-4 flex items-center gap-4">
                   <div className={`w-10 h-10 ${activity.studentColor} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>{activity.studentAvatar}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm"><span className="text-gray-900 font-medium">{activity.studentName}</span><span className="text-gray-500"> {activity.detail}</span></p>
+                    <p className="text-sm"><span className="text-white font-medium">{activity.studentName}</span><span className="text-white/40"> {activity.detail}</span></p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-gray-400 text-xs">{activity.projectName}</span>
-                      <span className="text-gray-300 text-xs">•</span>
-                      <span className="text-gray-400 text-xs">{activity.timestamp}</span>
+                      <span className="text-white/30 text-xs">{activity.projectName}</span>
+                      <span className="text-white/15 text-xs">•</span>
+                      <span className="text-white/30 text-xs">{activity.timestamp}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {activity.driveFileId && activity.mimeType && (
-                      <button onClick={() => window.open(getGoogleFileUrl(activity.driveFileId!, activity.mimeType!), "_blank")} className="flex items-center gap-1.5 text-gray-400 text-sm hover:text-gray-700 transition-colors whitespace-nowrap">
+                      <button onClick={() => window.open(getGoogleFileUrl(activity.driveFileId!, activity.mimeType!), "_blank")} className="flex items-center gap-1.5 text-white/30 text-sm hover:text-white/60 transition-colors whitespace-nowrap">
                         <span>Open</span><ExternalLink className="w-3.5 h-3.5" />
                       </button>
                     )}
                     {activity.projectId && activity.fileId && (
-                      <button onClick={() => navigate(`/teacher/live-replay/${activity.projectId}/${activity.fileId}`)} className="flex items-center gap-1.5 text-blue-600 text-sm hover:text-blue-700 transition-colors whitespace-nowrap">
+                      <button onClick={() => navigate(`/teacher/live-replay/${activity.projectId}/${activity.fileId}`)} className="flex items-center gap-1.5 text-blue-400 text-sm hover:text-blue-300 transition-colors whitespace-nowrap">
                         <span>View Replay</span><Play className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -126,9 +126,9 @@ export default function TeacherLiveMonitor() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <Activity className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No recent activity</p>
-            <p className="text-gray-400 text-sm mt-1">Activity will appear here when students start working</p>
+            <Activity className="w-10 h-10 text-white/15 mx-auto mb-4" />
+            <p className="text-white/40">No recent activity</p>
+            <p className="text-white/20 text-sm mt-1">Activity will appear here when students start working</p>
           </div>
         )}
       </motion.div>

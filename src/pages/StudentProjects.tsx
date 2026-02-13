@@ -17,6 +17,7 @@ import { ClassroomGate } from "@/components/student/ClassroomGate";
 import { JoinProjectModal } from "@/components/student/JoinProjectModal";
 import { api, fetchProjectsWithFallback } from "@/lib/api";
 import { toast } from "sonner";
+
 // Backend API response format
 interface ApiProject {
   id: string;
@@ -31,7 +32,6 @@ interface Project {
   name: string;
   description: string;
   created_at: string;
-  // Fields not returned by current backend - show defaults
   course?: string;
   deadline?: string;
   daysUntilDeadline?: number;
@@ -39,9 +39,6 @@ interface Project {
   progress?: number;
   myContributionScore?: number;
   teamMembers?: Array<{ id: string; name: string; avatar: string; role: string }>;
-  // Task fields - NOTE: Backend API uses different field names:
-  // Backend: { title, status } vs old Supabase: { task_name, completed }
-  // TODO: Get tasks from backend API when list endpoint available
   tasksCompleted?: number;
   totalTasks?: number;
   lastActivity?: string;
@@ -49,17 +46,25 @@ interface Project {
   filesSubmitted?: number;
 }
 
-// Health indicator styling
+const projectGradients = [
+  "from-[#1e3a8a] to-[#3b82f6]",
+  "from-[#581c87] to-[#a855f7]",
+  "from-[#065f46] to-[#10b981]",
+  "from-[#134e4a] to-[#14b8a6]",
+  "from-[#312e81] to-[#6366f1]",
+  "from-[#9d174d] to-[#ec4899]",
+];
+
 const getHealthStyles = (health: string) => {
   switch (health) {
     case "green":
-      return { bg: "bg-green-500/20", text: "text-green-400", dot: "bg-green-500", label: "On Track", border: "border-green-500/30" };
+      return { text: "text-emerald-400", dot: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]", label: "On Track", border: "border-emerald-500/30" };
     case "yellow":
-      return { bg: "bg-yellow-500/20", text: "text-yellow-400", dot: "bg-yellow-500", label: "Needs Attention", border: "border-yellow-500/30" };
+      return { text: "text-yellow-400", dot: "bg-yellow-500 shadow-[0_0_6px_rgba(234,179,8,0.5)]", label: "Needs Attention", border: "border-yellow-500/30" };
     case "red":
-      return { bg: "bg-red-500/20", text: "text-red-400", dot: "bg-red-500", label: "At Risk", border: "border-red-500/30" };
+      return { text: "text-red-400", dot: "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]", label: "At Risk", border: "border-red-500/30" };
     default:
-      return { bg: "bg-white/10", text: "text-slate-400", dot: "bg-slate-500", label: "Unknown", border: "border-white/10" };
+      return { text: "text-white/40", dot: "bg-white/30", label: "Unknown", border: "border-white/10" };
   }
 };
 
@@ -74,65 +79,32 @@ export default function StudentProjects() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        // Fetch projects with fallback endpoint logic
         const data = await fetchProjectsWithFallback<ApiProject>();
-        // Transform API response to frontend format with defaults
         const transformedProjects: Project[] = (data || []).map((p) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || '',
-          created_at: p.created_at,
-          // Defaults for fields not supported by backend yet
-          course: '—',
-          deadline: undefined,
-          daysUntilDeadline: undefined,
-          health: 'green' as const,
-          progress: 0,
-          myContributionScore: 0,
-          teamMembers: [],
-          // TODO: Fetch tasks from backend API when list endpoint is available
-          // Backend task uses: { title, description, assigned_to, status: 'open'|'in_progress'|'done' }
-          // Count tasks where status === 'done' for tasksCompleted
-          tasksCompleted: 0,
-          totalTasks: 0,
-          lastActivity: p.created_at,
-          isNew: false,
-          filesSubmitted: 0,
+          id: p.id, name: p.name, description: p.description || '', created_at: p.created_at,
+          course: '—', deadline: undefined, daysUntilDeadline: undefined, health: 'green' as const,
+          progress: 0, myContributionScore: 0, teamMembers: [], tasksCompleted: 0, totalTasks: 0,
+          lastActivity: p.created_at, isNew: false, filesSubmitted: 0,
         }));
         setProjects(transformedProjects);
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast.error("Failed to load projects");
-      } finally {
-        setIsLoading(false);
-      }
+      } finally { setIsLoading(false); }
     };
     fetchProjects();
   }, []);
 
   const handleJoinSuccess = async () => {
-    // Refresh projects list
     try {
       const data = await fetchProjectsWithFallback<ApiProject>();
       const transformedProjects: Project[] = (data || []).map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || '',
-        created_at: p.created_at,
-        course: '—',
-        health: 'green' as const,
-        progress: 0,
-        myContributionScore: 0,
-        teamMembers: [],
-        tasksCompleted: 0,
-        totalTasks: 0,
-        lastActivity: p.created_at,
-        filesSubmitted: 0,
+        id: p.id, name: p.name, description: p.description || '', created_at: p.created_at,
+        course: '—', health: 'green' as const, progress: 0, myContributionScore: 0,
+        teamMembers: [], tasksCompleted: 0, totalTasks: 0, lastActivity: p.created_at, filesSubmitted: 0,
       }));
       setProjects(transformedProjects);
-    } catch (error) {
-      console.error("Failed to refresh projects:", error);
-    }
+    } catch (error) { console.error("Failed to refresh projects:", error); }
   };
 
   const filteredProjects = projects.filter((project) => {
@@ -146,10 +118,7 @@ export default function StudentProjects() {
     return (
       <StudentLayout pageTitle="My Projects">
         <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            <p className="text-slate-400">Loading projects...</p>
-          </div>
+          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
         </div>
       </StudentLayout>
     );
@@ -158,200 +127,130 @@ export default function StudentProjects() {
   return (
     <StudentLayout pageTitle="My Projects">
       <ClassroomGate>
-      {/* Page Header */}
       <div className="flex items-center justify-end mb-6">
-        <Button
-          onClick={() => setShowJoinModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Join Project
+        <Button onClick={() => setShowJoinModal(true)} className="btn-gradient">
+          <UserPlus className="w-4 h-4 mr-2" />Join Project
         </Button>
       </div>
 
       {/* Filter Tabs */}
       <div className="mb-6">
-        <div className="bg-white/5 rounded-xl border border-white/10 p-2 inline-flex gap-2">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              filter === "all"
-                ? "bg-blue-500 text-white shadow-sm"
-                : "text-slate-400 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            All Projects ({projects.length})
-          </button>
-          <button
-            onClick={() => setFilter("active")}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              filter === "active"
-                ? "bg-blue-500 text-white shadow-sm"
-                : "text-slate-400 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setFilter("completed")}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              filter === "completed"
-                ? "bg-blue-500 text-white shadow-sm"
-                : "text-slate-400 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            Completed
-          </button>
+        <div className="bg-white/[0.06] rounded-2xl border border-white/[0.06] p-1 inline-flex gap-1">
+          {[{ key: "all" as const, label: `All Projects (${projects.length})` }, { key: "active" as const, label: "Active" }, { key: "completed" as const, label: "Completed" }].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)}
+              className={`px-5 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${filter === f.key ? "btn-gradient shadow-lg" : "text-white/40 hover:bg-white/[0.04] hover:text-white/60"}`}>
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Projects Grid or Empty State */}
       {filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredProjects.map((project, index) => {
             const healthStyles = getHealthStyles(project.health);
-
             return (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -4, scale: 1.01 }}
-                className={`bg-white/5 rounded-xl border ${healthStyles.border} p-6 cursor-pointer transition-all hover:bg-white/10 relative`}
+                transition={{ delay: index * 0.08 }}
+                className="rounded-2xl overflow-hidden cursor-pointer card-hover"
                 onClick={() => navigate(`/student/projects/${project.id}`)}
               >
-                {/* NEW Badge */}
-                {project.isNew && (
-                  <Badge className="absolute top-4 right-4 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    NEW
-                  </Badge>
-                )}
+                {/* Gradient header */}
+                <div className={`bg-gradient-to-br ${projectGradients[index % projectGradients.length]} p-5 relative`}>
+                  {project.isNew && (
+                    <Badge className="absolute top-3 right-3 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">NEW</Badge>
+                  )}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`w-2 h-2 rounded-full ${healthStyles.dot}`} />
+                    <span className={`text-xs font-medium ${healthStyles.text}`}>{healthStyles.label}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1">{project.name}</h3>
+                  <p className="text-sm text-white/60">{project.course}</p>
+                </div>
 
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`w-2 h-2 rounded-full ${healthStyles.dot}`} />
-                      <span className={`text-xs font-medium ${healthStyles.text}`}>
-                        {healthStyles.label}
-                      </span>
+                {/* Dark bottom section */}
+                <div className="bg-[#111633]/80 backdrop-blur-sm p-5 space-y-4">
+                  <p className="text-sm text-white/40 line-clamp-2">{project.description}</p>
+
+                  {project.deadline && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/30" />
+                      <span className="text-sm text-white/40">Due: {project.deadline}</span>
+                      {project.daysUntilDeadline <= 3 && (
+                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">{project.daysUntilDeadline} days left</Badge>
+                      )}
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">{project.name}</h3>
-                    <p className="text-sm text-slate-500">{project.course}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-500" />
-                </div>
-
-                {/* Description */}
-                <p className="text-sm text-slate-400 mb-4 line-clamp-2">{project.description}</p>
-
-                {/* Deadline */}
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-4 h-4 text-slate-500" />
-                  <span className="text-sm text-slate-400">Due: {project.deadline}</span>
-                  {project.daysUntilDeadline <= 3 && (
-                    <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                      {project.daysUntilDeadline} days left
-                    </Badge>
                   )}
-                </div>
 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-400">Progress</span>
-                    <span className="font-semibold text-white">{project.progress}%</span>
+                  {/* Progress */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-white/40">Progress</span>
+                      <span className="font-semibold text-white">{project.progress}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-blue-400" style={{ width: `${project.progress}%` }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-white/10 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${healthStyles.dot}`}
-                      style={{ width: `${project.progress}%` }}
-                    />
-                  </div>
-                </div>
 
-                {/* My Contribution Score */}
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 mb-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm text-slate-400">My Contribution</span>
+                  {/* Contribution Score */}
+                  <div className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-blue-400" />
+                      <span className="text-sm text-white/40">My Contribution</span>
+                    </div>
+                    <span className={`text-lg font-bold ${project.myContributionScore >= 70 ? "text-emerald-400" : project.myContributionScore >= 50 ? "text-yellow-400" : "text-red-400"}`}>
+                      {project.myContributionScore}%
+                    </span>
                   </div>
-                  <span className={`text-lg font-bold ${
-                    project.myContributionScore >= 70 ? "text-green-400" :
-                    project.myContributionScore >= 50 ? "text-yellow-400" : "text-red-400"
-                  }`}>
-                    {project.myContributionScore}%
-                  </span>
-                </div>
 
-                {/* Team Members */}
-                <div className="flex items-center justify-between">
-                  <div className="flex -space-x-2">
-                    {project.teamMembers.slice(0, 4).map((member) => (
-                      <div
-                        key={member.id}
-                        className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#111827]"
-                        title={member.name}
-                      >
-                        {member.avatar}
-                      </div>
-                    ))}
-                    {project.teamMembers.length > 4 && (
-                      <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-slate-400 text-xs font-semibold border-2 border-[#111827]">
-                        +{project.teamMembers.length - 4}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>{project.tasksCompleted}/{project.totalTasks} tasks</span>
-                  </div>
-                </div>
-
-                {/* File Submission Status */}
-                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                  {project.filesSubmitted > 0 ? (
-                    <span className="text-emerald-400 text-xs flex items-center gap-1">
+                  {/* Team & Tasks */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {project.teamMembers.slice(0, 4).map((member) => (
+                        <div key={member.id} className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#111633]" title={member.name}>
+                          {member.avatar}
+                        </div>
+                      ))}
+                      {project.teamMembers.length > 4 && (
+                        <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/40 text-xs font-semibold border-2 border-[#111633]">+{project.teamMembers.length - 4}</div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-white/30">
                       <CheckCircle className="w-3 h-3" />
-                      {project.filesSubmitted} documents submitted
-                    </span>
-                  ) : (
-                    <span className="text-yellow-400 text-xs flex items-center gap-1">
-                      ⚠ No documents submitted yet
-                    </span>
-                  )}
-                  <p className="text-xs text-slate-500">{project.lastActivity}</p>
+                      <span>{project.tasksCompleted}/{project.totalTasks} tasks</span>
+                    </div>
+                  </div>
+
+                  {/* Files */}
+                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                    {project.filesSubmitted > 0 ? (
+                      <span className="text-emerald-400 text-xs flex items-center gap-1"><CheckCircle className="w-3 h-3" />{project.filesSubmitted} documents submitted</span>
+                    ) : (
+                      <span className="text-yellow-400 text-xs flex items-center gap-1">⚠ No documents submitted yet</span>
+                    )}
+                    <p className="text-xs text-white/20">{project.lastActivity}</p>
+                  </div>
                 </div>
               </motion.div>
             );
           })}
         </div>
       ) : (
-        <div className="bg-white/5 rounded-xl border border-white/10 p-12 text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FolderOpen className="w-8 h-8 text-slate-500" />
-          </div>
+        <div className="glass-card text-center py-12">
+          <FolderOpen className="w-12 h-12 text-white/15 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-white mb-2">No Projects Yet</h3>
-          <p className="text-slate-400 mb-6 max-w-md mx-auto">
-            You're not part of any projects yet. Join a project with an invite code or wait for your instructor to add you.
-          </p>
-          <Button 
-            onClick={() => setShowJoinModal(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Join Project
+          <p className="text-white/40 mb-6 max-w-md mx-auto">You're not part of any projects yet.</p>
+          <Button onClick={() => setShowJoinModal(true)} className="btn-gradient">
+            <UserPlus className="w-4 h-4 mr-2" />Join Project
           </Button>
         </div>
       )}
 
-      {/* Join Project Modal */}
-      <JoinProjectModal
-        isOpen={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onSuccess={handleJoinSuccess}
-      />
+      <JoinProjectModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} onSuccess={handleJoinSuccess} />
       </ClassroomGate>
     </StudentLayout>
   );
