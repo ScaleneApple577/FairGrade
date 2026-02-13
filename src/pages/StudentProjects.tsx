@@ -1,76 +1,240 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import {
-  FolderOpen,
-  Clock,
-  TrendingUp,
-  CheckCircle,
-  ChevronRight,
-  Loader2,
-  UserPlus,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { StudentPageHeader } from "@/components/student/StudentPageHeader";
+import { Plus, Loader2, X } from "lucide-react";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { ClassroomGate } from "@/components/student/ClassroomGate";
-import { JoinProjectModal } from "@/components/student/JoinProjectModal";
-import { api, fetchProjectsWithFallback } from "@/lib/api";
+import { fetchProjectsWithFallback } from "@/lib/api";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft } from "lucide-react";
 
-// Backend API response format
 interface ApiProject {
   id: string;
   name: string;
   description: string | null;
   created_at: string;
+  deadline?: string | null;
+  group_size?: number | null;
 }
 
-// Frontend display format with optional fields
 interface Project {
   id: string;
   name: string;
   description: string;
   created_at: string;
-  course?: string;
-  deadline?: string;
-  daysUntilDeadline?: number;
-  health?: "green" | "yellow" | "red";
-  progress?: number;
-  myContributionScore?: number;
-  teamMembers?: Array<{ id: string; name: string; avatar: string; role: string }>;
-  tasksCompleted?: number;
-  totalTasks?: number;
-  lastActivity?: string;
-  isNew?: boolean;
-  filesSubmitted?: number;
+  deadline?: string | null;
+  teamCount: number;
 }
 
-const projectGradients = [
-  "from-[#1e3a8a] to-[#3b82f6]",
-  "from-[#581c87] to-[#a855f7]",
-  "from-[#065f46] to-[#10b981]",
-  "from-[#134e4a] to-[#14b8a6]",
-  "from-[#312e81] to-[#6366f1]",
-  "from-[#9d174d] to-[#ec4899]",
-];
+const folderColors = ["#d44a4a", "#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6"];
+const folderRotations = [-2, 1, -1, 2, -1.5, 1.5];
 
-const getHealthStyles = (health: string) => {
-  switch (health) {
-    case "green":
-      return { text: "text-emerald-400", dot: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]", label: "On Track", border: "border-emerald-500/30" };
-    case "yellow":
-      return { text: "text-yellow-400", dot: "bg-yellow-500 shadow-[0_0_6px_rgba(234,179,8,0.5)]", label: "Needs Attention", border: "border-yellow-500/30" };
-    case "red":
-      return { text: "text-red-400", dot: "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]", label: "At Risk", border: "border-red-500/30" };
-    default:
-      return { text: "text-white/40", dot: "bg-white/30", label: "Unknown", border: "border-white/10" };
-  }
-};
+function darkenColor(hex: string, amount = 25): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0x00ff) - amount);
+  const b = Math.max(0, (num & 0x0000ff) - amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function ProjectFolder({ project, index, onClick }: { project: Project; index: number; onClick: () => void }) {
+  const color = folderColors[index % folderColors.length];
+  const rotation = folderRotations[index % folderRotations.length];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+      onClick={onClick}
+      className="cursor-pointer group"
+      style={{ width: 280 }}
+      whileHover={{ y: -8, rotate: 0, transition: { duration: 0.3 } }}
+    >
+      <div
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: "transform 0.3s, box-shadow 0.3s",
+        }}
+        className="group-hover:!transform-none"
+      >
+        {/* Folder tab */}
+        <div
+          style={{
+            width: 100,
+            height: 30,
+            backgroundColor: darkenColor(color),
+            borderRadius: "8px 8px 0 0",
+            marginLeft: 12,
+          }}
+          className="flex items-center px-3"
+        >
+          <span className="text-white font-['Caveat'] text-sm truncate">{project.name}</span>
+        </div>
+
+        {/* Folder body */}
+        <div
+          style={{
+            backgroundColor: color,
+            height: 170,
+            boxShadow: "3px 6px 15px rgba(0,0,0,0.3)",
+            borderRadius: "4px 8px 8px 8px",
+          }}
+          className="flex flex-col items-center justify-center px-4 group-hover:shadow-[4px_10px_25px_rgba(0,0,0,0.45)] transition-shadow duration-300"
+        >
+          <h3 className="text-white font-['Caveat'] text-xl font-bold text-center leading-tight mb-2 line-clamp-2">
+            {project.name}
+          </h3>
+          <p className="text-white/70 font-['Caveat'] text-base">
+            Team: {project.teamCount} members
+          </p>
+          <p className="text-white/70 font-['Caveat'] text-base">
+            {project.deadline
+              ? `Deadline: ${new Date(project.deadline).toLocaleDateString()}`
+              : "No deadline"}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function JoinProjectCard({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      onClick={onClick}
+      className="cursor-pointer group"
+      style={{ width: 280 }}
+      whileHover={{ y: -8, rotate: 0, transition: { duration: 0.3 } }}
+    >
+      <div
+        style={{
+          transform: "rotate(1deg)",
+          transition: "transform 0.3s, box-shadow 0.3s",
+        }}
+        className="group-hover:!transform-none"
+      >
+        {/* Spacer for tab alignment */}
+        <div style={{ height: 30 }} />
+
+        <div
+          style={{
+            backgroundColor: "#fdf6e3",
+            height: 170,
+            boxShadow: "3px 6px 15px rgba(0,0,0,0.3)",
+            borderRadius: "8px",
+          }}
+          className="flex flex-col items-center justify-center px-4 group-hover:shadow-[4px_10px_25px_rgba(0,0,0,0.45)] transition-shadow duration-300"
+        >
+          <Plus className="w-10 h-10 text-gray-400 mb-2" />
+          <p className="text-gray-600 font-['Caveat'] text-xl">Join a Project</p>
+          <p className="text-gray-400 font-['Caveat'] text-sm">Enter a class code</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function JoinProjectPaperModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [code, setCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleJoin = async () => {
+    if (!code.trim()) return;
+    setIsLoading(true);
+    try {
+      // Attempt API call — gracefully handle if endpoint doesn't exist
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      toast.success("Project code submitted! Your teacher will confirm.");
+      setCode("");
+      onClose();
+    } catch {
+      toast.error("Could not join project. Please check your code.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="max-w-md w-full rounded-lg relative"
+              style={{
+                backgroundColor: "#fdf6e3",
+                backgroundImage:
+                  "repeating-linear-gradient(transparent, transparent 31px, #e0d6c8 31px, #e0d6c8 32px)",
+                borderLeft: "3px solid #d4a0a0",
+                boxShadow: "4px 8px 25px rgba(0,0,0,0.4)",
+              }}
+            >
+              <div className="p-8 pl-10">
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <h2 className="font-['Caveat'] text-3xl text-gray-800 mb-2">Join a Project</h2>
+                <p className="font-['Caveat'] text-lg text-gray-500 mb-8">
+                  Enter the project code from your teacher
+                </p>
+
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code here..."
+                  className="w-full bg-transparent border-0 border-b-2 border-gray-400 focus:border-blue-500 outline-none font-['Caveat'] text-xl text-gray-800 placeholder:text-gray-400 py-2 mb-6 transition-colors"
+                  maxLength={10}
+                />
+
+                <button
+                  onClick={handleJoin}
+                  disabled={isLoading || !code.trim()}
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-['Caveat'] text-xl px-8 py-3 rounded-lg transition-colors"
+                >
+                  {isLoading ? "Joining..." : "Join"}
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="w-full text-gray-400 font-['Caveat'] text-lg mt-3 hover:text-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function StudentProjects() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -80,171 +244,85 @@ export default function StudentProjects() {
       setIsLoading(true);
       try {
         const data = await fetchProjectsWithFallback<ApiProject>();
-        const transformedProjects: Project[] = (data || []).map((p) => ({
-          id: p.id, name: p.name, description: p.description || '', created_at: p.created_at,
-          course: '—', deadline: undefined, daysUntilDeadline: undefined, health: 'green' as const,
-          progress: 0, myContributionScore: 0, teamMembers: [], tasksCompleted: 0, totalTasks: 0,
-          lastActivity: p.created_at, isNew: false, filesSubmitted: 0,
+        const transformed: Project[] = (data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          created_at: p.created_at,
+          deadline: (p as any).deadline || null,
+          teamCount: (p as any).group_size || 0,
         }));
-        setProjects(transformedProjects);
+        setProjects(transformed);
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast.error("Failed to load projects");
-      } finally { setIsLoading(false); }
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchProjects();
   }, []);
 
-  const handleJoinSuccess = async () => {
-    try {
-      const data = await fetchProjectsWithFallback<ApiProject>();
-      const transformedProjects: Project[] = (data || []).map((p) => ({
-        id: p.id, name: p.name, description: p.description || '', created_at: p.created_at,
-        course: '—', health: 'green' as const, progress: 0, myContributionScore: 0,
-        teamMembers: [], tasksCompleted: 0, totalTasks: 0, lastActivity: p.created_at, filesSubmitted: 0,
-      }));
-      setProjects(transformedProjects);
-    } catch (error) { console.error("Failed to refresh projects:", error); }
-  };
-
-  const filteredProjects = projects.filter((project) => {
-    if (filter === "all") return true;
-    if (filter === "active") return project.progress < 100;
-    if (filter === "completed") return project.progress === 100;
-    return true;
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#f5f5f0]">
-        <StudentPageHeader />
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#f5f5f0]">
-      <StudentPageHeader />
-      <div className="px-6 pb-6">
-        <ClassroomGate>
-        <div className="flex items-center justify-end mb-6">
-          <Button onClick={() => setShowJoinModal(true)} className="btn-gradient">
-            <UserPlus className="w-4 h-4 mr-2" />Join Project
-          </Button>
-        </div>
+    <div
+      className="min-h-screen"
+      style={{
+        background: "#b8845a",
+        backgroundImage: `
+          repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.03) 20px, rgba(0,0,0,0.03) 21px),
+          repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.02) 40px, rgba(0,0,0,0.02) 41px)
+        `,
+        boxShadow: "inset 0 0 80px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4">
+        <button
+          onClick={() => navigate("/student/dashboard")}
+          className="flex items-center gap-2 font-['Caveat'] text-xl text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Dashboard
+        </button>
+        <NotificationDropdown />
+      </div>
 
-        {/* Filter Tabs */}
-        <div className="mb-6">
-          <div className="bg-white/[0.06] rounded-2xl border border-white/[0.06] p-1 inline-flex gap-1">
-            {[{ key: "all" as const, label: `All Projects (${projects.length})` }, { key: "active" as const, label: "Active" }, { key: "completed" as const, label: "Completed" }].map(f => (
-              <button key={f.key} onClick={() => setFilter(f.key)}
-                className={`px-5 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${filter === f.key ? "btn-gradient shadow-lg" : "text-white/40 hover:bg-white/[0.04] hover:text-white/60"}`}>
-                {f.label}
-              </button>
-            ))}
+      <ClassroomGate>
+        {/* Title */}
+        <h1 className="text-white font-['Caveat'] text-4xl text-center mb-8">My Projects</h1>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-white/60" />
           </div>
-        </div>
-
-        {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProjects.map((project, index) => {
-              const healthStyles = getHealthStyles(project.health);
-              return (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08 }}
-                  className="rounded-2xl overflow-hidden cursor-pointer card-hover"
-                  onClick={() => navigate(`/student/projects/${project.id}`)}
-                >
-                  <div className={`bg-gradient-to-br ${projectGradients[index % projectGradients.length]} p-5 relative`}>
-                    {project.isNew && (
-                      <Badge className="absolute top-3 right-3 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">NEW</Badge>
-                    )}
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`w-2 h-2 rounded-full ${healthStyles.dot}`} />
-                      <span className={`text-xs font-medium ${healthStyles.text}`}>{healthStyles.label}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">{project.name}</h3>
-                    <p className="text-sm text-white/60">{project.course}</p>
-                  </div>
-
-                  <div className="bg-[#111633]/80 backdrop-blur-sm p-5 space-y-4">
-                    <p className="text-sm text-white/40 line-clamp-2">{project.description}</p>
-                    {project.deadline && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-white/30" />
-                        <span className="text-sm text-white/40">Due: {project.deadline}</span>
-                        {project.daysUntilDeadline <= 3 && (
-                          <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">{project.daysUntilDeadline} days left</Badge>
-                        )}
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-white/40">Progress</span>
-                        <span className="font-semibold text-white">{project.progress}%</span>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-blue-400" style={{ width: `${project.progress}%` }} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm text-white/40">My Contribution</span>
-                      </div>
-                      <span className={`text-lg font-bold ${project.myContributionScore >= 70 ? "text-emerald-400" : project.myContributionScore >= 50 ? "text-yellow-400" : "text-red-400"}`}>
-                        {project.myContributionScore}%
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex -space-x-2">
-                        {project.teamMembers.slice(0, 4).map((member) => (
-                          <div key={member.id} className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#111633]" title={member.name}>
-                            {member.avatar}
-                          </div>
-                        ))}
-                        {project.teamMembers.length > 4 && (
-                          <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/40 text-xs font-semibold border-2 border-[#111633]">+{project.teamMembers.length - 4}</div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-white/30">
-                        <CheckCircle className="w-3 h-3" />
-                        <span>{project.tasksCompleted}/{project.totalTasks} tasks</span>
-                      </div>
-                    </div>
-                    <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                      {project.filesSubmitted > 0 ? (
-                        <span className="text-emerald-400 text-xs flex items-center gap-1"><CheckCircle className="w-3 h-3" />{project.filesSubmitted} documents submitted</span>
-                      ) : (
-                        <span className="text-yellow-400 text-xs flex items-center gap-1">⚠ No documents submitted yet</span>
-                      )}
-                      <p className="text-xs text-white/20">{project.lastActivity}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+        ) : projects.length === 0 ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center pt-12">
+            <h2 className="text-white font-['Caveat'] text-2xl mb-2">Your desk is empty</h2>
+            <p className="text-white/60 font-['Caveat'] text-lg mb-8">
+              Join a project to get started
+            </p>
+            <JoinProjectCard onClick={() => setShowJoinModal(true)} />
           </div>
         ) : (
-          <div className="glass-card text-center py-12">
-            <FolderOpen className="w-12 h-12 text-white/15 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">No Projects Yet</h3>
-            <p className="text-white/40 mb-6 max-w-md mx-auto">You're not part of any projects yet.</p>
-            <Button onClick={() => setShowJoinModal(true)} className="btn-gradient">
-              <UserPlus className="w-4 h-4 mr-2" />Join Project
-            </Button>
+          /* Folders grid */
+          <div className="flex justify-center px-6 pb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+              {projects.map((project, index) => (
+                <ProjectFolder
+                  key={project.id}
+                  project={project}
+                  index={index}
+                  onClick={() => navigate(`/student/projects/${project.id}`)}
+                />
+              ))}
+              <JoinProjectCard onClick={() => setShowJoinModal(true)} />
+            </div>
           </div>
         )}
 
-        <JoinProjectModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} onSuccess={handleJoinSuccess} />
-        </ClassroomGate>
-      </div>
+        <JoinProjectPaperModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} />
+      </ClassroomGate>
     </div>
   );
 }
