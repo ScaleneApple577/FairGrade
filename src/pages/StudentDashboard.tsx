@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -42,11 +41,6 @@ export default function StudentDashboard() {
     return '';
   })();
 
-  const fullName = user?.fullName || '';
-  const initials = fullName
-    ? fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : (user?.email || '?').charAt(0).toUpperCase();
-
   if (authLoading) {
     return (
       <div className="min-h-screen w-full bg-[#2d4a3e] flex items-center justify-center">
@@ -57,7 +51,7 @@ export default function StudentDashboard() {
 
   return (
     <div
-      className="min-h-screen w-full relative overflow-hidden flex flex-col"
+      className="h-screen w-full relative overflow-hidden flex flex-col"
       style={{
         background: "linear-gradient(170deg, #2d4a3e 0%, #243f34 40%, #1e3529 100%)",
         boxShadow: "inset 0 0 100px rgba(0,0,0,0.3)",
@@ -77,15 +71,9 @@ export default function StudentDashboard() {
         </span>
       </div>
 
-      {/* Top right — Bell + User */}
-      <div className="absolute top-5 right-8 z-20 flex items-center gap-4">
+      {/* Top right — Bell only */}
+      <div className="absolute top-6 right-8 z-20">
         <NotificationDropdown />
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-semibold ring-2 ring-blue-400/30">
-            {initials}
-          </div>
-          <span className="text-sm text-white/70 font-medium hidden md:block">{fullName}</span>
-        </div>
       </div>
 
       {/* Center content */}
@@ -128,23 +116,23 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Bottom left — Log out */}
-      <button
-        onClick={handleLogout}
-        className="absolute bottom-6 left-8 z-20 font-['Caveat'] text-lg text-white/50 hover:text-white/80 flex items-center gap-2 transition-colors duration-200"
+      {/* Chalk ledge / tray */}
+      <div
+        className="flex-shrink-0 relative z-20 flex items-center px-8"
+        style={{
+          height: "48px",
+          background: "linear-gradient(180deg, #8B7355 0%, #6B5740 30%, #8B7355 50%, #7A6548 70%, #8B7355 100%)",
+          boxShadow: "0 -4px 8px rgba(0,0,0,0.3)",
+        }}
       >
-        <LogOut className="w-5 h-5" />
-        Log out
-      </button>
-
-      {/* Bottom right — Chalk doodles */}
-      <div className="absolute bottom-6 right-8 z-10 font-['Caveat'] text-white/15 text-lg select-none space-x-3">
-        <span>★</span><span>→</span><span>π</span><span>✦</span><span>∞</span><span>☆</span>
+        <button
+          onClick={handleLogout}
+          className="font-['Caveat'] text-sm text-white/70 hover:text-white flex items-center gap-2 transition-colors duration-200"
+        >
+          <LogOut className="w-4 h-4" />
+          Log out
+        </button>
       </div>
-
-      {/* More scattered doodles */}
-      <div className="absolute top-1/4 right-16 font-['Caveat'] text-sm text-white/10 select-none rotate-12">E = mc²</div>
-      <div className="absolute bottom-1/3 left-16 font-['Caveat'] text-sm text-white/10 select-none -rotate-6">∫ dx</div>
     </div>
   );
 }
