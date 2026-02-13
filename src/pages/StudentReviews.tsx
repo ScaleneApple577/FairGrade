@@ -1,19 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Star, Clock, CheckCircle, Lock, Loader2 } from "lucide-react";
-import { StudentLayout } from "@/components/student/StudentLayout";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, Lock, Loader2, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ClassroomGate } from "@/components/student/ClassroomGate";
 import { PendingReviewCard } from "@/components/reviews/PendingReviewCard";
 import { SubmittedReviewCard } from "@/components/reviews/SubmittedReviewCard";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
-
-// TODO: Connect to GET /api/peer-reviews/pending — peer reviews API
-// TODO: Connect to GET /api/peer-reviews/submitted — peer reviews API
-// TODO: Connect to POST /api/peer-reviews — submit peer review
-// 
-// TODO: When teams API is available, use GET /api/teams/{team_id}/members
-// to get the list of teammates for peer review instead of project students.
-// This enables proper team-based review workflows.
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface PendingReview {
   id: string;
@@ -38,7 +31,8 @@ interface SubmittedReview {
 }
 
 export default function StudentReviews() {
-  const [activeTab, setActiveTab] = useState<"pending" | "submitted">("pending");
+  const navigate = useNavigate();
+  const [isNotebookOpen, setIsNotebookOpen] = useState(false);
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
   const [submittedReviews, setSubmittedReviews] = useState<SubmittedReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +41,6 @@ export default function StudentReviews() {
   const [selectedProjectName, setSelectedProjectName] = useState("");
 
   const pendingCount = pendingReviews.reduce((acc, project) => acc + project.teammates.filter((t) => !t.reviewed).length, 0);
-  const completedCount = submittedReviews.length;
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,100 +76,233 @@ export default function StudentReviews() {
     setSubmittedReviews((prev) => [newReview, ...prev]);
   };
 
-  if (isLoading) {
-    return (
-      <StudentLayout pageTitle="Peer Reviews">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
-        </div>
-      </StudentLayout>
-    );
-  }
+  const handleStartReviewing = () => {
+    if (pendingReviews.length > 0) {
+      const firstUnreviewed = pendingReviews[0].teammates.find(t => !t.reviewed);
+      if (firstUnreviewed) {
+        handleOpenReview(firstUnreviewed, pendingReviews[0].projectName);
+      }
+    }
+  };
+
+  // Spiral binding circles for cover
+  const spiralCircles = Array.from({ length: 18 }, (_, i) => i);
 
   return (
-    <StudentLayout pageTitle="Peer Reviews">
-      <ClassroomGate>
-      <p className="text-white/40 text-sm mb-6 flex items-center gap-2">
-        <Lock className="w-4 h-4" />
-        Your reviews are anonymous and sent directly to your instructor.
-      </p>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-[#1e3a8a] to-[#3b82f6] rounded-2xl p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-3xl font-bold text-white mb-1">{pendingCount}</h3>
-              <p className="text-white/60 text-sm">Reviews to complete</p>
-            </div>
-            <Clock className="w-8 h-8 text-white/20" />
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-[#065f46] to-[#10b981] rounded-2xl p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-3xl font-bold text-white mb-1">{completedCount}</h3>
-              <p className="text-white/60 text-sm">Reviews submitted</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-white/20" />
-          </div>
-        </motion.div>
+    <div
+      className="min-h-screen w-full relative overflow-auto"
+      style={{
+        background: "#b8845a",
+        backgroundImage: `
+          repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.03) 20px, rgba(0,0,0,0.03) 21px),
+          repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.02) 40px, rgba(0,0,0,0.02) 41px)
+        `,
+        boxShadow: "inset 0 0 80px rgba(0,0,0,0.3)",
+      }}
+    >
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
+        <button
+          onClick={() => navigate("/student/dashboard")}
+          className="flex items-center gap-2 text-white/80 hover:text-white font-['Caveat'] text-xl transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Dashboard
+        </button>
+        <NotificationDropdown />
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="bg-white/[0.06] border border-white/[0.06] rounded-2xl p-1 inline-flex gap-1">
-          <button onClick={() => setActiveTab("pending")}
-            className={`px-5 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${activeTab === "pending" ? "btn-gradient shadow-lg" : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"}`}>
-            Pending Reviews ({pendingCount})
-          </button>
-          <button onClick={() => setActiveTab("submitted")}
-            className={`px-5 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${activeTab === "submitted" ? "btn-gradient shadow-lg" : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"}`}>
-            Submitted ({completedCount})
-          </button>
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-white/60" />
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-center min-h-screen pt-16 pb-8">
+          <AnimatePresence mode="wait">
+            {!isNotebookOpen ? (
+              /* STATE 1: Closed Notebook */
+              <motion.div
+                key="closed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.4 }}
+                className="relative cursor-default select-none"
+              >
+                {/* Notebook body */}
+                <div
+                  className="relative w-[400px] h-[500px] rounded-lg flex flex-col items-center justify-center"
+                  style={{
+                    backgroundColor: "#2c3e7a",
+                    backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E\")",
+                    boxShadow: "4px 8px 20px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {/* Spiral binding on left edge */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center justify-between py-4 z-10">
+                    {spiralCircles.map((i) => (
+                      <div
+                        key={i}
+                        className="w-5 h-5 rounded-full border-2 border-gray-300/80 bg-transparent"
+                        style={{
+                          boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.1)",
+                        }}
+                      />
+                    ))}
+                  </div>
 
-      {activeTab === "pending" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-          {pendingReviews.length > 0 ? (
-            pendingReviews.map((project) => (
-              <PendingReviewCard key={project.id} projectName={project.projectName} deadline={project.deadline} daysUntilDue={project.daysUntilDue}
-                teammates={project.teammates} completedCount={project.teammates.filter((t) => t.reviewed).length} totalCount={project.totalCount}
-                onReview={(teammate) => handleOpenReview(teammate, project.projectName)} onViewReview={(teammate) => { console.log("View review for:", teammate.name); }} />
-            ))
-          ) : (
-            <div className="glass-card text-center py-12">
-              <Star className="w-12 h-12 text-white/15 mx-auto mb-4" />
-              <h3 className="text-white font-semibold text-lg mb-2">No pending reviews</h3>
-              <p className="text-white/40">You'll be notified when peer reviews open for your projects.</p>
-            </div>
-          )}
-        </motion.div>
+                  {/* Cover content */}
+                  <div className="flex flex-col items-center gap-8 pl-6">
+                    <div className="text-center">
+                      <h1 className="text-white font-['Caveat'] text-4xl mb-2">
+                        Peer Reviews
+                      </h1>
+                      <div className="w-32 h-px bg-white/20 mx-auto" />
+                    </div>
+
+                    <motion.button
+                      onClick={() => setIsNotebookOpen(true)}
+                      className="bg-white/20 hover:bg-white/30 text-white rounded-xl px-8 py-3 text-lg font-['Caveat'] cursor-pointer transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Open Notebook
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              /* STATE 2: Open Notebook */
+              <motion.div
+                key="open"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="w-[85vw] max-w-5xl"
+                style={{ height: "80vh" }}
+              >
+                <ClassroomGate>
+                  <div className="flex h-full rounded-lg overflow-hidden" style={{ boxShadow: "4px 8px 30px rgba(0,0,0,0.4)" }}>
+                    {/* Left Page */}
+                    <div
+                      className="flex-1 relative p-8 flex flex-col"
+                      style={{
+                        backgroundColor: "#fdf6e3",
+                        backgroundImage: "repeating-linear-gradient(transparent, transparent 31px, #e0d6c8 31px, #e0d6c8 32px)",
+                        borderLeft: "none",
+                      }}
+                    >
+                      {/* Red margin line */}
+                      <div
+                        className="absolute top-0 bottom-0"
+                        style={{ left: "40px", borderLeft: "2px solid #d4a0a0" }}
+                      />
+
+                      <div className="pl-10 flex flex-col items-start justify-center flex-1">
+                        <h2 className="font-['Caveat'] text-2xl text-gray-700 mb-6">
+                          Reviews to Submit
+                        </h2>
+
+                        {pendingCount > 0 ? (
+                          <>
+                            <span className="font-['Caveat'] text-7xl font-bold text-gray-800 leading-none">
+                              {pendingCount}
+                            </span>
+                            <span className="font-['Caveat'] text-lg text-gray-500 mt-2">
+                              peer reviews remaining
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-['Caveat'] text-5xl font-bold text-green-600 leading-none">
+                              All done! ✓
+                            </span>
+                            <span className="font-['Caveat'] text-lg text-gray-500 mt-2">
+                              No reviews pending
+                            </span>
+                          </>
+                        )}
+
+                        {/* Close button at bottom */}
+                        <button
+                          onClick={() => setIsNotebookOpen(false)}
+                          className="mt-auto font-['Caveat'] text-gray-400 hover:text-gray-600 text-lg transition-colors"
+                        >
+                          ← Close notebook
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Spiral Spine */}
+                    <div
+                      className="w-6 relative flex-shrink-0"
+                      style={{
+                        background: "linear-gradient(180deg, #d1d5db 0%, #9ca3af 50%, #d1d5db 100%)",
+                      }}
+                    >
+                      <div
+                        className="absolute top-2 bottom-2 left-1/2 -translate-x-1/2 w-4"
+                        style={{
+                          backgroundImage: `repeating-linear-gradient(
+                            transparent,
+                            transparent 20px,
+                            #6b7280 20px,
+                            #6b7280 22px,
+                            transparent 22px,
+                            transparent 24px
+                          )`,
+                        }}
+                      />
+                    </div>
+
+                    {/* Right Page */}
+                    <div
+                      className="flex-1 relative p-8 flex flex-col items-center justify-center"
+                      style={{
+                        backgroundColor: "#fdf6e3",
+                        backgroundImage: "repeating-linear-gradient(transparent, transparent 31px, #e0d6c8 31px, #e0d6c8 32px)",
+                      }}
+                    >
+                      {pendingCount > 0 ? (
+                        <div className="flex flex-col items-center gap-6">
+                          <p className="font-['Caveat'] text-2xl text-gray-600 text-center">
+                            Ready to review<br />your teammates
+                          </p>
+                          <motion.button
+                            onClick={handleStartReviewing}
+                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-8 py-4 text-xl font-['Caveat'] transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            Start Reviewing →
+                          </motion.button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-4 opacity-50">
+                          <Lock className="w-16 h-16 text-gray-300" />
+                          <p className="font-['Caveat'] text-xl text-gray-400 text-center">
+                            No reviews pending
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </ClassroomGate>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
-      {activeTab === "submitted" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {submittedReviews.length > 0 ? (
-            submittedReviews.map((review) => (
-              <SubmittedReviewCard key={review.id} teammateName={review.teammateName} teammateAvatar={review.teammateAvatar} teammateColor={review.teammateColor}
-                projectName={review.projectName} rating={review.rating} feedback={review.feedback} submittedAt={review.submittedAt} anonymous={review.anonymous} />
-            ))
-          ) : (
-            <div className="col-span-2 glass-card text-center py-12">
-              <Star className="w-12 h-12 text-white/15 mx-auto mb-4" />
-              <h3 className="text-white font-semibold text-lg mb-2">No reviews yet</h3>
-              <p className="text-white/40">Your submitted reviews will appear here.</p>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      <ReviewModal isOpen={showReviewModal} onClose={() => setShowReviewModal(false)} teammate={selectedTeammate}
-        projectName={selectedProjectName} onSubmit={handleSubmitReview} />
-      </ClassroomGate>
-    </StudentLayout>
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        teammate={selectedTeammate}
+        projectName={selectedProjectName}
+        onSubmit={handleSubmitReview}
+      />
+    </div>
   );
 }
