@@ -140,9 +140,8 @@ export default function StudentCalendar() {
         }} />
 
         {/* Top aluminum frame strip */}
-        <div className="h-1 flex-shrink-0" style={{
-          background: "linear-gradient(90deg, #d1d5db, #e5e7eb, #d1d5db)",
-        }} />
+
+
 
         <ClassroomGate>
         <div className="relative z-10 p-6">

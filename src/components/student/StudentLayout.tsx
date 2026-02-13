@@ -90,8 +90,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
           </Link>
         </div>
 
-        {/* Divider */}
-        <div className="mx-4 h-px bg-gray-300/40" />
+        {/* No divider */}
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4">
@@ -117,7 +116,7 @@ export function StudentLayout({ children, pageTitle, noPadding, headerClassName 
         </nav>
 
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-gray-300/40">
+        <div className="px-3 py-4">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-['Caveat'] text-lg text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all duration-200 w-full"
