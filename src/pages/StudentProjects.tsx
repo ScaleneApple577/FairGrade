@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Loader2, X } from "lucide-react";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { ClassroomGate } from "@/components/student/ClassroomGate";
-import { fetchProjectsWithFallback } from "@/lib/api";
+import { api, fetchProjectsWithFallback } from "@/lib/api";
+import { useClassroom } from "@/contexts/ClassroomContext";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
@@ -139,7 +140,7 @@ function JoinProjectCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function JoinProjectPaperModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+function JoinProjectPaperModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: () => void }) {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -147,13 +148,16 @@ function JoinProjectPaperModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     if (!code.trim()) return;
     setIsLoading(true);
     try {
-      // Attempt API call — gracefully handle if endpoint doesn't exist
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      toast.success("Project code submitted! Your teacher will confirm.");
+      const result = await api.post<{ classroom_id: string; classroom_name: string }>(
+        "/api/classrooms/invitations/accept",
+        { token: code.trim() }
+      );
+      toast.success(`Successfully joined ${result.classroom_name || "classroom"}!`);
       setCode("");
       onClose();
-    } catch {
-      toast.error("Could not join project. Please check your code.");
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || "Invalid or expired code");
     } finally {
       setIsLoading(false);
     }
@@ -198,14 +202,14 @@ function JoinProjectPaperModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
                 <h2 className="font-['Caveat'] text-3xl text-gray-800 mb-2">Join a Project</h2>
                 <p className="font-['Caveat'] text-lg text-gray-500 mb-8">
-                  Enter the project code from your teacher
+                  Enter the invite code from your email
                 </p>
 
                 <input
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="Enter code here..."
+                  placeholder="Paste your invite code..."
                   className="w-full bg-transparent border-0 border-b-2 border-gray-400 focus:border-blue-500 outline-none font-['Caveat'] text-xl text-gray-800 placeholder:text-gray-400 py-2 mb-6 transition-colors"
                   maxLength={10}
                 />
@@ -238,28 +242,30 @@ export default function StudentProjects() {
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const { refreshClassrooms } = useClassroom();
+
+  const fetchProjects = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchProjectsWithFallback<ApiProject>();
+      const transformed: Project[] = (data || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || "",
+        created_at: p.created_at,
+        deadline: (p as any).deadline || null,
+        teamCount: (p as any).group_size || 0,
+      }));
+      setProjects(transformed);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      toast.error("Failed to load projects");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchProjectsWithFallback<ApiProject>();
-        const transformed: Project[] = (data || []).map((p) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || "",
-          created_at: p.created_at,
-          deadline: (p as any).deadline || null,
-          teamCount: (p as any).group_size || 0,
-        }));
-        setProjects(transformed);
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-        toast.error("Failed to load projects");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchProjects();
   }, []);
 
@@ -321,7 +327,14 @@ export default function StudentProjects() {
           </div>
         )}
 
-        <JoinProjectPaperModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} />
+        <JoinProjectPaperModal
+          isOpen={showJoinModal}
+          onClose={() => setShowJoinModal(false)}
+          onSuccess={() => {
+            fetchProjects();
+            refreshClassrooms();
+          }}
+        />
       </ClassroomGate>
     </div>
   );
