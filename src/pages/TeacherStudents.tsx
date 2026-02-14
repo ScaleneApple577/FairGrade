@@ -12,6 +12,9 @@ import {
   FolderPlus,
   Eye,
   GraduationCap,
+  Copy,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +97,12 @@ export default function TeacherStudents() {
   const [newClassroomName, setNewClassroomName] = useState("");
   const [isCreatingClassroom, setIsCreatingClassroom] = useState(false);
 
+  // Join code
+  const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [isRegeneratingCode, setIsRegeneratingCode] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [showInvitations, setShowInvitations] = useState(false);
+
   // Students display
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [stats, setStats] = useState<StudentStats>({ total: 0, active: 0, pending: 0 });
@@ -137,6 +146,8 @@ export default function TeacherStudents() {
       const data = await api.get<Classroom>(`/api/classrooms/${selectedClassroomId}`);
       setSelectedClassroom(data);
       
+      // Extract join code if available
+      setJoinCode((data as any).join_code || null);
       // Map students from classroom response
       const activeStudents: StudentRow[] = (data.students || []).map((s) => ({
         id: `student-${s.user_id}`,
@@ -347,6 +358,29 @@ export default function TeacherStudents() {
     fetchClassroomDetail();
   };
 
+  const handleRegenerateCode = async () => {
+    if (!selectedClassroomId) return;
+    setIsRegeneratingCode(true);
+    try {
+      const newCode = await api.post<string>(`/api/classrooms/${selectedClassroomId}/regenerate-code`);
+      setJoinCode(typeof newCode === "string" ? newCode : (newCode as any).code || null);
+      toast.success("Code regenerated");
+    } catch (error) {
+      console.error("Failed to regenerate code:", error);
+      toast.error("Failed to regenerate code");
+    } finally {
+      setIsRegeneratingCode(false);
+    }
+  };
+
+  const handleCopyCode = () => {
+    if (!joinCode) return;
+    navigator.clipboard.writeText(joinCode);
+    setCodeCopied(true);
+    toast.success("Copied!");
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   const handleViewScore = (student: StudentRow) => {
     setSelectedStudentForScore(student);
     setScoreModalOpen(true);
@@ -488,6 +522,78 @@ export default function TeacherStudents() {
             + New
           </button>
         </div>
+
+        {/* Join Code & Invitations Section */}
+        {selectedClassroomId && !isLoadingClassroom && (
+          <div className="flex items-center gap-6 mb-5 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+            {/* Join Code */}
+            {joinCode && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[#8b949e]">Join Code:</span>
+                <span className="text-2xl font-mono tracking-wider text-white font-semibold">{joinCode}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyCode}
+                  className="text-[#8b949e] hover:text-white h-7 px-2"
+                >
+                  {codeCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRegenerateCode}
+                  disabled={isRegeneratingCode}
+                  className="text-[#8b949e] hover:text-white h-7 px-2"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRegeneratingCode ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
+            )}
+
+            {/* Invitations toggle */}
+            <button
+              onClick={() => setShowInvitations(!showInvitations)}
+              className="ml-auto text-xs text-[#8b949e] hover:text-white transition-colors"
+            >
+              {showInvitations ? "Hide" : "Show"} Invitations ({invitations.length})
+            </button>
+          </div>
+        )}
+
+        {/* Invitations List */}
+        {showInvitations && invitations.length > 0 && (
+          <div className="mb-5 rounded-lg border border-white/[0.06] overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-left p-3 text-xs font-medium text-[#8b949e]">Email</th>
+                  <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Status</th>
+                  <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Sent</th>
+                  <th className="text-center p-3 text-xs font-medium text-[#8b949e]">Accepted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {invitations.map((inv) => (
+                  <tr key={inv.id} className="hover:bg-white/[0.02]">
+                    <td className="p-3 text-sm text-white">{inv.email}</td>
+                    <td className="p-3 text-center">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        inv.status === "accepted"
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-yellow-500/15 text-yellow-400"
+                      }`}>
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center text-xs text-[#8b949e]">{formatDate(inv.created_at)}</td>
+                    <td className="p-3 text-center text-xs text-[#8b949e]">{inv.accepted_at ? formatDate(inv.accepted_at) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Stats row */}
         <div className="flex items-center gap-4 mb-5 text-xs text-[#8b949e]">
