@@ -62,9 +62,9 @@ const Auth = () => {
 
   const redirectBasedOnRole = (userRole?: string) => {
     if (userRole === "teacher") {
-      navigate("/teacher/dashboard");
+      navigate("/teacher/home");
     } else {
-      navigate("/student/dashboard");
+      navigate("/student/home");
     }
   };
 
@@ -75,10 +75,10 @@ const Auth = () => {
         const user = JSON.parse(storedUser);
         const role = toFrontendRole(user.role);
         if (role === 'teacher') {
-          window.location.href = '/teacher/dashboard';
+          window.location.href = '/teacher/home';
           return;
         } else if (role === 'student') {
-          window.location.href = '/student/dashboard';
+          window.location.href = '/student/home';
           return;
         }
       } catch { /* ignore */ }
@@ -86,9 +86,9 @@ const Auth = () => {
     // Fallback
     const userRole = localStorage.getItem('user_role');
     if (userRole === 'teacher') {
-      window.location.href = '/teacher/dashboard';
+      window.location.href = '/teacher/home';
     } else if (userRole === 'student') {
-      window.location.href = '/student/dashboard';
+      window.location.href = '/student/home';
     } else {
       window.location.href = '/auth';
     }
@@ -178,9 +178,9 @@ const Auth = () => {
         sessionStorage.removeItem('pending_invite_redirect');
         navigate(pendingRedirect);
       } else if (normalized.role === 'teacher') {
-        navigate('/teacher/dashboard');
+        navigate('/teacher/home');
       } else if (normalized.role === 'student') {
-        navigate('/student/dashboard');
+        navigate('/student/home');
       }
     } catch (error: any) {
       toast({
@@ -225,9 +225,9 @@ const Auth = () => {
         sessionStorage.removeItem('pending_invite_redirect');
         navigate(pendingRedirect);
       } else if (normalizedUserData.role === 'student') {
-        navigate('/student/dashboard');
+        navigate('/student/home');
       } else if (normalizedUserData.role === 'teacher') {
-        navigate('/teacher/dashboard');
+        navigate('/teacher/home');
       }
     } catch (error: any) {
       toast({
