@@ -19,6 +19,15 @@ export function JoinClassroomModal({ open, onOpenChange, onSuccess }: JoinClassr
 
   const handleJoin = async () => {
     if (!code.trim()) return;
+
+    // TODO: remove dev bypass before production
+    if (code.trim() === "12345") {
+      setCode("");
+      onOpenChange(false);
+      window.location.href = "/student/home";
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await api.post<{ classroom_id: string; classroom_name: string }>("/api/classrooms/join", { code: code.trim() });
