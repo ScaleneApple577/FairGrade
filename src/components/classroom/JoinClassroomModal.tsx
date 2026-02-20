@@ -24,7 +24,7 @@ export function JoinClassroomModal({ open, onOpenChange, onSuccess }: JoinClassr
     if (code.trim() === "12345") {
       setCode("");
       onOpenChange(false);
-      window.location.href = "/student/home";
+      window.location.href = "/student/classroom/dev-test";
       return;
     }
 
