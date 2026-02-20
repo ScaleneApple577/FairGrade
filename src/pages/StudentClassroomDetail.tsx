@@ -64,6 +64,20 @@ export default function StudentClassroomDetail() {
 
   const fetchClassroom = useCallback(async () => {
     if (!id) return;
+
+    // TODO: remove dev bypass before production
+    if (id === "dev-test") {
+      setClassroom({
+        id: "dev-test",
+        name: "Dev Test Classroom",
+        students: [],
+        projects: [],
+        created_at: new Date().toISOString(),
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await api.get<ClassroomDetail>(`/api/classrooms/${id}`);
       setClassroom(data);
