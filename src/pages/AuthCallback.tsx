@@ -33,9 +33,9 @@ const AuthCallback = () => {
           sessionStorage.removeItem('pending_invite_redirect');
           navigate(pendingRedirect, { replace: true });
         } else if (normalized.role === "teacher") {
-          navigate("/teacher/dashboard", { replace: true });
+          navigate("/teacher/home", { replace: true });
         } else if (normalized.role === "student") {
-          navigate("/student/dashboard", { replace: true });
+          navigate("/student/home", { replace: true });
         } else {
           navigate("/auth", { replace: true });
         }
