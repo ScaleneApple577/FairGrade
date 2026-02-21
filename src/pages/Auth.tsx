@@ -241,7 +241,9 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = () => {
-    loginWithGoogle();
+    const apiRole = role === 'teacher' ? 'instructor' : 'student';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fairgrade.onrender.com';
+    window.location.href = `${API_BASE_URL}/api/auth/google/authorize?role=${apiRole}`;
   };
 
   // Loading state
