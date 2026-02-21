@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Loader2, BookOpen, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { Plus, Loader2, BookOpen, FileText, Monitor, User, Clock } from "lucide-react";
 import { api } from "@/lib/api";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { WelcomeBanner } from "@/components/layout/WelcomeBanner";
@@ -8,6 +8,7 @@ import { DashboardTabs } from "@/components/layout/DashboardTabs";
 import { ClassroomCard } from "@/components/classroom/ClassroomCard";
 import { CreateClassroomModal } from "@/components/classroom/CreateClassroomModal";
 import { AssignmentCard } from "@/components/classroom/AssignmentCard";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Classroom {
   id: string;
@@ -17,11 +18,23 @@ interface Classroom {
   projects?: any[];
 }
 
+interface SubmissionFile {
+  id: string;
+  name: string;
+  student_name?: string;
+  student_email?: string;
+  submitted_at?: string;
+  drive_file_id?: string;
+  projectName: string;
+  projectId: string;
+  classroomName: string;
+}
+
 const TABS = [
   { key: 'classroom', label: 'Classroom' },
   { key: 'assignments', label: 'Assignments' },
   { key: 'submissions', label: 'Submissions' },
-  { key: 'calendar', label: 'Calendar' },
+  { key: 'monitoring', label: 'Monitoring' },
 ];
 
 export default function TeacherHome() {
@@ -29,6 +42,8 @@ export default function TeacherHome() {
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('classroom');
+  const [submissions, setSubmissions] = useState<SubmissionFile[]>([]);
+  const [monitoringLoading, setMonitoringLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchClassrooms = async () => {
@@ -42,7 +57,52 @@ export default function TeacherHome() {
     }
   };
 
+  const fetchMonitoringData = async () => {
+    setMonitoringLoading(true);
+    try {
+      const cls = await api.get<Classroom[]>("/api/classrooms");
+      const classroomList = Array.isArray(cls) ? cls : [];
+      const projects = await api.get<any[]>("/api/projects");
+      const projectList = Array.isArray(projects) ? projects : [];
+
+      const allSubs: SubmissionFile[] = [];
+      for (const project of projectList) {
+        try {
+          const files = await api.get<any[]>(`/api/projects/${project.id}/files`);
+          const fileList = Array.isArray(files) ? files : [];
+          const classroom = classroomList.find((c: any) => c.id === project.classroom_id);
+          for (const file of fileList) {
+            allSubs.push({
+              id: file.id,
+              name: file.name,
+              student_name: file.student_name || file.student_email || 'Unknown',
+              student_email: file.student_email,
+              submitted_at: file.submitted_at || file.created_at,
+              drive_file_id: file.drive_file_id,
+              projectName: project.name,
+              projectId: project.id,
+              classroomName: classroom?.name || 'Unknown',
+            });
+          }
+        } catch {
+          // skip projects with no files
+        }
+      }
+      setSubmissions(allSubs);
+    } catch {
+      setSubmissions([]);
+    } finally {
+      setMonitoringLoading(false);
+    }
+  };
+
   useEffect(() => { fetchClassrooms(); }, []);
+
+  useEffect(() => {
+    if (activeTab === 'monitoring') {
+      fetchMonitoringData();
+    }
+  }, [activeTab]);
 
   // Collect all assignments across classrooms
   const allAssignments = classrooms.flatMap(c =>
@@ -129,11 +189,59 @@ export default function TeacherHome() {
             </div>
           )}
 
-          {/* Calendar Tab */}
-          {activeTab === 'calendar' && (
-            <div className="text-center py-16">
-              <CalendarIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Upcoming deadlines and events will appear here.</p>
+          {/* Monitoring Tab */}
+          {activeTab === 'monitoring' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-foreground">Student Activity Monitoring</h2>
+              </div>
+              {monitoringLoading ? (
+                <div className="flex justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : submissions.length === 0 ? (
+                <div className="text-center py-16">
+                  <Monitor className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No submissions to monitor yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {submissions.map((sub) => (
+                    <Card key={sub.id} className="overflow-hidden">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{sub.student_name}</p>
+                            {sub.student_email && (
+                              <p className="text-xs text-muted-foreground truncate">{sub.student_email}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">{sub.projectName}</span> · {sub.classroomName}
+                          </p>
+                          {sub.submitted_at && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(sub.submitted_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => navigate(`/teacher/classroom/${sub.projectId}`)}
+                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                        >
+                          View Replay
+                        </button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>
