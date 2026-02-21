@@ -35,6 +35,39 @@ const Auth = () => {
   const { loginWithGoogle } = useAuth();
 
   useEffect(() => {
+    // Check if URL contains a token param (Google OAuth callback)
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+
+    if (urlToken) {
+      // Save token and fetch user profile
+      localStorage.setItem('access_token', urlToken);
+      // Clean the URL
+      window.history.replaceState({}, '', '/auth');
+
+      api.get('/api/auth/me')
+        .then((data) => {
+          const normalized = normalizeUser(data);
+          localStorage.setItem('user', JSON.stringify(normalized));
+          localStorage.setItem('user_role', normalized.role || '');
+
+          if (normalized.role === 'teacher') {
+            navigate('/teacher/home', { replace: true });
+          } else if (normalized.role === 'student') {
+            navigate('/student/home', { replace: true });
+          } else {
+            setCheckingSession(false);
+          }
+        })
+        .catch((err) => {
+          console.error('OAuth callback error:', err);
+          localStorage.removeItem('access_token');
+          toast({ title: 'Authentication failed', description: 'Please try again.', variant: 'destructive' });
+          setCheckingSession(false);
+        });
+      return;
+    }
+
     // Check for existing token/user in localStorage
     const token = localStorage.getItem('access_token');
     if (token) {
