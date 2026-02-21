@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Loader2, BookOpen, ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ClassroomBanner } from "@/components/classroom/ClassroomBanner";
 import { TabBar } from "@/components/classroom/TabBar";
 import { AnnouncementCard } from "@/components/classroom/AnnouncementCard";
@@ -118,15 +118,15 @@ export default function StudentClassroomDetail() {
   };
 
   if (loading) {
-    return <AppLayout><div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-[#1a73e8]" /></div></AppLayout>;
+    return <DashboardLayout><div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-[#1a73e8]" /></div></DashboardLayout>;
   }
 
   if (!classroom) {
-    return <AppLayout><p className="text-center text-[#5f6368] py-20">Classroom not found</p></AppLayout>;
+    return <DashboardLayout><p className="text-center text-[#5f6368] py-20">Classroom not found</p></DashboardLayout>;
   }
 
   return (
-    <AppLayout>
+    <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-4">
         <ClassroomBanner id={classroom.id} name={classroom.name} studentCount={classroom.students?.length} />
         <TabBar tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
@@ -196,6 +196,6 @@ export default function StudentClassroomDetail() {
           )}
         </div>
       </div>
-    </AppLayout>
+    </DashboardLayout>
   );
 }
