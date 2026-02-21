@@ -1,8 +1,14 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,11 +17,24 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false); // placeholder toggle
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   const homeRoute = user?.role === 'teacher' ? '/teacher/home' : '/student/home';
   const firstName = user?.firstName || user?.email?.charAt(0).toUpperCase() || 'U';
   const initial = (user?.firstName || user?.email || 'U').charAt(0).toUpperCase();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   const handleLogout = async () => {
     await logout();
@@ -42,20 +61,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {darkMode ? <Sun className="w-5 h-5 text-muted-foreground" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-              {initial}
-            </div>
-            <span className="text-sm font-medium text-foreground hidden sm:inline">{firstName}</span>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-full hover:bg-secondary transition-colors"
-            aria-label="Log out"
-          >
-            <LogOut className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 p-1 rounded-full hover:bg-secondary transition-colors cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                  {initial}
+                </div>
+                <span className="text-sm font-medium text-foreground hidden sm:inline">{firstName}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
