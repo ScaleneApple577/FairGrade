@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Loader2, BookOpen, FileText, Monitor, User, Clock } from "lucide-react";
+import { Plus, Loader2, BookOpen, FileText, Monitor, User, Clock, LayoutGrid } from "lucide-react";
 import { api } from "@/lib/api";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { SidebarDashboardLayout, SidebarNavItem } from "@/components/layout/SidebarDashboardLayout";
 import { WelcomeBanner } from "@/components/layout/WelcomeBanner";
-import { DashboardTabs } from "@/components/layout/DashboardTabs";
 import { ClassroomCard } from "@/components/classroom/ClassroomCard";
 import { CreateClassroomModal } from "@/components/classroom/CreateClassroomModal";
 import { AssignmentCard } from "@/components/classroom/AssignmentCard";
@@ -30,11 +29,11 @@ interface SubmissionFile {
   classroomName: string;
 }
 
-const TABS = [
-  { key: 'classroom', label: 'Classroom' },
-  { key: 'assignments', label: 'Assignments' },
-  { key: 'submissions', label: 'Submissions' },
-  { key: 'monitoring', label: 'Monitoring' },
+const NAV_ITEMS: SidebarNavItem[] = [
+  { key: 'classroom', label: 'Classroom', icon: LayoutGrid },
+  { key: 'assignments', label: 'Assignments', icon: BookOpen },
+  { key: 'submissions', label: 'Submissions', icon: FileText },
+  { key: 'monitoring', label: 'Monitoring', icon: Monitor },
 ];
 
 export default function TeacherHome() {
@@ -104,15 +103,13 @@ export default function TeacherHome() {
     }
   }, [activeTab]);
 
-  // Collect all assignments across classrooms
   const allAssignments = classrooms.flatMap(c =>
     (c.projects || []).map((p: any) => ({ ...p, classroomName: c.name }))
   );
 
   return (
-    <DashboardLayout>
+    <SidebarDashboardLayout navItems={NAV_ITEMS} activeItem={activeTab} onItemChange={setActiveTab}>
       <WelcomeBanner />
-      <DashboardTabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -120,7 +117,6 @@ export default function TeacherHome() {
         </div>
       ) : (
         <>
-          {/* Classroom Tab */}
           {activeTab === 'classroom' && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -160,7 +156,6 @@ export default function TeacherHome() {
             </div>
           )}
 
-          {/* Assignments Tab */}
           {activeTab === 'assignments' && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -181,7 +176,6 @@ export default function TeacherHome() {
             </div>
           )}
 
-          {/* Submissions Tab */}
           {activeTab === 'submissions' && (
             <div className="text-center py-16">
               <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
@@ -189,7 +183,6 @@ export default function TeacherHome() {
             </div>
           )}
 
-          {/* Monitoring Tab */}
           {activeTab === 'monitoring' && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -252,6 +245,6 @@ export default function TeacherHome() {
         onOpenChange={setCreateOpen}
         onSuccess={() => fetchClassrooms()}
       />
-    </DashboardLayout>
+    </SidebarDashboardLayout>
   );
 }

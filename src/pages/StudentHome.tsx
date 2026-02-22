@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Loader2, BookOpen, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { Plus, Loader2, BookOpen, Calendar as CalendarIcon, FileText, LayoutGrid } from "lucide-react";
 import { api } from "@/lib/api";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { SidebarDashboardLayout, SidebarNavItem } from "@/components/layout/SidebarDashboardLayout";
 import { WelcomeBanner } from "@/components/layout/WelcomeBanner";
-import { DashboardTabs } from "@/components/layout/DashboardTabs";
 import { ClassroomCard } from "@/components/classroom/ClassroomCard";
 import { JoinClassroomModal } from "@/components/classroom/JoinClassroomModal";
 import { AssignmentCard } from "@/components/classroom/AssignmentCard";
@@ -17,11 +16,11 @@ interface Classroom {
   projects?: any[];
 }
 
-const TABS = [
-  { key: 'classroom', label: 'Classroom' },
-  { key: 'assignments', label: 'Assignments' },
-  { key: 'submissions', label: 'Submissions' },
-  { key: 'calendar', label: 'Calendar' },
+const NAV_ITEMS: SidebarNavItem[] = [
+  { key: 'classroom', label: 'Classroom', icon: LayoutGrid },
+  { key: 'assignments', label: 'Assignments', icon: BookOpen },
+  { key: 'submissions', label: 'Submissions', icon: FileText },
+  { key: 'calendar', label: 'Calendar', icon: CalendarIcon },
 ];
 
 export default function StudentHome() {
@@ -49,9 +48,8 @@ export default function StudentHome() {
   );
 
   return (
-    <DashboardLayout>
+    <SidebarDashboardLayout navItems={NAV_ITEMS} activeItem={activeTab} onItemChange={setActiveTab}>
       <WelcomeBanner />
-      <DashboardTabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -59,7 +57,6 @@ export default function StudentHome() {
         </div>
       ) : (
         <>
-          {/* Classroom Tab */}
           {activeTab === 'classroom' && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -99,7 +96,6 @@ export default function StudentHome() {
             </div>
           )}
 
-          {/* Assignments Tab */}
           {activeTab === 'assignments' && (
             <div>
               <h2 className="text-lg font-medium text-foreground mb-4">All Assignments</h2>
@@ -118,7 +114,6 @@ export default function StudentHome() {
             </div>
           )}
 
-          {/* Submissions Tab */}
           {activeTab === 'submissions' && (
             <div className="text-center py-16">
               <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
@@ -126,7 +121,6 @@ export default function StudentHome() {
             </div>
           )}
 
-          {/* Calendar Tab */}
           {activeTab === 'calendar' && (
             <div className="text-center py-16">
               <CalendarIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
@@ -141,6 +135,6 @@ export default function StudentHome() {
         onOpenChange={setJoinOpen}
         onSuccess={fetchClassrooms}
       />
-    </DashboardLayout>
+    </SidebarDashboardLayout>
   );
 }
