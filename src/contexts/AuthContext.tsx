@@ -48,49 +48,42 @@ function buildAuthUserFromStored(): AuthUser | null {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [role, setRole] = useState<UserRole>(null);
+  // Initialize from cache synchronously — no loading screen
+  const cachedUser = buildAuthUserFromStored();
+  const hasToken = !!localStorage.getItem('access_token');
 
-  // On mount, check for existing token and load user
+  const [user, setUser] = useState<AuthUser | null>(cachedUser);
+  const [isLoading, setIsLoading] = useState(!hasToken && !cachedUser ? false : false);
+  const [role, setRole] = useState<UserRole>(cachedUser?.role || null);
+
+  // Silently verify token in background — never show loading
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    if (token) {
-      // Try to load cached user immediately
-      const cached = buildAuthUserFromStored();
-      if (cached) {
-        setUser(cached);
-        setRole(cached.role);
-      }
-      // Verify token is still valid by fetching /api/auth/me
-      api.get('/api/auth/me')
-        .then((data) => {
-          const normalized = normalizeUser(data);
-          const authUser: AuthUser = {
-            id: normalized.id,
-            email: normalized.email,
-            fullName: normalized.name,
-            firstName: normalized.first_name,
-            lastName: normalized.last_name,
-            role: (normalized.role as UserRole) || null,
-          };
-          setUser(authUser);
-          setRole(authUser.role);
-          localStorage.setItem('user', JSON.stringify(normalized));
-          localStorage.setItem('user_role', normalized.role || '');
-        })
-        .catch(() => {
-          // Token invalid, clear everything
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('user_role');
-          setUser(null);
-          setRole(null);
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
+    if (!token) return;
+
+    api.get('/api/auth/me')
+      .then((data) => {
+        const normalized = normalizeUser(data);
+        const authUser: AuthUser = {
+          id: normalized.id,
+          email: normalized.email,
+          fullName: normalized.name,
+          firstName: normalized.first_name,
+          lastName: normalized.last_name,
+          role: (normalized.role as UserRole) || null,
+        };
+        setUser(authUser);
+        setRole(authUser.role);
+        localStorage.setItem('user', JSON.stringify(normalized));
+        localStorage.setItem('user_role', normalized.role || '');
+      })
+      .catch(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('user_role');
+        setUser(null);
+        setRole(null);
+      });
   }, []);
 
   const refreshUser = useCallback(async () => {

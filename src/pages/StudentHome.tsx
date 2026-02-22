@@ -59,39 +59,44 @@ export default function StudentHome() {
         <>
           {activeTab === 'classroom' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">My Classes</h2>
-                <button
-                  onClick={() => setJoinOpen(true)}
-                  className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Join Classroom
-                </button>
-              </div>
               {classrooms.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Plus className="w-8 h-8 text-primary" />
+                /* Empty state: only centered join button */
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-primary" />
+                    </div>
+                    <h2 className="text-lg font-medium text-foreground mb-1">Join your first classroom</h2>
+                    <p className="text-sm text-muted-foreground mb-4">Ask your teacher for the classroom code</p>
+                    <button
+                      onClick={() => setJoinOpen(true)}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      + Join Classroom
+                    </button>
                   </div>
-                  <h2 className="text-lg font-medium text-foreground mb-1">Join your first classroom</h2>
-                  <p className="text-sm text-muted-foreground mb-4">Ask your teacher for the classroom code</p>
-                  <button
-                    onClick={() => setJoinOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    + Join Classroom
-                  </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {classrooms.map((c) => (
-                    <ClassroomCard
-                      key={c.id}
-                      classroom={c}
-                      onClick={() => navigate(`/student/classroom/${c.id}`)}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-foreground">My Classes</h2>
+                    <button
+                      onClick={() => setJoinOpen(true)}
+                      className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <Plus className="w-4 h-4" /> Join Classroom
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {classrooms.map((c) => (
+                      <ClassroomCard
+                        key={c.id}
+                        classroom={c}
+                        onClick={() => navigate(`/student/classroom/${c.id}`)}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
