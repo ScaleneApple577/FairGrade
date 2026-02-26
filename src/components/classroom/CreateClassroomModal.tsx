@@ -49,7 +49,7 @@ export function CreateClassroomModal({ open, onOpenChange, onSuccess }: CreateCl
           />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!name.trim() || loading} className="bg-[#1a73e8] hover:bg-[#1557b0] text-white">
+            <Button onClick={handleCreate} disabled={!name.trim() || loading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create
             </Button>

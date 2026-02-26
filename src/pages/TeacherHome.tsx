@@ -1,116 +1,125 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Loader2, BookOpen, FileText, Monitor, User, Clock, LayoutGrid } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Plus, Loader2, BookOpen, FileText, Calendar as CalendarIcon, Eye, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/api";
-import { SidebarDashboardLayout, SidebarNavItem } from "@/components/layout/SidebarDashboardLayout";
-import { WelcomeBanner } from "@/components/layout/WelcomeBanner";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ClassroomCard } from "@/components/classroom/ClassroomCard";
 import { CreateClassroomModal } from "@/components/classroom/CreateClassroomModal";
-import { AssignmentCard } from "@/components/classroom/AssignmentCard";
-import { Card, CardContent } from "@/components/ui/card";
+<<<<<<< HEAD
+import { MagneticBackground } from "@/components/MagneticBackground";
+=======
+import { getMonitoringStatus, getMonitoringStateColor, type MonitoringStatus } from "@/lib/monitoringUtils";
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
 
 interface Classroom {
   id: string;
   name: string;
   student_count?: number;
   created_at?: string;
-  projects?: any[];
 }
 
-interface SubmissionFile {
+interface Assignment {
   id: string;
-  name: string;
-  student_name?: string;
-  student_email?: string;
-  submitted_at?: string;
-  drive_file_id?: string;
-  projectName: string;
-  projectId: string;
-  classroomName: string;
+  classroom_id: string;
+  classroom_name?: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  created_at: string;
 }
-
-const NAV_ITEMS: SidebarNavItem[] = [
-  { key: 'classroom', label: 'Classroom', icon: LayoutGrid },
-  { key: 'assignments', label: 'Assignments', icon: BookOpen },
-  { key: 'submissions', label: 'Submissions', icon: FileText },
-  { key: 'monitoring', label: 'Monitoring', icon: Monitor },
-];
 
 export default function TeacherHome() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [monitoringData, setMonitoringData] = useState<MonitoringStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('classroom');
-  const [submissions, setSubmissions] = useState<SubmissionFile[]>([]);
-  const [monitoringLoading, setMonitoringLoading] = useState(false);
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'classroom');
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
+  const [hoverTarget, setHoverTarget] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const assignmentCountsByClassroom = useMemo(() => {
+    const counts: Record<string, number> = {};
+    assignments.forEach((a) => {
+      if (!a.classroom_id) return;
+      const id = String(a.classroom_id);
+      counts[id] = (counts[id] || 0) + 1;
+    });
+    return counts;
+  }, [assignments]);
 
   const fetchClassrooms = async () => {
     try {
       const data = await api.get<Classroom[]>("/api/classrooms");
       setClassrooms(Array.isArray(data) ? data : []);
-    } catch {
-      setClassrooms([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setClassrooms([]); }
   };
 
-  const fetchMonitoringData = async () => {
-    setMonitoringLoading(true);
+  const fetchAssignments = async () => {
     try {
-      const cls = await api.get<Classroom[]>("/api/classrooms");
-      const classroomList = Array.isArray(cls) ? cls : [];
-      const projects = await api.get<any[]>("/api/projects");
-      const projectList = Array.isArray(projects) ? projects : [];
-
-      const allSubs: SubmissionFile[] = [];
-      for (const project of projectList) {
-        try {
-          const files = await api.get<any[]>(`/api/projects/${project.id}/files`);
-          const fileList = Array.isArray(files) ? files : [];
-          const classroom = classroomList.find((c: any) => c.id === project.classroom_id);
-          for (const file of fileList) {
-            allSubs.push({
-              id: file.id,
-              name: file.name,
-              student_name: file.student_name || file.student_email || 'Unknown',
-              student_email: file.student_email,
-              submitted_at: file.submitted_at || file.created_at,
-              drive_file_id: file.drive_file_id,
-              projectName: project.name,
-              projectId: project.id,
-              classroomName: classroom?.name || 'Unknown',
-            });
-          }
-        } catch {
-          // skip projects with no files
-        }
-      }
-      setSubmissions(allSubs);
-    } catch {
-      setSubmissions([]);
-    } finally {
-      setMonitoringLoading(false);
-    }
+      const data = await api.get<Assignment[]>("/api/assignments/mine");
+      setAssignments(Array.isArray(data) ? data : []);
+    } catch { setAssignments([]); }
   };
 
-  useEffect(() => { fetchClassrooms(); }, []);
+  const fetchMonitoring = async () => {
+    try {
+      const data = await getMonitoringStatus();
+      setMonitoringData(data);
+    } catch { setMonitoringData([]); }
+  };
 
   useEffect(() => {
-    if (activeTab === 'monitoring') {
-      fetchMonitoringData();
-    }
+    Promise.all([fetchClassrooms(), fetchAssignments(), fetchMonitoring()]).finally(() => setLoading(false));
+  }, []);
+
+  // Auto-refresh monitoring data every 15s when on monitoring tab
+  useEffect(() => {
+    if (activeTab !== 'monitoring') return;
+    const interval = setInterval(fetchMonitoring, 15000);
+    return () => clearInterval(interval);
   }, [activeTab]);
 
-  const allAssignments = classrooms.flatMap(c =>
-    (c.projects || []).map((p: any) => ({ ...p, classroomName: c.name }))
-  );
+  useEffect(() => {
+    if (location.state?.activeTab) setActiveTab(location.state.activeTab);
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const measure = () => {
+      if (containerRef.current) {
+        setContainerRect(containerRef.current.getBoundingClientRect());
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const handleCardHoverStart = (cardRect: DOMRect) => {
+    if (!containerRect) return;
+    setHoverTarget({
+      x: cardRect.left - containerRect.left,
+      y: cardRect.top - containerRect.top,
+      width: cardRect.width,
+      height: cardRect.height,
+    });
+  };
+
+  const handleCardHoverEnd = () => {
+    setHoverTarget(null);
+  };
 
   return (
-    <SidebarDashboardLayout navItems={NAV_ITEMS} activeItem={activeTab} onItemChange={setActiveTab}>
-      <WelcomeBanner />
-
+    <DashboardLayout>
       {loading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -118,58 +127,70 @@ export default function TeacherHome() {
       ) : (
         <>
           {activeTab === 'classroom' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">My Classes</h2>
-                <button
-                  onClick={() => setCreateOpen(true)}
-                  className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Create Classroom
-                </button>
-              </div>
-              {classrooms.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Plus className="w-8 h-8 text-primary" />
-                  </div>
-                  <h2 className="text-lg font-medium text-foreground mb-1">No classes yet</h2>
-                  <p className="text-sm text-muted-foreground mb-4">Create your first classroom to get started</p>
-                  <button
-                    onClick={() => setCreateOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Create Classroom
+            <div ref={containerRef} className="relative w-full min-h-[400px]">
+              <MagneticBackground
+                particleCount={40}
+                containerRect={containerRect}
+                targetRect={hoverTarget}
+              />
+              <div className="relative z-10 w-full text-left">
+                <div className="flex items-center justify-between mb-4 w-full">
+                  <h2 className="text-lg font-medium text-foreground dark:text-white">My Classes</h2>
+                  <button onClick={() => setCreateOpen(true)} className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <Plus className="w-4 h-4" /> Create Classroom
                   </button>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {classrooms.map((c) => (
-                    <ClassroomCard
-                      key={c.id}
-                      classroom={c}
-                      onClick={() => navigate(`/teacher/classroom/${c.id}`)}
-                    />
-                  ))}
-                </div>
-              )}
+                {classrooms.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-primary" />
+                    </div>
+                    <h2 className="text-lg font-medium text-foreground dark:text-white mb-1">No classes yet</h2>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400 mb-4">Create your first classroom to get started</p>
+                    <button onClick={() => setCreateOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                      Create Classroom
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 justify-items-start">
+                    {classrooms.map((c, index) => (
+                      <ClassroomCard
+                        key={c.id}
+                        classroom={c}
+                        assignmentCount={assignmentCountsByClassroom[String(c.id)] || 0}
+                        index={index}
+                        onHoverStart={handleCardHoverStart}
+                        onHoverEnd={handleCardHoverEnd}
+                        onClick={() => navigate(`/teacher/classroom/${c.id}`)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {activeTab === 'assignments' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">All Assignments</h2>
-              </div>
-              {allAssignments.length === 0 ? (
+            <div className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground dark:text-gray-400 mb-3">All Assignments</h2>
+              {assignments.length === 0 ? (
                 <div className="text-center py-16">
                   <BookOpen className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No assignments yet. Create assignments from within a classroom.</p>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">No assignments yet. Create assignments from within a classroom.</p>
                 </div>
               ) : (
-                <div className="gc-card divide-y divide-border">
-                  {allAssignments.map((p: any) => (
-                    <AssignmentCard key={p.id} project={p} onClick={() => navigate(`/teacher/classroom/${p.classroom_id || ''}`)} />
+                <div className="space-y-3">
+                  {assignments.map((a) => (
+                    <div key={a.id} onClick={() => navigate(`/teacher/classroom/${a.classroom_id}`)} className="gc-card p-4 cursor-pointer hover:shadow-md transition-shadow dark:bg-gray-900 dark:border-gray-700">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground dark:text-white">{a.title}</h3>
+                          {a.classroom_name && <p className="text-sm text-muted-foreground dark:text-gray-400">{a.classroom_name}</p>}
+                          {a.description && <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">{a.description}</p>}
+                        </div>
+                        {a.due_date && <p className="text-xs text-muted-foreground dark:text-gray-500 whitespace-nowrap ml-4">Due {new Date(a.due_date).toLocaleDateString()}</p>}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -177,74 +198,120 @@ export default function TeacherHome() {
           )}
 
           {activeTab === 'submissions' && (
+<<<<<<< HEAD
             <div className="text-center py-16">
               <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Student submissions across all assignments will appear here.</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-400">Student submissions across all assignments will appear here.</p>
+=======
+            <div>
+              <h2 className="text-lg font-medium text-foreground mb-4">All Submissions</h2>
+              {monitoringData.length === 0 ? (
+                <div className="text-center py-16">
+                  <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No submissions yet. Students will submit their work from their classrooms.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {monitoringData.map((item) => (
+                    <div
+                      key={item.submission_id}
+                      onClick={() => navigate(`/teacher/submission/${item.submission_id}`)}
+                      className="gc-card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#1a73e8] flex items-center justify-center text-white text-xs font-semibold">
+                            {(item.student_name || item.student_email || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{item.student_name || item.student_email}</p>
+                            <p className="text-xs text-muted-foreground">{item.assignment_title}{item.classroom_name ? ` · ${item.classroom_name}` : ''}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {item.flag_count > 0 && (
+                            <span className="flex items-center gap-1 text-xs text-orange-500">
+                              <AlertTriangle className="w-3.5 h-3.5" /> {item.flag_count}
+                            </span>
+                          )}
+                          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${item.status === "submitted" ? "bg-emerald-500/15 text-emerald-400" : item.status === "in_progress" ? "bg-blue-500/15 text-blue-400" : "bg-slate-500/15 text-slate-400"}`}>
+                            {item.status === "not_started" ? "Not Started" : item.status === "in_progress" ? "In Progress" : "Submitted"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
             </div>
           )}
 
           {activeTab === 'monitoring' && (
+<<<<<<< HEAD
+            <div className="text-center py-16">
+              <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground dark:text-gray-400">Live monitoring of student submissions will appear here.</p>
+=======
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">Student Activity Monitoring</h2>
-              </div>
-              {monitoringLoading ? (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : submissions.length === 0 ? (
+              <h2 className="text-lg font-medium text-foreground mb-4">Live Monitoring</h2>
+              {monitoringData.length === 0 ? (
                 <div className="text-center py-16">
-                  <Monitor className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No submissions to monitor yet.</p>
+                  <Eye className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No submissions are being monitored yet.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Monitoring starts when students link their Google Docs to assignments.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {submissions.map((sub) => (
-                    <Card key={sub.id} className="overflow-hidden">
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="w-4 h-4 text-primary" />
+                <div className="space-y-2">
+                  {monitoringData.map((item) => {
+                    const stateColor = getMonitoringStateColor(item.monitoring_state);
+                    return (
+                      <div
+                        key={item.submission_id}
+                        onClick={() => navigate(`/teacher/submission/${item.submission_id}`)}
+                        className="gc-card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-[#1a73e8] flex items-center justify-center text-white text-xs font-semibold">
+                              {(item.student_name || item.student_email || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{item.student_name || item.student_email}</p>
+                              <p className="text-xs text-muted-foreground">{item.assignment_title}{item.classroom_name ? ` · ${item.classroom_name}` : ''}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{sub.student_name}</p>
-                            {sub.student_email && (
-                              <p className="text-xs text-muted-foreground truncate">{sub.student_email}</p>
+                          <div className="flex items-center gap-3">
+                            {item.flag_count > 0 && (
+                              <span className="flex items-center gap-1 text-xs text-orange-500">
+                                <AlertTriangle className="w-3.5 h-3.5" /> {item.flag_count}
+                              </span>
                             )}
+                            <span className="text-xs text-muted-foreground">{item.snapshot_count} snapshots</span>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${stateColor.bg} ${stateColor.text}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${stateColor.dot} ${item.monitoring_state === "active" ? "animate-pulse" : ""}`} />
+                              {item.monitoring_state}
+                            </span>
                           </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">
-                            <span className="font-medium text-foreground">{sub.projectName}</span> · {sub.classroomName}
-                          </p>
-                          {sub.submitted_at && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(sub.submitted_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => navigate(`/teacher/classroom/${sub.projectId}`)}
-                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                        >
-                          View Replay
-                        </button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
+            </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <div className="text-center py-16">
+              <CalendarIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground dark:text-gray-400">Upcoming deadlines and events will appear here.</p>
             </div>
           )}
         </>
       )}
-
-      <CreateClassroomModal
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onSuccess={() => fetchClassrooms()}
-      />
-    </SidebarDashboardLayout>
+      <CreateClassroomModal open={createOpen} onOpenChange={setCreateOpen} onSuccess={() => fetchClassrooms()} />
+    </DashboardLayout>
   );
 }

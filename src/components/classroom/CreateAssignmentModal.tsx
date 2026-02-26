@@ -14,22 +14,30 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  classroomId: string;
 }
 
-export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: Props) {
+export function CreateAssignmentModal({ open, onOpenChange, onSuccess, classroomId }: Props) {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
     setLoading(true);
     try {
-      await api.post("/api/projects", { name: title.trim(), description: description.trim() || undefined });
+      await api.post("/api/assignments", {
+        classroom_id: classroomId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        due_date: dueDate || undefined,
+      });
       toast({ title: "Assignment created!" });
       setTitle("");
       setDescription("");
+      setDueDate("");
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
@@ -55,7 +63,11 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: Props) 
             <Label htmlFor="desc">Description (optional)</Label>
             <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Instructions for students..." rows={3} />
           </div>
-          <Button onClick={handleCreate} disabled={!title.trim() || loading} className="w-full bg-[#1a73e8] hover:bg-[#1557b0]">
+          <div>
+            <Label htmlFor="dueDate">Due Date (optional)</Label>
+            <Input id="dueDate" type="datetime-local" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <Button onClick={handleCreate} disabled={!title.trim() || loading} className="w-full bg-primary hover:bg-primary/90">
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Create
           </Button>

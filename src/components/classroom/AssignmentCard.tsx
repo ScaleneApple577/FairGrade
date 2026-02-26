@@ -12,7 +12,7 @@ export function AssignmentCard({ project, onClick }: AssignmentCardProps) {
       onClick={onClick}
       className="w-full text-left gc-card flex items-start gap-4 p-4 hover:bg-[hsl(220,10%,97%)] transition-colors"
     >
-      <div className="w-10 h-10 rounded-full bg-[#1a73e8] flex items-center justify-center flex-shrink-0">
+      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
         <FileText className="w-5 h-5 text-white" />
       </div>
       <div className="flex-1 min-w-0">

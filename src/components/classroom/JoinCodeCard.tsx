@@ -27,17 +27,17 @@ export function JoinCodeCard({ code, onRegenerate }: JoinCodeCardProps) {
   };
 
   return (
-    <div className="gc-card p-5">
-      <p className="text-sm text-[#5f6368] mb-3">Share this code with your students</p>
-      <div className="flex items-center gap-4">
-        <code className="text-2xl font-mono tracking-wider text-[#202124] font-medium select-all">
+    <div className="gc-card p-4">
+      <p className="text-xs text-muted-foreground mb-2">Share this code with your students</p>
+      <div className="flex items-center gap-3">
+        <code className="text-lg font-mono tracking-wider text-foreground font-medium select-all">
           {code}
         </code>
-        <Button variant="ghost" size="sm" onClick={handleCopy} className="text-[#1a73e8]">
+        <Button variant="ghost" size="sm" onClick={handleCopy} className="text-primary">
           {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           {copied ? 'Copied!' : 'Copy'}
         </Button>
-        <Button variant="ghost" size="sm" onClick={handleRegenerate} disabled={regenerating} className="text-[#5f6368]">
+        <Button variant="ghost" size="sm" onClick={handleRegenerate} disabled={regenerating} className="text-muted-foreground">
           {regenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Regenerate
         </Button>

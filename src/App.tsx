@@ -14,8 +14,12 @@ import FeatureDetailPage from "./pages/FeatureDetailPage";
 import NotFound from "./pages/NotFound";
 import TeacherHome from "./pages/TeacherHome";
 import TeacherClassroomDetail from "./pages/TeacherClassroomDetail";
+import TeacherSubmissionDetail from "./pages/TeacherSubmissionDetail";
+import TeacherMonitoringPage from "./pages/TeacherMonitoringPage";
 import StudentHome from "./pages/StudentHome";
 import StudentClassroomDetail from "./pages/StudentClassroomDetail";
+import StudentCalendar from "./pages/StudentCalendar";
+import TeacherCalendar from "./pages/TeacherCalendar";
 
 const queryClient = new QueryClient();
 
@@ -42,13 +46,18 @@ const AppRoutes = () => (
     {/* Teacher routes */}
     <Route path="/teacher/home" element={<TeacherRoute><TeacherHome /></TeacherRoute>} />
     <Route path="/teacher/classroom/:id" element={<TeacherRoute><TeacherClassroomDetail /></TeacherRoute>} />
+    <Route path="/teacher/submission/:id" element={<TeacherRoute><TeacherSubmissionDetail /></TeacherRoute>} />
+    <Route path="/teacher/monitoring" element={<TeacherRoute><TeacherMonitoringPage /></TeacherRoute>} />
+    <Route path="/teacher/calendar" element={<TeacherRoute><TeacherCalendar /></TeacherRoute>} />
 
     {/* Student routes */}
     <Route path="/student/home" element={<StudentRoute><StudentHome /></StudentRoute>} />
     <Route path="/student/classroom/:id" element={<StudentRoute><StudentClassroomDetail /></StudentRoute>} />
+    <Route path="/student/calendar" element={<StudentRoute><StudentCalendar /></StudentRoute>} />
 
     {/* Legacy redirects */}
     <Route path="/teacher/dashboard" element={<Navigate to="/teacher/home" replace />} />
+    <Route path="/teacher/submissions/:id" element={<Navigate to="/teacher/home" replace />} />
     <Route path="/student/dashboard" element={<Navigate to="/student/home" replace />} />
 
     {/* Catch-all */}

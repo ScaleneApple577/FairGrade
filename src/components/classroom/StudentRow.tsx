@@ -33,7 +33,7 @@ function getDisplayName(s: Student): string {
   return s.email;
 }
 
-const AVATAR_COLORS = ['#1a73e8', '#137333', '#8430ce', '#e8710a', '#0d7377', '#c5221f'];
+const AVATAR_COLORS = ['#6366f1', '#137333', '#8430ce', '#e8710a', '#0d7377', '#c5221f'];
 
 function getAvatarColor(email: string): string {
   let hash = 0;

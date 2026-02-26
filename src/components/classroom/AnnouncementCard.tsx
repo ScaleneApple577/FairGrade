@@ -10,7 +10,7 @@ export function AnnouncementCard({ author, date, message }: AnnouncementCardProp
   return (
     <div className="gc-card p-4">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-8 h-8 rounded-full bg-[#1a73e8] flex items-center justify-center text-white text-sm font-medium">
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
           {author.charAt(0).toUpperCase()}
         </div>
         <div>

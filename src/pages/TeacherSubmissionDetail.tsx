@@ -125,6 +125,34 @@ export default function TeacherSubmissionDetail() {
     });
   }, [flags, timelineEntries]);
 
+  // Split content into pages: each page is ~3000 chars or split on many newlines
+  const pages = useMemo(() => {
+    if (!currentContent) return [];
+    // Split on 3+ consecutive newlines (paragraph breaks that act as page breaks)
+    const rawPages = currentContent.split(/\n{3,}/);
+    // Further split any page that's very long (>3000 chars) into chunks
+    const result: string[] = [];
+    for (const page of rawPages) {
+      if (page.length <= 3000) {
+        result.push(page);
+      } else {
+        // Split long page by paragraphs
+        const paragraphs = page.split(/\n\n/);
+        let current = "";
+        for (const para of paragraphs) {
+          if ((current + para).length > 3000 && current.length > 0) {
+            result.push(current.trim());
+            current = para;
+          } else {
+            current = current ? current + "\n\n" + para : para;
+          }
+        }
+        if (current.trim()) result.push(current.trim());
+      }
+    }
+    return result.filter(p => p.trim().length > 0);
+  }, [currentContent]);
+
   useEffect(() => {
     if (!isPlaying || timelineEntries.length === 0) return;
     const interval = setInterval(() => {
@@ -267,8 +295,27 @@ export default function TeacherSubmissionDetail() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
+<<<<<<< HEAD
+              <h1 className="text-2xl font-semibold text-foreground">{detail.student_name || detail.student_email}</h1>
+              <p className="text-muted-foreground mt-0.5 text-sm">{detail.assignment_title} · {detail.classroom_name}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full ${stateColor.bg} ${stateColor.text}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${stateColor.dot} ${detail.monitoring_state === "active" ? "animate-pulse" : ""}`} />
+                {detail.monitoring_state}
+              </span>
+              <button onClick={handleToggleMonitoring} className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-secondary transition-colors">
+                {detail.monitoring_state === "stopped" ? <><Play className="w-4 h-4" /> Resume</> : <><Pause className="w-4 h-4" /> Pause</>}
+              </button>
+              {detail.drive_file_url && (
+                <a href={detail.drive_file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm text-primary-foreground transition-colors">
+                  <ExternalLink className="w-4 h-4" /> Open Doc
+                </a>
+              )}
+=======
               <h1 className="text-lg font-semibold text-foreground leading-tight">{detail.student_name || detail.student_email}</h1>
               <p className="text-muted-foreground text-xs">{detail.assignment_title} · {detail.classroom_name}</p>
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -325,10 +372,112 @@ export default function TeacherSubmissionDetail() {
                         <span>{charCount} chars</span>
                       </div>
                     </div>
+<<<<<<< HEAD
+                    <div>
+                      <p className="text-[#202124] text-sm font-medium leading-tight">{detail.assignment_title}</p>
+                      <p className="text-[#5f6368] text-xs leading-tight">{detail.student_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-[#5f6368]">
+                    {currentEntry && (
+                      <span className="bg-[#e8f0fe] text-[#1967d2] px-2.5 py-1 rounded-full font-medium">
+                        {new Date(currentEntry.captured_at).toLocaleString()}
+                      </span>
+                    )}
+                    <span>{wordCount} words</span>
+                    <span>{charCount} chars</span>
+                  </div>
+                </div>
+
+                {/* Doc content - paginated like Google Docs */}
+                <div className="bg-[#f8f9fa] min-h-[500px] max-h-[600px] overflow-auto flex flex-col items-center py-8 px-4 gap-6">
+                  {pages.length > 0 ? (
+                    pages.map((pageContent, i) => (
+                      <div
+                        key={i}
+                        className="bg-white shadow-md w-full max-w-[816px] flex-shrink-0"
+                        style={{ minHeight: "1056px", padding: "72px" }}
+                      >
+                        <div
+                          className="text-[#202124] font-['Arial',sans-serif]"
+                          style={{
+                            fontSize: "11pt",
+                            lineHeight: "1.5",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                          }}
+                        >
+                          {pageContent}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div
+                      className="bg-white shadow-md w-full max-w-[816px] flex-shrink-0"
+                      style={{ minHeight: "1056px", padding: "72px" }}
+                    >
+                      <p className="text-[#80868b] text-sm italic">Empty document</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Playback controls */}
+                <div className="bg-card border-t border-border px-5 py-3">
+                  <div className="mb-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, timelineEntries.length - 1)}
+                      value={timelinePosition}
+                      onChange={(e) => { setTimelinePosition(parseInt(e.target.value, 10)); setIsPlaying(false); }}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500"
+                      style={{
+                        background: `linear-gradient(to right, hsl(var(--primary)) ${(timelinePosition / Math.max(1, timelineEntries.length - 1)) * 100}%, hsl(var(--border)) ${(timelinePosition / Math.max(1, timelineEntries.length - 1)) * 100}%)`
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => { setTimelinePosition(0); setIsPlaying(false); }} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                        <SkipBack className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button onClick={() => setTimelinePosition(Math.max(0, timelinePosition - 5))} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                        <Rewind className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button onClick={() => setTimelinePosition(Math.max(0, timelinePosition - 1))} disabled={timelinePosition === 0} className="p-2 rounded-lg hover:bg-secondary disabled:opacity-30 transition-colors">
+                        <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => { if (timelinePosition >= timelineEntries.length - 1) setTimelinePosition(0); setIsPlaying(!isPlaying); }}
+                        className="p-2.5 rounded-full bg-primary hover:bg-primary/90 transition-colors mx-1"
+                      >
+                        {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white ml-0.5" />}
+                      </button>
+                      <button onClick={() => setTimelinePosition(Math.min(timelineEntries.length - 1, timelinePosition + 1))} disabled={timelinePosition >= timelineEntries.length - 1} className="p-2 rounded-lg hover:bg-secondary disabled:opacity-30 transition-colors">
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button onClick={() => setTimelinePosition(Math.min(timelineEntries.length - 1, timelinePosition + 5))} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                        <FastForward className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button onClick={() => { setTimelinePosition(timelineEntries.length - 1); setIsPlaying(false); }} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                        <SkipForward className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                    <span className="text-sm text-muted-foreground font-mono">{timelinePosition + 1} / {timelineEntries.length}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Speed</span>
+                      {[0.5, 1, 2, 4].map((speed) => (
+                        <button key={speed} onClick={() => setPlaybackSpeed(speed)}
+                          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${playbackSpeed === speed ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}>
+                          {speed}x
+                        </button>
+=======
                     {/* Google Docs menu bar */}
                     <div className="bg-white border-b border-[#dadce0] px-3 py-0 flex items-center gap-1 flex-shrink-0">
                       {["File", "Edit", "View", "Insert", "Format", "Tools"].map((m) => (
                         <span key={m} className="text-[#444746] text-[13px] px-2 py-1 cursor-default select-none">{m}</span>
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
                       ))}
                     </div>
                     {/* Google Docs toolbar (cosmetic) */}
@@ -609,7 +758,11 @@ export default function TeacherSubmissionDetail() {
 
         {/* Flags Tab */}
         {activeTab === "flags" && (
+<<<<<<< HEAD
+          <div className="gc-card p-4">
+=======
           <div className="flex-1 min-h-0 overflow-auto gc-card p-4">
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
             {flags.length > 0 ? (
               <div className="space-y-2">
                 {flags.map((flag) => {
@@ -632,10 +785,21 @@ export default function TeacherSubmissionDetail() {
                           {flag.teacher_status.replace(/_/g, " ")}
                         </span>
                         {flag.teacher_status !== "false_positive" && (
+<<<<<<< HEAD
+                          <button onClick={() => handleFlagUpdate(flag._id, "false_positive")} className="text-xs px-3 py-1.5 border border-border hover:bg-secondary rounded-lg text-muted-foreground transition-colors">
+                            False Positive
+                          </button>
+                        )}
+                        {flag.teacher_status !== "needs_followup" && (
+                          <button onClick={() => handleFlagUpdate(flag._id, "needs_followup")} className="text-xs px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 rounded-lg text-orange-500 transition-colors">
+                            Needs Follow-up
+                          </button>
+=======
                           <button onClick={() => handleFlagUpdate(flag._id, "false_positive")} className="text-[10px] px-2 py-1 border border-border hover:bg-secondary rounded-lg text-muted-foreground transition-colors">False Positive</button>
                         )}
                         {flag.teacher_status !== "needs_followup" && (
                           <button onClick={() => handleFlagUpdate(flag._id, "needs_followup")} className="text-[10px] px-2 py-1 bg-orange-500/10 hover:bg-orange-500/20 rounded-lg text-orange-500 transition-colors">Needs Follow-up</button>
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
                         )}
                       </div>
                     </div>
@@ -653,7 +817,11 @@ export default function TeacherSubmissionDetail() {
 
         {/* Report Tab */}
         {activeTab === "report" && (
+<<<<<<< HEAD
+          <div className="gc-card p-4">
+=======
           <div className="flex-1 min-h-0 overflow-auto gc-card p-4">
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
             {report ? (
               <div className="space-y-4">
                 <div>
@@ -713,7 +881,13 @@ export default function TeacherSubmissionDetail() {
                           </div>
                         ))}
                       </div>
+<<<<<<< HEAD
+                    ) : (
+                      <p className="text-muted-foreground text-sm">No flags recorded</p>
+                    )}
+=======
                     ) : <p className="text-muted-foreground text-xs">No flags recorded</p>}
+>>>>>>> bb891d8e782f7073a5ed20b32c5c9195ffba4b3f
                   </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground">Report generated: {new Date(report.generated_at).toLocaleString()}</p>

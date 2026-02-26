@@ -53,7 +53,7 @@ export function StudentSubmissionForm({ projectId, onSuccess }: Props) {
         <Label htmlFor="sub-name">Submission name</Label>
         <Input id="sub-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Submission" />
       </div>
-      <Button onClick={handleSubmit} disabled={!url.trim() || loading} className="bg-[#1a73e8] hover:bg-[#1557b0]">
+      <Button onClick={handleSubmit} disabled={!url.trim() || loading} className="bg-primary hover:bg-primary/90">
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
         Submit
       </Button>
